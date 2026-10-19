@@ -1,3 +1,8 @@
+// Integration: Redis is mocked, but the orchestrator's run loop reaches modules that open
+// their own Redis connections and query Postgres (theory of mind, user representations),
+// so it hangs where those services are absent. It runs under `npm run test:integration`,
+// where CI provisions both, until those dependencies are mocked too.
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { swarmCommunicationService } from './swarm-communication.service.js';
 import { AgentOrchestrator } from './agent-orchestrator.js';

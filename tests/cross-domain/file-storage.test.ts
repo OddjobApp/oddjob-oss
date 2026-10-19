@@ -73,8 +73,11 @@ describe("FileStorageService", () => {
         it("should prevent path traversal", () => {
             // resolvePath implementation has a regex to stop ..
             const resolved = fileStorageSuccess.resolvePath(1, "../../../etc/passwd");
-            expect(resolved).not.toContain("etc/passwd");
-            expect(resolved).toContain(path.join("1", "etc", "passwd")); // Traversal removed
+            // The leading ../ segments are stripped, so the path stays inside org 1's sandbox.
+            // (This used to assert not.toContain("etc/passwd"), which contradicts the line
+            // below and only held on Windows, where the separator is a backslash.)
+            expect(resolved.startsWith(fileStorageSuccess.resolvePath(1) + path.sep)).toBe(true);
+            expect(resolved).toContain(path.join("1", "etc", "passwd"));
         });
     });
 

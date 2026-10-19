@@ -6,6 +6,9 @@
  * options.pipelineSteps and options.dataset.fields. Dropping a unit from the chat view
  * alone would leave it wired in the draft and it would return on the next deploy, so
  * removal has to reach the draft.
+ *
+ * Integration: it reads and writes the real Redis draft store, so it runs under
+ * `npm run test:integration` (CI provisions Redis there), not the hermetic unit gate.
  */
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { redis } from "@domain/core/infrastructure/redis/redis-client.js";

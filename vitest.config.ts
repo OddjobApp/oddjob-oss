@@ -8,6 +8,11 @@ dotenv.config({ path: '.env.test' });
 // Never inherit a development or production DATABASE_URL into the test runner.
 configureTestEnvironment();
 
+// Pin the zone the suite was written in. Date and calendar tests read the host's
+// zone, so they passed on the authors' machines and failed in a UTC container or
+// CI runner. Set before the workers fork, so they inherit it.
+process.env.TZ = 'America/Los_Angeles';
+
 export default defineConfig({
     test: {
         globals: true,

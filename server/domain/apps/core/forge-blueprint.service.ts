@@ -13,6 +13,43 @@ export interface ForgeOptions {
     [key: string]: any;
 }
 
+export type BlueprintMaturity = "stable" | "beta" | "experimental";
+
+/**
+ * How far each catalog blueprint can be relied on, from evidence in this repository:
+ *
+ * - stable: used by a cycle, so the blueprint contract test gates it, and has its
+ *   own tests (rescue-dispatch's suite, tests/sdlc-workbench for sdlc-workbench and
+ *   wayfare).
+ * - beta: used by a cycle, so the contract test gates it, without dedicated tests.
+ * - experimental: in no cycle — starter templates, demos and stubs.
+ *
+ * Anything not listed is experimental. This replaces a formalVerification flag that
+ * claimed "MaxSMT & WCAG AA PASSED" for every entry without anything having run.
+ */
+export const BLUEPRINT_MATURITY: Record<string, BlueprintMaturity> = {
+    "rescue-dispatch": "stable",
+    "sdlc-workbench": "stable",
+    "wayfare": "stable",
+
+    "agent-training-workbench": "beta",
+    "ai-workforce-dashboard": "beta",
+    "budgetmaster-advisor": "beta",
+    "budgetmaster-workbench": "beta",
+    "codegen-pipeline-workbench": "beta",
+    "it-ticketing-portal": "beta",
+    "location-search": "beta",
+    "ops-workbench": "beta",
+    "pm-workbench": "beta",
+    "product-launch-workbench": "beta",
+    "qa-workbench": "beta",
+    "research-workbench": "beta",
+    "sales-opportunity-workbench": "beta",
+    "scrum-master-workbench": "beta",
+    "stakeholder-workbench": "beta",
+    "support-agent-dashboard": "beta",
+};
+
 export class ForgeBlueprintService {
     /**
      * Smart Blueprint Selection
@@ -183,7 +220,6 @@ Return ONLY the slug, nothing else.`;
             capabilities: string[];
             icon: string;
             governanceRisk: "low" | "medium" | "high";
-            formalVerification: { maxSmtVerified: boolean; wcagAA: boolean; status: "PASSED" | "EXEMPT" };
             keywords: string[];
         }> = {
             // 1. Operations & Field
@@ -195,7 +231,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Spatial", "API", "Charts", "Auth"],
                 icon: "ShieldAlert",
                 governanceRisk: "high",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["dispatch", "rescue", "spatial-h3", "emergency", "maps"]
             },
             "ops-workbench": {
@@ -206,19 +241,7 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Forms", "API", "Charts", "AI"],
                 icon: "Zap",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["operations", "incident", "triage", "sla", "runbook"]
-            },
-            "supply-chain-dispatch": {
-                name: "Supply Chain & Fleet Dispatch",
-                category: "Operations & Field",
-                persona: "Logistics Dispatcher",
-                description: "Supply chain logistics coordination, fleet route optimization, and spatial geofence transition alerts.",
-                capabilities: ["Spatial", "API", "Charts"],
-                icon: "Globe",
-                governanceRisk: "high",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
-                keywords: ["supply-chain", "logistics", "fleet", "dispatch", "spatial-h3"]
             },
             "location-search": {
                 name: "Location & Proximity Search",
@@ -228,7 +251,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Spatial", "Search", "API"],
                 icon: "Search",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["geo", "proximity", "places", "spatial"]
             },
             "industrial-dashboard": {
@@ -239,7 +261,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Charts", "Database", "API"],
                 icon: "BarChart2",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["iot", "scada", "telemetry", "industrial", "hardware"]
             },
 
@@ -252,7 +273,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Code", "API", "AI", "Auth"],
                 icon: "Code",
                 governanceRisk: "high",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["sdlc", "cicd", "repository", "git", "code-review"]
             },
             "codegen-pipeline-workbench": {
@@ -263,7 +283,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Code", "AI", "Forms"],
                 icon: "FileCode",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["codegen", "ast", "scaffold", "compiler"]
             },
             "devops-workbench": {
@@ -274,7 +293,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Database", "API", "Shield"],
                 icon: "Hammer",
                 governanceRisk: "high",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["devops", "infrastructure", "kubernetes", "docker"]
             },
             "qa-workbench": {
@@ -285,7 +303,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Code", "Charts", "Forms"],
                 icon: "CheckCircle2",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["qa", "testing", "playwright", "vitest", "flaky"]
             },
             "agent-training-workbench": {
@@ -296,7 +313,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["AI", "Database", "Charts"],
                 icon: "Bot",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["training", "eval", "fine-tune", "benchmarks"]
             },
 
@@ -309,7 +325,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Shield", "Database", "Forms", "Auth"],
                 icon: "Shield",
                 governanceRisk: "high",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["compliance", "soc2", "audit", "governance", "w3c"]
             },
             "mission-supervisor": {
@@ -320,7 +335,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["AI", "Charts", "API", "Auth"],
                 icon: "Bot",
                 governanceRisk: "high",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["mission", "supervisor", "orchestration", "blackboard"]
             },
             "it-ticketing-portal": {
@@ -331,7 +345,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Forms", "Auth", "Database"],
                 icon: "FileCode",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["helpdesk", "servicedesk", "tickets", "access-control"]
             },
 
@@ -344,7 +357,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Charts", "Database", "API"],
                 icon: "BarChart3",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["analytics", "dashboard", "kpi", "metrics"]
             },
             "ai-workforce-dashboard": {
@@ -355,7 +367,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["AI", "Charts", "Database"],
                 icon: "BarChart2",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["workforce", "agents", "fleet", "economy"]
             },
             "budgetmaster-workbench": {
@@ -366,7 +377,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Charts", "Forms", "Database"],
                 icon: "BarChart3",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["budget", "finance", "burn-rate", "accounting"]
             },
             "budgetmaster-advisor": {
@@ -377,7 +387,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["AI", "Charts", "API"],
                 icon: "Bot",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["advisor", "portfolio", "forecast", "finance"]
             },
             "sales-opportunity-workbench": {
@@ -388,7 +397,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Forms", "Charts", "Database"],
                 icon: "BarChart3",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["sales", "pipeline", "deals", "crm"]
             },
             "stakeholder-workbench": {
@@ -399,7 +407,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Charts", "Forms", "Auth"],
                 icon: "Layout",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["stakeholder", "briefing", "kpi", "executive"]
             },
             "pm-workbench": {
@@ -410,7 +417,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Forms", "Charts", "AI"],
                 icon: "Layout",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["product-manager", "roadmap", "backlog", "epics"]
             },
             "product-launch-workbench": {
@@ -421,7 +427,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Forms", "Charts", "API"],
                 icon: "Zap",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["launch", "gtm", "checklist", "release"]
             },
             "scrum-master-workbench": {
@@ -432,7 +437,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Charts", "Forms", "AI"],
                 icon: "Layout",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["scrum", "sprint", "velocity", "agile"]
             },
             "support-agent-dashboard": {
@@ -443,7 +447,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Forms", "AI", "Database"],
                 icon: "Bot",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["support", "tickets", "csat", "zendesk"]
             },
             "research-workbench": {
@@ -454,7 +457,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Search", "AI", "Database"],
                 icon: "Search",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["research", "literature", "arxiv", "papers"]
             },
 
@@ -467,7 +469,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["AI", "API", "Auth"],
                 icon: "Bot",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["chat", "assistant", "support", "rag"]
             },
             "chat-assistant-v2": {
@@ -478,7 +479,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["AI", "API", "Auth"],
                 icon: "Bot",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["crew", "multi-agent", "governed-chat", "socratic"]
             },
             "crud-app": {
@@ -489,7 +489,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Database", "Forms", "API", "Auth"],
                 icon: "Database",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["crud", "crm", "database", "tables"]
             },
             "api": {
@@ -500,7 +499,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["API", "Auth"],
                 icon: "Globe",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "EXEMPT" },
                 keywords: ["api", "backend", "microservice", "rest"]
             },
             "spa": {
@@ -511,7 +509,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Layout", "Auth"],
                 icon: "Layout",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["spa", "web app", "portal", "react"]
             },
             "pwa": {
@@ -522,7 +519,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Smartphone", "Layout"],
                 icon: "Smartphone",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["pwa", "mobile", "offline", "installable"]
             },
             "react-native": {
@@ -533,7 +529,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Smartphone", "API"],
                 icon: "Smartphone",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["mobile", "react-native", "ios-android"]
             },
             "wayfare": {
@@ -544,7 +539,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Forms", "API", "Charts"],
                 icon: "Globe",
                 governanceRisk: "low",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "PASSED" },
                 keywords: ["travel", "itinerary", "booking", "logistics"]
             },
             "go-backend": {
@@ -555,7 +549,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Code", "API"],
                 icon: "Code",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "EXEMPT" },
                 keywords: ["go", "gin", "golang", "microservice"]
             },
             "python-backend": {
@@ -566,7 +559,6 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Code", "API", "AI"],
                 icon: "Code",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "EXEMPT" },
                 keywords: ["python", "fastapi", "django", "analytics"]
             },
             "java-backend": {
@@ -577,14 +569,14 @@ Return ONLY the slug, nothing else.`;
                 capabilities: ["Code", "Database", "API"],
                 icon: "Code",
                 governanceRisk: "medium",
-                formalVerification: { maxSmtVerified: true, wcagAA: true, status: "EXEMPT" },
                 keywords: ["java", "spring", "maven", "enterprise"]
             },
         };
 
         return Object.entries(BLUEPRINT_CATALOG).map(([slug, meta]) => ({
             slug,
-            ...meta
+            ...meta,
+            maturity: BLUEPRINT_MATURITY[slug] ?? "experimental",
         }));
     }
 }

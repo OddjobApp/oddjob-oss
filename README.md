@@ -90,6 +90,8 @@ For a throwaway demo database with sample organizations and logins, see
 - [Platform best practices](docs/platform/) — architecture, governance,
   UI standards, component guides and agent runbooks. The same articles are served
   in-app from the Best Practices page.
+- [Blueprint app maturity](docs/guides/blueprint-maturity.md) — which App Forge
+  blueprints are stable, beta or experimental, and why.
 - [System architecture](docs/SYSTEM_ARCHITECTURE.md) and
   [deployment](README_DEPLOYMENT.md).
 - [Contributing](CONTRIBUTING.md) and [working in this repository](AGENTS.md) —

@@ -20,12 +20,32 @@ import {
   CheckCircle2,
   Smartphone,
   ShieldAlert,
-  ShieldCheck,
   Sparkles,
   Layers,
   X
 } from 'lucide-react';
 import { BlueprintDetailModal } from './BlueprintDetailModal';
+
+export type BlueprintMaturity = "stable" | "beta" | "experimental";
+
+/** What each maturity label means; the rule lives beside BLUEPRINT_MATURITY on the server. */
+export const MATURITY_INFO: Record<BlueprintMaturity, { label: string; className: string; description: string }> = {
+  stable: {
+    label: "Stable",
+    className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    description: "Used by a cycle, checked by the blueprint contract test, and covered by its own tests.",
+  },
+  beta: {
+    label: "Beta",
+    className: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    description: "Used by a cycle and checked by the blueprint contract test, without dedicated tests yet.",
+  },
+  experimental: {
+    label: "Experimental",
+    className: "bg-muted text-muted-foreground",
+    description: "Not used by any cycle: a starter template, demo or early build. Expect gaps.",
+  },
+};
 
 export interface Blueprint {
   slug: string;
@@ -36,7 +56,7 @@ export interface Blueprint {
   category: string;
   persona?: string;
   governanceRisk?: "low" | "medium" | "high";
-  formalVerification?: { maxSmtVerified: boolean; wcagAA: boolean; status: "PASSED" | "EXEMPT" };
+  maturity?: BlueprintMaturity;
   keywords?: string[];
 }
 
@@ -247,12 +267,20 @@ export function BlueprintGallery({ blueprints, selectedSlug, onSelect, onCloneSu
               </CardHeader>
 
               <CardContent className="pt-0 space-y-3">
-                {/* Formal Verification Badge & Risk Tag */}
+                {/* Maturity & Risk Tag */}
                 <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 text-[10px]">
-                  <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>MaxSMT & WCAG AA</span>
-                  </div>
+                  {(() => {
+                    const info = MATURITY_INFO[blueprint.maturity ?? "experimental"];
+                    return (
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase ${info.className}`}
+                        title={info.description}
+                        data-testid={`blueprint-maturity-${blueprint.slug}`}
+                      >
+                        {info.label}
+                      </span>
+                    );
+                  })()}
                   {blueprint.governanceRisk && (
                     <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase ${
                       blueprint.governanceRisk === 'high'

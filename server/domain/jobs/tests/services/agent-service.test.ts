@@ -40,6 +40,14 @@ vi.mock("@server/database_service.js", () => {
     };
 });
 
+// The parsed-upload cache is Redis. Unmocked, processUploadedFiles failed with
+// "Connection is closed" wherever Redis was not running, CI's verify job included.
+vi.mock("@domain/auth/core/embed-profile-cache.js", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@domain/auth/core/embed-profile-cache.js")>()),
+    setFileCache: vi.fn().mockResolvedValue(undefined),
+    getFileCache: vi.fn().mockResolvedValue(null),
+}));
+
 // Mock dependencies
 vi.mock("@domain/agents/agent-runner.js", () => ({
     runAgentLoop: vi.fn().mockResolvedValue({

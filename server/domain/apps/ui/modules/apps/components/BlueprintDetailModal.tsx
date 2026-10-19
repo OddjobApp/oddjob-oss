@@ -26,7 +26,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { useToast } from '@domain-ui/core/ui/hooks/use-toast';
-import { type Blueprint } from './BlueprintGallery';
+import { type Blueprint, MATURITY_INFO } from './BlueprintGallery';
 
 interface BlueprintDetailModalProps {
   blueprint: Blueprint | null;
@@ -126,21 +126,24 @@ export function BlueprintDetailModal({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Formal Verification Badge Banner */}
-        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3.5 flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
-          <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-foreground">Formal Layout & Contrast Invariant Certificate</p>
-              <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[10px] py-0">
-                MaxSMT & WCAG 2.2 AA
-              </Badge>
+        {/* Maturity Banner */}
+        {(() => {
+          const info = MATURITY_INFO[blueprint.maturity ?? "experimental"];
+          return (
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-3.5 flex items-start gap-3" data-testid="blueprint-maturity-banner">
+              <ShieldCheck className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-foreground">Maturity</p>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${info.className}`}>
+                    {info.label}
+                  </span>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">{info.description}</p>
+              </div>
             </div>
-            <p className="text-muted-foreground leading-relaxed">
-              Formally verified across continuous viewports $W \in [320px, 2560px]$. Responsive CSS clamp boundaries and relative luminance tokens are mathematically sound with zero layout overlaps.
-            </p>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Capabilities Grid */}
         <div className="space-y-2">
