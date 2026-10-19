@@ -22,8 +22,10 @@ describe("App Forge Blueprint Catalog & Metadata", () => {
             expect(bp.capabilities.length).toBeGreaterThan(0);
             expect(bp.icon).toBeDefined();
             expect(["low", "medium", "high"]).toContain(bp.governanceRisk);
-            expect(bp.formalVerification).toBeDefined();
-            expect(["PASSED", "EXEMPT"]).toContain(bp.formalVerification.status);
+            // A maturity label replaced a formalVerification flag that claimed
+            // "PASSED" for every entry without anything having run.
+            expect(["stable", "beta", "experimental"]).toContain(bp.maturity);
+            expect(bp).not.toHaveProperty("formalVerification");
         });
     });
 
@@ -36,10 +38,10 @@ describe("App Forge Blueprint Catalog & Metadata", () => {
         expect(rescue?.persona).toBe("Incident Commander");
         expect(rescue?.capabilities).toContain("Spatial");
         expect(rescue?.governanceRisk).toBe("high");
-        expect(rescue?.formalVerification.maxSmtVerified).toBe(true);
+        expect(rescue?.maturity).toBe("stable");
     });
 
-    it("verifies compliance-sentinel has formal verification and security tags", async () => {
+    it("verifies compliance-sentinel has security tags and is labelled experimental", async () => {
         const blueprints = await forgeBlueprintService.listBlueprints();
         const compliance = blueprints.find(bp => bp.slug === "compliance-sentinel");
 
@@ -47,7 +49,8 @@ describe("App Forge Blueprint Catalog & Metadata", () => {
         expect(compliance?.category).toBe("Governance & Compliance");
         expect(compliance?.persona).toBe("Compliance Auditor");
         expect(compliance?.capabilities).toContain("Shield");
-        expect(compliance?.formalVerification.status).toBe("PASSED");
+        // No cycle uses it yet, so it is experimental.
+        expect(compliance?.maturity).toBe("experimental");
     });
 
     it("verifies 5 distinct operational categories cover the catalog", async () => {

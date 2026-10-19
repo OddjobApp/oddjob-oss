@@ -25,8 +25,9 @@ describe("SPA Routing Consolidation", () => {
             expect(getEntryForUrl("/pipeline-executions")).toBe("operations");
         });
 
-        it("PIPELINES SPA_ENTRIES is empty (deprecated)", () => {
-            expect(SPA_ENTRIES.PIPELINES).toEqual([]);
+        it("PIPELINES has no SPA entry any more", () => {
+            // The deprecated entry was deleted, not emptied, by the single route manifest.
+            expect(SPA_ENTRIES).not.toHaveProperty("PIPELINES");
         });
 
         it("OPERATIONS SPA_ENTRIES includes pipeline prefixes", () => {
@@ -57,8 +58,9 @@ describe("SPA Routing Consolidation", () => {
             expect(getEntryForUrl("/events")).toBe("intelligence");
         });
 
-        it("OBSERVABILITY SPA_ENTRIES is empty (deprecated)", () => {
-            expect(SPA_ENTRIES.OBSERVABILITY).toEqual([]);
+        it("OBSERVABILITY has no SPA entry any more", () => {
+            // The deprecated entry was deleted, not emptied, by the single route manifest.
+            expect(SPA_ENTRIES).not.toHaveProperty("OBSERVABILITY");
         });
 
         it("INTELLIGENCE SPA_ENTRIES includes observability prefixes", () => {

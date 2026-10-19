@@ -22,6 +22,8 @@ const { orgs, users, userOrgs } = await import("@shared/schema/auth.js");
 const { mediaKeyframes } = await import("@shared/schema/media-studio.js");
 const { mediaStudio } = await import("../../core/media-studio.service.js");
 const { ImageGenerationError } = await import("../../core/gemini-image.js");
+// Dynamic like the rest: it reaches org-model.service, so it must load after configureTestEnvironment().
+const { ORG_GEMINI_KEY_MISSING } = await import("@domain/ai/core/org-gemini-key.js");
 
 let reachable = false;
 try {
@@ -135,7 +137,7 @@ describe.skipIf(!reachable)("Media Studio storyboard", () => {
         await expect(mediaStudio.requestKeyframe(ctx(ownerId), plotPointId, {}, { generator, wait: true }))
             .rejects.toThrow("This keyframe would take Tight budget past its budget: $0.04 of $0.05 is spent, and a keyframe costs about $0.04.");
         await expect(mediaStudio.requestKeyframe(ctx(ownerId), plotPointId, {}, { generator: fakeGenerator({ configured: false }), wait: true }))
-            .rejects.toThrow("Keyframes cannot be rendered: Gemini is not configured for this organization. Connect your organization's Gemini API key in Organization Settings.");
+            .rejects.toThrow(`Keyframes cannot be rendered: Gemini is not configured for this organization. ${ORG_GEMINI_KEY_MISSING}.`);
         expect(generator.calls).toHaveLength(1);
     });
 

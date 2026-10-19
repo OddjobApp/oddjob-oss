@@ -1,6 +1,6 @@
 services:
   qdrant:
-    image: qdrant/qdrant:v1.8.1
+    image: qdrant/qdrant:v1.18.3
     container_name: oddjob-qdrant
     restart: unless-stopped
     ports:

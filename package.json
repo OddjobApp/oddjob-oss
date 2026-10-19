@@ -150,7 +150,7 @@
     "@opentelemetry/resources": "^2.2.0",
     "@opentelemetry/sdk-node": "^0.208.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
-    "@qdrant/js-client-rest": "^1.8.1",
+    "@qdrant/js-client-rest": "~1.18.0",
     "@slack/socket-mode": "^2.0.6",
     "@slack/web-api": "^7.14.1",
     "@trycua/computer": "^0.1.6",

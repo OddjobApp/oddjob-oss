@@ -155,23 +155,39 @@ file: org scoping, BYOK keys, routing and migrations.
 ## Testing
 
 ```bash
-npm run verify            # the full gate: lints, tsc, unit tests, smoke, build
-npm test                  # unit tests only
-npx playwright test       # browser tests, against a running dev server
+npm run playwright:install  # once: some unit tests launch a real Chromium
+npm run verify              # the full gate: lints, tsc, unit tests, smoke, build
+npm test                    # unit tests only
+npx playwright test         # browser tests, against a running dev server
 ```
 
-### Tests against a database
+`npm run verify` needs no database, Redis or API key. A test that needs a live
+service is an integration test and is named `*.integration.test.ts` (or sits under an
+`integration/` directory), so the unit gate skips it. A unit test that only passes
+with Redis or Postgres running is a bug; `lint:dead-mocks` catches the commonest
+cause, a `vi.mock` whose path no longer exists.
 
-Integration tests need their own database. They never use `DATABASE_URL` from
-`.env`: `tests/configure-test-environment.ts` overwrites it and refuses any URL whose
-database name lacks a distinct `test` segment.
+### Integration tests
+
+Integration tests need Postgres, Redis and Qdrant, as in CI's `integration` job.
+They never use `DATABASE_URL` from `.env`: `tests/configure-test-environment.ts`
+overwrites it and refuses any URL whose database name lacks a distinct `test`
+segment.
 
 ```bash
 npm run test:db:setup     # create, migrate and seed the test database (idempotent)
-npm run test:integration
+
+# Throwaway Redis and Qdrant: some suites delete Redis keys by pattern, so never
+# point them at the Redis your dev server uses.
+docker run -d --rm --name oddjob-test-redis -p 6391:6379 redis:7-alpine
+docker run -d --rm --name oddjob-test-qdrant -p 6343:6333 qdrant/qdrant:v1.18.3
+
+REDIS_URL=redis://127.0.0.1:6391 QDRANT_URL=http://127.0.0.1:6343 npm run test:integration
+
+docker stop oddjob-test-redis oddjob-test-qdrant
 ```
 
-Set `TEST_DATABASE_URL` in `.env.test` (gitignored) to point at it.
+Set `TEST_DATABASE_URL` in `.env.test` (gitignored) to point at the test database.
 
 **Never hardcode a connection string in a test.** Any test that opens its own pool or
 client must obtain the URL from `requireTestDatabaseUrl()`, which applies the same

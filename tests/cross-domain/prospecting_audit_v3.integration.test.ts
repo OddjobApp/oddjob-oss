@@ -49,7 +49,9 @@ describe("Prospecting Pod API Deep Audit", () => {
 
         // 2. Ensure Test Database Connection & Context
         const [org] = await db.insert(orgs).values({
-            name: "Prospect Audit Org",
+            // Unique per run: a fixed name collided with orgs_name_unique on any test
+            // database that had seen a previous run.
+            name: `Prospect Audit Org ${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
             slug: `prospect_${Date.now()}`
         }).returning();
         testOrgId = org.id;

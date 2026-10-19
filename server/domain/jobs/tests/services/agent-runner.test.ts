@@ -5,6 +5,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock dependencies only
+// The planner asks the sentinel for each tool's health, which queries Postgres. With
+// the tool registry mocked (its old path mocked nothing), that query ran against
+// whatever database was reachable and failed where there was none.
+vi.mock("@domain/mission/core/sentinel-service.js", () => ({
+    SentinelService: {
+        getSkillHealth: vi.fn().mockResolvedValue({ totalRuns: 0, reliabilityIndex: 100, avgLatencyMs: 0 }),
+        getBatchSkillHealth: vi.fn().mockResolvedValue({}),
+        logInsight: vi.fn().mockResolvedValue({}),
+        logSuccess: vi.fn().mockResolvedValue({}),
+        logFailure: vi.fn().mockResolvedValue({}),
+    },
+}));
+
 vi.mock("@domain/tools/v1/tool-registry.service.js", () => ({
     AGENT_TOOLS: { "t1": { name: "t1", execute: vi.fn() } },
     normalizeToolName: (name: string) => name,
