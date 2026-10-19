@@ -24,14 +24,14 @@ The initial analysis understated several implemented features. This revision inc
 
 | Component | Location | Capability |
 |-----------|----------|------------|
-| **Agent Chat** | [server/routes/agent-chat.ts](server/routes/agent-chat.ts), [server/services/agent-service.ts](server/services/agent-service.ts) | POST `/api/agent/chat`; context-aware; Governor/Molt; **Fast Path** for "how many jobs" / "job count" (direct SQL, no LLM) |
+| **Agent Chat** | [server/routes/agent-chat.ts](../../server/routes/agent-chat.ts), server/services/agent-service.ts | POST `/api/agent/chat`; context-aware; Governor/Molt; **Fast Path** for "how many jobs" / "job count" (direct SQL, no LLM) |
 | **Chat Persistence** | agent-service.ts `saveMessage()` | **Persists to `agentChatMessages`** (jobId, userId, sessionId, role, content, missionId); deduplication (30s window) |
-| **RAG Examples** | [server/services/ai/prompt-service.ts](server/services/ai/prompt-service.ts) (lines 717-751) | **Positive examples**: `agentChatMessages` with rating=1, effectivenessScore; **Negative examples**: rating=-1; both injected into system prompt |
+| **RAG Examples** | [server/services/ai/prompt-service.ts](../../server/domain/ai/core/prompt-service.ts) (lines 717-751) | **Positive examples**: `agentChatMessages` with rating=1, effectivenessScore; **Negative examples**: rating=-1; both injected into system prompt |
 | **Critic Feedback Injection** | agent-service.ts (lines 354-362) | `criticService.getRelevantCritiques(message)` injects past critiques into context |
 | **Mission Blackboard Context** | agent-service.ts (lines 368-377) | Mission blackboard injected when missionId present |
-| **Sidecar Memory Sync** | [server/services/sidecar-sync-service.ts](server/services/sidecar-sync-service.ts) | After each agent response: `syncMemory()` to Python `/memory/memories`; `fetchConsolidatedContext()` for long-term context |
+| **Sidecar Memory Sync** | [server/services/sidecar-sync-service.ts](../../server/domain/knowledge/core/sidecar-sync-service.ts) | After each agent response: `syncMemory()` to Python `/memory/memories`; `fetchConsolidatedContext()` for long-term context |
 | **Natural Language Query** | graph-service.ts, knowledge-graph routes | `parseNaturalLanguageQuery()` for knowledge graph; POST `/search/natural` |
-| **System Knowledge** | [server/knowledge/](server/knowledge/) | 35+ markdown files: features (jobs, pipelines, templates, workgroups), screens, mcp-tools, cognitive-states; loaded by prompt-service for RAG |
+| **System Knowledge** | [server/knowledge/](../../server/knowledge) | 35+ markdown files: features (jobs, pipelines, templates, workgroups), screens, mcp-tools, cognitive-states; loaded by prompt-service for RAG |
 
 ### Gaps (Corrected)
 
@@ -61,14 +61,14 @@ Vertical accelerators, marketplace ratings, credential bundling.
 
 | Component | Location | Capability |
 |-----------|----------|-------------|
-| **Evaluation Service** | [server/services/evaluation-service.ts](server/services/evaluation-service.ts) | `evaluateWithLLM()` (Yes/No criteria); `evaluateResponse()` for rule-based + LLM |
-| **Critic Service** | [server/services/agent/critic-service.ts](server/services/agent/critic-service.ts) | `assessInteraction()` - scores 0-10, issues, correction; stores in DB; **injected into agent context** |
+| **Evaluation Service** | server/services/evaluation-service.ts | `evaluateWithLLM()` (Yes/No criteria); `evaluateResponse()` for rule-based + LLM |
+| **Critic Service** | [server/services/agent/critic-service.ts](../../server/domain/agents/core/critic-service.ts) | `assessInteraction()` - scores 0-10, issues, correction; stores in DB; **injected into agent context** |
 | **Fire-and-Forget Evaluation** | agent-service.ts (lines 590-596) | After saveMessage: `evaluationService.evaluateResponse(agentMsgId, response, ...)` |
 | **Effectiveness Tracking** | agent-service.ts `submitFeedback()` | Boosts `effectivenessScore` on positive feedback; used for RAG example ranking |
-| **Prompt Service** | [server/services/ai/prompt-service.ts](server/services/ai/prompt-service.ts) | Route-based knowledge loading (`ROUTE_TO_KNOWLEDGE`), tool hints, screen hints; **loads from server/knowledge/** |
-| **Memory Documentation Test** | [tests/integration/memory-documentation.test.ts](tests/integration/memory-documentation.test.ts) | Tests **expected API contract** for: generate, get, list, update, delete, search, freshness, maintenance (mocked) |
-| **Python Documentation API** | [backend/api/routes/documentation.py](backend/api/routes/documentation.py) | POST `/documentation/generate/{feature_id}`, maintenance tasks, search; uses `memory_documentation_service` |
-| **Python Memory Documentation** | [backend/core/memory_documentation.py](backend/core/memory_documentation.py) | `MemoryDocumentationService` - templates, feature registry, generation; integrates with `VectorMemoryStore` |
+| **Prompt Service** | [server/services/ai/prompt-service.ts](../../server/domain/ai/core/prompt-service.ts) | Route-based knowledge loading (`ROUTE_TO_KNOWLEDGE`), tool hints, screen hints; **loads from server/knowledge/** |
+| **Memory Documentation Test** | [tests/integration/memory-documentation.test.ts](../../server/domain/knowledge/tests/integration/memory-documentation.test.ts) | Tests **expected API contract** for: generate, get, list, update, delete, search, freshness, maintenance (mocked) |
+| **Python Documentation API** | [backend/api/routes/documentation.py](../../backend/api/routes/documentation.py) | POST `/documentation/generate/{feature_id}`, maintenance tasks, search; uses `memory_documentation_service` |
+| **Python Memory Documentation** | [backend/core/memory_documentation.py](../../backend/core/memory_documentation.py) | `MemoryDocumentationService` - templates, feature registry, generation; integrates with `VectorMemoryStore` |
 
 ### Gaps (Corrected)
 
@@ -135,18 +135,18 @@ Embeddable widget, WhatsApp/SMS, voice.
 
 | Component | Location | Capability |
 |-----------|----------|------------|
-| **agentChatMessages** | [shared/schema/agent/chat.ts](shared/schema/agent/chat.ts) | Persisted chat; jobId, sessionId, missionId, rating, effectivenessScore, embedding |
+| **agentChatMessages** | [shared/schema/agent/chat.ts](../../shared/schema/agent/chat.ts) | Persisted chat; jobId, sessionId, missionId, rating, effectivenessScore, embedding |
 | **saveMessage** | agent-service.ts | Persists user + agent messages; deduplication |
 | **Mission Blackboard** | mission-service.ts | Shared KV; `getSharedMemories()`, `addSharedMemory()`; **missionService** (not workgroupService) |
-| **add_shared_memory tool** | [server/services/tools/missions.ts](server/services/tools/missions.ts) | `missionService.addSharedMemory()` - agents can log observations |
+| **add_shared_memory tool** | server/services/tools/missions.ts | `missionService.addSharedMemory()` - agents can log observations |
 | **launch_mission tool** | missions.ts | Triggers mission execution |
-| **Python Memory API** | [backend/api/routes/memory.py](backend/api/routes/memory.py) | POST `/memories`, `/memories/conversation`, `/memories/workflow`; GET `/memories/{id}`; POST `/memories/search`, `/memories/context`, `/memories/conversation-context`; consolidate, export |
-| **Python Memory Service** | [backend/services/memory_service.py](backend/services/memory_service.py) | `store_conversation_memory`, `store_workflow_memory`, `search_memories`, `retrieve_context`, `get_conversation_context`, `consolidate_memories`, `export_memories` |
-| **Python Memory Store** | [backend/core/memory_store.py](backend/core/memory_store.py) | `VectorMemoryStore`, `MemoryEntry` (embedding, importance, tags, session_id, workflow_id) |
-| **Python Memory Retrieval** | [backend/core/memory_retrieval.py](backend/core/memory_retrieval.py) | `memory_chunker`, `contextual_retriever` |
+| **Python Memory API** | [backend/api/routes/memory.py](../../backend/api/routes/memory.py) | POST `/memories`, `/memories/conversation`, `/memories/workflow`; GET `/memories/{id}`; POST `/memories/search`, `/memories/context`, `/memories/conversation-context`; consolidate, export |
+| **Python Memory Service** | [backend/services/memory_service.py](../../backend/services/memory_service.py) | `store_conversation_memory`, `store_workflow_memory`, `search_memories`, `retrieve_context`, `get_conversation_context`, `consolidate_memories`, `export_memories` |
+| **Python Memory Store** | [backend/core/memory_store.py](../../backend/core/memory_store.py) | `VectorMemoryStore`, `MemoryEntry` (embedding, importance, tags, session_id, workflow_id) |
+| **Python Memory Retrieval** | [backend/core/memory_retrieval.py](../../backend/core/memory_retrieval.py) | `memory_chunker`, `contextual_retriever` |
 | **Sidecar Sync** | sidecar-sync-service.ts | Syncs agent responses to Python memory; fetches consolidated context |
-| **Agent Memory View** | [client/src/pages/agent/AgentMemoryView.tsx](client/src/pages/agent/AgentMemoryView.tsx) | UI for agent runs, steps, suggestions (execution traces) |
-| **use-agent-memory** | [client/src/hooks/use-agent-memory.ts](client/src/hooks/use-agent-memory.ts) | Hook for runs, steps, suggestions |
+| **Agent Memory View** | [client/src/pages/agent/AgentMemoryView.tsx](../../server/domain/ai/ui/modules/agent-ai/pages/AgentMemoryView.tsx) | UI for agent runs, steps, suggestions (execution traces) |
+| **use-agent-memory** | [client/src/hooks/use-agent-memory.ts](../../server/domain/agents/ui/modules/agents/hooks/use-agent-memory.ts) | Hook for runs, steps, suggestions |
 | **In-Memory CHAT_HISTORY** | agent-service.ts | 1hr TTL; used for recent context; **DB is primary** for published agents and persistence |
 
 ### Gaps (Corrected)
@@ -193,7 +193,7 @@ Distributed tracing, agent trace aggregation.
 | **Decision Router** | decision-router.ts | riskLevel (low/medium/high); creates decision requests |
 | **Molt Protocol** | messaging-webhooks | OBSERVATION, PROPOSAL, DECISION |
 | **agentRunSteps.confidence** | shared/schema/agent/chat.ts | Column exists; populated in agent-service when saving steps |
-| **Tool Analytics** | [server/services/tool-analytics.ts](server/services/tool-analytics.ts) | `inferTaskType()`, `getSuccessfulExamples()`, `getRecommendedTools()` - **implemented** (spec-coverage tests) |
+| **Tool Analytics** | [server/services/tool-analytics.ts](../../shared/schema/agent/tool-analytics.ts) | `inferTaskType()`, `getSuccessfulExamples()`, `getRecommendedTools()` - **implemented** (spec-coverage tests) |
 | **Tool Recommendations** | AI_AGENT_ENHANCEMENTS_SPEC | Tool recommendations from past usage; toolAnalyticsService provides this |
 | **Streaming Supervisor Plans** | supervisor-service.ts | `planStream` exists (spec-coverage); async generator |
 | **Multi-Model Fallback** | ai-client.ts | `FallbackAIClient`; used when copilotWithFallback configured |
@@ -211,7 +211,7 @@ Distributed tracing, agent trace aggregation.
 
 ## 12. Test and Spec Coverage Notes
 
-### Spec-Coverage Test ([tests/integration/spec-coverage.test.ts](tests/integration/spec-coverage.test.ts))
+### Spec-Coverage Test ([tests/integration/spec-coverage.test.ts](../../tests/cross-domain/spec-coverage.test.ts))
 
 - **Job Executors**: All JOB_TYPES_SPEC executors registered
 - **HIL 2.0**: registerApprovalsRoutes, externalService.submitForm
@@ -223,12 +223,12 @@ Distributed tracing, agent trace aggregation.
 
 **Action:** Update spec-coverage test to use `missionService` instead of `workgroupService`. **DONE** (Feb 2026).
 
-### Mission Wake-Up Test ([tests/integration/mission-wake-up.test.ts](tests/integration/mission-wake-up.test.ts))
+### Mission Wake-Up Test ([tests/integration/mission-wake-up.test.ts](../../server/domain/mission/tests/integration/mission-wake-up.test.ts))
 
 - Imports `workgroups`, `missions`, `workgroupBlackboardHistory` from `@shared/schema`; **workgroups/workgroupBlackboardHistory no longer exist** (refactored to missions)
 - **Action:** Update test for missions schema: use `missions`, `missionRuns`, `missionBlackboardHistory`. **DONE** (Feb 2026) – test now uses missionRunService and missions schema.
 
-### Memory Documentation Test ([tests/integration/memory-documentation.test.ts](tests/integration/memory-documentation.test.ts))
+### Memory Documentation Test ([tests/integration/memory-documentation.test.ts](../../server/domain/knowledge/tests/integration/memory-documentation.test.ts))
 
 - Tests **mocked** API contract for Python documentation/memory features
 - Covers: generate, get, list, update, delete, search, freshness report, maintenance (configure, status, history)
@@ -253,6 +253,6 @@ Distributed tracing, agent trace aggregation.
 
 1. **Fix spec-coverage test**: Replace `workgroupService` with `missionService` for getSharedMemories/addSharedMemory.
 2. **Fix mission-wake-up test**: Update for missions schema (remove workgroups dependency if tables changed).
-3. **Document Node-Python memory flow**: Clarify when Python memory context is used vs. agentChatMessages. **DONE** – see [docs/memory/NODE_PYTHON_MEMORY_FLOW.md](../memory/NODE_PYTHON_MEMORY_FLOW.md).
+3. **Document Node-Python memory flow**: Clarify when Python memory context is used vs. agentChatMessages. **DONE** – see docs/memory/NODE_PYTHON_MEMORY_FLOW.md.
 4. **Intent-to-pipeline**: Add NL intent layer to map chat utterances to pipeline triggers (leverage existing trigger_pipeline tool).
 5. **Embeddable widget**: Enable customer-facing deployment without full app.

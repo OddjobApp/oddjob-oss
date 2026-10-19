@@ -43,7 +43,7 @@ Receives `message.received` events from AgentMail. Performs HMAC signature verif
 | Variable | Description |
 | :--- | :--- |
 | `AGENTMAIL_API_KEY` | Your AgentMail API token. |
-| `AGENTMAIL_INBOX` | The default inbox for Oddjob (e.g., `oddjobapp@agentmail.to`). |
+| `AGENTMAIL_INBOX` | The default inbox for Oddjob (e.g., `your-inbox@agentmail.to`). Required: without it AgentMail stays off. |
 
 ## Usage Examples
 

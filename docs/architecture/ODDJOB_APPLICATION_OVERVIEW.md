@@ -1,6 +1,6 @@
 # Oddjob Application: Comprehensive Functionality and Use Cases
 
-> **Config Reference:** Job type schemas and configuration options are defined in `shared/schema/jobs/config-*.ts`. See [docs/JobTypes.md](../JobTypes.md) and [JOB_TYPES_SPEC](../specs/JOB_TYPES_SPEC.md) for detailed configuration.
+> **Config Reference:** Job type schemas and configuration options are defined in `shared/schema/jobs/config-*.ts`. See docs/JobTypes.md and JOB_TYPES_SPEC for detailed configuration.
 
 ---
 

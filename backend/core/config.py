@@ -65,7 +65,7 @@ class Settings:
 
     # Notification Channels
     AGENTMAIL_API_KEY: Optional[str] = None
-    AGENTMAIL_INBOX: str = "oddjobapp@agentmail.to"
+    AGENTMAIL_INBOX: Optional[str] = None
     AGENTMAIL_WEBHOOK_SECRET: Optional[str] = None
     SLACK_BOT_TOKEN: Optional[str] = None
     SLACK_APP_TOKEN: Optional[str] = None
@@ -124,7 +124,7 @@ class Settings:
         
         # Notifications
         self.AGENTMAIL_API_KEY = os.getenv("AGENTMAIL_API_KEY")
-        self.AGENTMAIL_INBOX = os.getenv("AGENTMAIL_INBOX", self.AGENTMAIL_INBOX)
+        self.AGENTMAIL_INBOX = os.getenv("AGENTMAIL_INBOX")
         self.AGENTMAIL_WEBHOOK_SECRET = os.getenv("AGENTMAIL_WEBHOOK_SECRET")
         self.SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
         self.SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN")

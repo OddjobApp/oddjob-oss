@@ -97,7 +97,7 @@ The Admin Dashboard provides comprehensive system administration capabilities fo
 
 #### **Tool Registry (`/admin/tools`), MCP Tokens (`/admin/mcp-tokens`), Event Log (`/admin/events`)**
 - **Purpose**: OpenAPI tool specs, MCP token management, system event stream
-- **Spec**: [MCP_SPEC](../../specs/MCP_SPEC.md)
+- **Spec**: MCP_SPEC
 
 ### **Component Hierarchy**
 
@@ -771,11 +771,11 @@ export function canPerformAdminAction(
 ## **Documentation References**
 
 ### **Related Documents**
-- [05-auth-system.md](./05-auth-system.md) - User authentication and permissions
-- [01-jobs-system.md](./01-jobs-system.md) - Job administration and monitoring
-- [03-knowledge-system.md](./03-knowledge-system.md) - Knowledge system administration
-- [10-system-monitoring.md](./10-system-monitoring.md) - Detailed monitoring documentation
-- [11-audit-logging.md](./11-audit-logging.md) - Audit and compliance documentation
+- 05-auth-system.md - User authentication and permissions
+- [01-jobs-system.md](../core-features/01-jobs-system.md) - Job administration and monitoring
+- [03-knowledge-system.md](../core-features/03-knowledge-system.md) - Knowledge system administration
+- 10-system-monitoring.md - Detailed monitoring documentation
+- 11-audit-logging.md - Audit and compliance documentation
 
 ### **External Documentation**
 - [React Admin Templates](https://marmelab.com/react-admin/) - Admin interface patterns

@@ -10,7 +10,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         idempotency: "none",
         label: "Send AgentMail Email",
         group: "Integrations",
-        description: "Send an outbound email via AgentMail (oddjobapp@agentmail.to). Supports rich styling, CC/BCC, and labels.",
+        description: "Send an outbound email from the configured AgentMail inbox. Supports rich styling, CC/BCC, and labels.",
         parameters: z.object({
             to: z.union([z.string(), z.array(z.string())]).describe("Recipient email address or list of addresses"),
             subject: z.string().describe("Email subject line"),
@@ -27,7 +27,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         execute: async (params: any, context?: any) => {
             try {
                 if (!agentMailService.isConfigured()) {
-                    return "Error: AgentMail is not configured (missing AGENTMAIL_API_KEY).";
+                    return "Error: AgentMail is not configured (missing AGENTMAIL_API_KEY or AGENTMAIL_INBOX).";
                 }
 
                 const toList = Array.isArray(params.to) ? params.to : [params.to];

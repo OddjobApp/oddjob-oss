@@ -6,7 +6,7 @@
  *
  * Credentials (set in environment):
  *   AGENTMAIL_API_KEY   — Bearer token
- *   AGENTMAIL_INBOX     — e.g. oddjobapp@agentmail.to
+ *   AGENTMAIL_INBOX     — the inbox to send from, e.g. your-inbox@agentmail.to
  *   AGENTMAIL_WEBHOOK_SECRET — whsec_... returned when the webhook was registered
  */
 
@@ -87,7 +87,7 @@ class AgentMailService {
     }
 
     private get inbox(): string {
-        return process.env.AGENTMAIL_INBOX ?? "oddjobapp@agentmail.to";
+        return process.env.AGENTMAIL_INBOX ?? "";
     }
 
     private get webhookSecret(): string {
@@ -95,7 +95,7 @@ class AgentMailService {
     }
 
     isConfigured(): boolean {
-        return !!this.apiKey;
+        return !!this.apiKey && !!this.inbox;
     }
 
     private headers(): Record<string, string> {

@@ -118,7 +118,7 @@ Supported builder pods:
      * `POST /api/governor/hr/competencies/assign`: Endpoint for human supervisor endorsements or manual overrides.
 
 3. **Agentic HR UI Integration**:
-   * [`AgenticHR.tsx`](../../server/domain/agents/ui/AgenticHR.tsx):
+   * [`AgenticHR.tsx`](../../client/src/modules/agents/components/AgenticHR.tsx):
      * **Polymorphic Competency Matrix**: Tab rendering cards for each agent with star proficiency ratings (★) and verification provenance.
      * **Verified Competencies**: Displayed inside the agent details dialog.
      * **Mount Upskilling Pod**: Direct action button to launch the `AgentUpskillingPod` for any agent.
@@ -129,7 +129,7 @@ Supported builder pods:
 
 ### 6.1 Playwright Browser End-to-End Automation
 Automated browser tests are executed using Chromium via Playwright:
-* Test runner script: [`scripts/run-playwright-verification.ts`](../../scripts/run-playwright-verification.ts)
+* Test runner script: `scripts/run-playwright-verification.ts`
 * Showcase route: `/external/builder-pods` via [`client/src/pages/dev/BuilderPodsShowcasePage.tsx`](../../client/src/pages/dev/BuilderPodsShowcasePage.tsx)
 * Test coverage verified:
   1. Full page rendering of all 4 interactive pods.

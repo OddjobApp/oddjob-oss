@@ -198,6 +198,6 @@ Recommended E2E coverage:
 
 - [Copilot Cycle Operations](../copilot-cycle-operations.md)
 - [Intervention Engine](./intervention-engine.md)
-- [AI Agent Enhancements](./ai-agent-enhancements.md)
-- [Decision Inbox](../integration-features/07-decision-inbox-hil.md)
+- AI Agent Enhancements
+- Decision Inbox
 - [Knowledge System](../core-features/03-knowledge-system.md)

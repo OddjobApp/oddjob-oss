@@ -13,10 +13,10 @@ In the Mach 3 distributed architecture, this module serves as the primary gatewa
 - **[AgencyMaturityDashboard](./pages/AgencyMaturityDashboard.tsx)**: High-level metrics on knowledge coverage, vectorization status, and graph density.
 
 ## Key Components
-- **[GraphCanvas](./components/GraphCanvas.tsx)**: D3 or Force-graph based visualization for the Knowledge Graph.
-- **[RagAssetManager](./components/RagAssetManager.tsx)**: Unified interface for uploading and managing source documents.
-- **[QueryBuilder](./components/QueryBuilder.tsx)**: Advanced interface for constructing semantic and metadata-filtered queries.
-- **[DatasetPreview](./components/DatasetPreview.tsx)**: Visualizes the structure and quality of generated training data.
+- **GraphCanvas**: D3 or Force-graph based visualization for the Knowledge Graph.
+- **[RagAssetManager](../../components/knowledge/RagAssetManager.tsx)**: Unified interface for uploading and managing source documents.
+- **[QueryBuilder](pages/QueryBuilder.tsx)**: Advanced interface for constructing semantic and metadata-filtered queries.
+- **DatasetPreview**: Visualizes the structure and quality of generated training data.
 
 ## Hooks & State
 - **`useKnowledgeGraph`**: Manages the local node/edge state and layout physics for the graph visualization.

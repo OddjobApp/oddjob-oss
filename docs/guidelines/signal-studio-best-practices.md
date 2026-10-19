@@ -7,7 +7,7 @@
 > - [Industry Packs Best Practices](./signal-studio-industry-packs-best-practices.md)
 > - [Signal Studio Feature Documentation](../feature-documentation/signal-studio.md)
 > - [Signal Studio General Purpose Harvesting Proposal](../proposals/SIGNAL_STUDIO_GENERAL_PURPOSE_HARVESTING_PROPOSAL.md)
-> - [Distributed Tracing Implementation Plan](../../.agent/workflows/distributed-tracing-implementation.md)
+> - Distributed Tracing Implementation Plan (`.agent/workflows/distributed-tracing-implementation.md`)
 
 ---
 

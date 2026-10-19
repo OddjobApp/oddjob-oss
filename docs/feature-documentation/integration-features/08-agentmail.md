@@ -4,7 +4,7 @@
 
 AgentMail is a **connector** — it bridges Oddjob's internal agent infrastructure to the open email network via the AgentMail API (`api.agentmail.to/v0`). It is not a skill (no sandboxed code execution) and not a plain tool (it is stateful, bidirectional, and operates over an external persistent channel).
 
-Oddjob's inbox: **oddjobapp@agentmail.to**
+The inbox Oddjob sends from is set by `AGENTMAIL_INBOX` (for example **your-inbox@agentmail.to**).
 
 ---
 
@@ -37,7 +37,7 @@ Enables agents and the platform to:
 AgentMail sits in the **connector** tier — alongside Gmail, Jira, Slack, and Resend. It is:
 - **Stateful**: threads and messages persist externally on AgentMail's infrastructure
 - **Bidirectional**: both outbound (send) and inbound (webhook) data flows
-- **External surface**: exposes a real email address (`oddjobapp@agentmail.to`) to the internet
+- **External surface**: exposes a real email address (`your-inbox@agentmail.to`) to the internet
 - **Not a skill**: no code is compiled or sandboxed; it's an API integration
 - **Not an agent tool alone**: the inbound side runs autonomously without an agent invoking it
 
@@ -48,7 +48,7 @@ OUTBOUND (agent-driven)
   Agent → DecisionRouter (email channel)
         → agentMailService.sendHilEmail()
         → OTP written to otp_codes table
-        → Email delivered from oddjobapp@agentmail.to
+        → Email delivered from your-inbox@agentmail.to
 
 INBOUND (event-driven)
   User reply → AgentMail webhook → POST /api/integrations/agentmail/webhook
@@ -109,7 +109,7 @@ Returns `{ configured, inbox, reachable }`. Use for health checks.
 Three tools exposed to agents via the MCP protocol:
 
 ### `agentmail_send`
-Send an email from `oddjobapp@agentmail.to`.
+Send an email from `your-inbox@agentmail.to`.
 
 ```json
 {
@@ -140,7 +140,7 @@ Get all messages in a specific thread.
 
 ```env
 AGENTMAIL_API_KEY=am_us_...          # Bearer token for API calls
-AGENTMAIL_INBOX=oddjobapp@agentmail.to  # Sending inbox address
+AGENTMAIL_INBOX=your-inbox@agentmail.to  # Sending inbox address
 AGENTMAIL_WEBHOOK_SECRET=whsec_...   # HMAC secret for inbound verification
 APP_URL=https://your-domain.com       # Used in reply links + webhook registration
 ```

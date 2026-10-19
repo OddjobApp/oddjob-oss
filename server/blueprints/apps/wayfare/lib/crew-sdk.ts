@@ -35,7 +35,7 @@ export interface CrewSelectedRecord {
 export interface CrewInputField {
     key: string;
     label: string;
-    type?: "text" | "number" | "select" | "checkbox";
+    type?: "text" | "number" | "select" | "checkbox" | "location";
     required?: boolean;
     options?: string[];
 }

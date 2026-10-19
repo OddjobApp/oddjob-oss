@@ -11,3 +11,10 @@ before you redistribute a build:
   not an open-source license, and needs a Mapbox access token to render maps.
 - ffmpeg-static ships an FFmpeg binary under the GPL-3.0-or-later. Images or
   installers that bundle it carry that binary's GPL obligations.
+
+One third-party program is included in this repository in built form:
+
+- client/public/database-designer/ is a modified build of ThothBlueprint v0.0.11
+  (https://github.com/AHS12/thoth-blueprint), licensed under the GPL-3.0, not
+  Apache-2.0. It runs as a separate page. Its licence, source location and the
+  list of changes are in that directory's LICENSE.md and README.md.

@@ -1,6 +1,6 @@
 # Platform Feature Reference
 
-Concise, implementation-grounded docs for major Oddjob subsystems. For UI flows and integration detail, see [feature-documentation](../feature-documentation/README.md). For routes and schemas, see [specs](../specs/README.md).
+Concise, implementation-grounded docs for major Oddjob subsystems. For UI flows and integration detail, see [feature-documentation](../feature-documentation/README.md). For routes and schemas, see specs.
 
 ## Self-improvement & cost optimization
 

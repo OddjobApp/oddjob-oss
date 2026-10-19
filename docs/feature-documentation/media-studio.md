@@ -1,10 +1,10 @@
 # Media Studio Documentation
 
 > **Spec References:**
-> - [Oddjob 5-Layer AI Control Plane](../../.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md)
+> - Oddjob 5-Layer AI Control Plane (`.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md`)
 > - [Oddjob Film Production Manual](../film-production/ODDJOB_AI_FILM_PRODUCTION_MANUAL.md)
 > - [ComfyUI Media Studio Architecture](../proposals/COMFYUI_MEDIA_STUDIO_RESEARCH.md)
-> - [Distributed Tracing & Forensic Logging](../../.agent/workflows/distributed-tracing-implementation.md)
+> - Distributed Tracing & Forensic Logging (`.agent/workflows/distributed-tracing-implementation.md`)
 
 ---
 

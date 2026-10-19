@@ -8,7 +8,7 @@ Rather than cluttering the chat stream with temporary text dumps, specialized ra
 
 ## 1. Architecture & Multi-Rail Hub (`CrewRailHub`)
 
-All specialized rails are unified inside [`CrewRailHub.tsx`](../../../client/src/components/agent-chat/rails/CrewRailHub.tsx), mounted to the right of the CREW message canvas:
+All specialized rails are unified inside `CrewRailHub.tsx`, mounted to the right of the CREW message canvas:
 
 ```mermaid
 graph TD

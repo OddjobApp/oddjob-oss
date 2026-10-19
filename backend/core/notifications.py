@@ -299,7 +299,7 @@ class NotificationManager:
         api_key = settings.AGENTMAIL_API_KEY
         inbox = settings.AGENTMAIL_INBOX
         
-        if not api_key or not channel.email_addresses:
+        if not api_key or not inbox or not channel.email_addresses:
             return
 
         try:

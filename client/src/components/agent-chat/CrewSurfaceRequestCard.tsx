@@ -38,11 +38,17 @@ export function CrewSurfaceRequestCard({ pending, onDismiss }: { pending: Pendin
     <p className="text-xs text-muted-foreground">{pending.appTitle} · Input request</p><h3 className="font-semibold">{pending.request.title}</h3>
     <p className="text-xs text-muted-foreground">Answers return to this app surface. Submitting is not approval to execute an action.</p>
     <form onSubmit={e => { e.preventDefault(); try { const answers = validateSurfaceAnswers(pending.request, data); pending.finish('submitted', answers); setDone(true); } catch (err) { setError((err as Error).message); } }}>
-      {pending.request.fields?.map(f => <label key={f.key} className="mt-3 block text-sm">{f.label}{f.required ? ' *' : ''}
-        {f.type === 'select' ? <select disabled={done} className="ml-2 rounded border bg-background p-2" value={String(data[f.key] ?? '')} onChange={e => setData(d => ({ ...d, [f.key]: e.target.value }))}><option value="">Choose…</option>{f.options?.map(o => <option key={o}>{o}</option>)}</select>
-          : f.type === 'location' ? <React.Suspense fallback={<p className="text-xs text-muted-foreground">Loading map…</p>}><LocationPicker value={data[f.key] as any} onChange={v => setData(d => ({ ...d, [f.key]: v }))} disabled={done} placeholder={f.label} /></React.Suspense>
-          : <input disabled={done} className="ml-2 rounded border bg-background p-2" type={f.type === 'checkbox' ? 'checkbox' : f.type === 'number' ? 'number' : 'text'} step="any" onChange={e => setData(d => ({ ...d, [f.key]: f.type === 'checkbox' ? e.target.checked : f.type === 'number' && e.target.value !== '' ? Number(e.target.value) : e.target.value }))} />}
-      </label>)}
+      {pending.request.fields?.map(f => f.type === 'location'
+        ? <div key={f.key} className="mt-3 text-sm">
+          <p>{f.label}{f.required ? ' *' : ''}</p>
+          <React.Suspense fallback={<p className="text-xs text-muted-foreground">Loading map…</p>}>
+            <LocationPicker value={data[f.key] as any} onChange={v => setData(d => ({ ...d, [f.key]: v }))} disabled={done} placeholder={f.label} />
+          </React.Suspense>
+        </div>
+        : <label key={f.key} className="mt-3 block text-sm">{f.label}{f.required ? ' *' : ''}
+          {f.type === 'select' ? <select disabled={done} className="ml-2 rounded border bg-background p-2" value={String(data[f.key] ?? '')} onChange={e => setData(d => ({ ...d, [f.key]: e.target.value }))}><option value="">Choose…</option>{f.options?.map(o => <option key={o}>{o}</option>)}</select>
+            : <input disabled={done} className="ml-2 rounded border bg-background p-2" type={f.type === 'checkbox' ? 'checkbox' : f.type === 'number' ? 'number' : 'text'} step="any" onChange={e => setData(d => ({ ...d, [f.key]: f.type === 'checkbox' ? e.target.checked : f.type === 'number' && e.target.value !== '' ? Number(e.target.value) : e.target.value }))} />}
+        </label>)}
       {error && <p role="alert">{error}</p>}{done ? <div className="mt-2 flex items-center gap-3"><p role="status">Request closed.</p>{onDismiss && <button type="button" onClick={onDismiss}>Clear</button>}</div> : <div className="mt-3 flex gap-3"><button type="submit">Return answers</button><button type="button" onClick={() => { try { pending.finish('cancelled'); } catch {} setDone(true); }}>Cancel</button></div>}
     </form>
   </section>;

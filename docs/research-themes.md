@@ -40,4 +40,4 @@ Oddjob already combines **missions**, **App Forge**, **RAG / Knowledge Store**, 
 ## Further reading
 
 - In-repo overview: [agentic-maturity.md](feature-documentation/agentic-maturity.md)
-- Architecture pattern: [architecture_overview.md](architecture_overview.md)
+- Architecture pattern: architecture_overview.md

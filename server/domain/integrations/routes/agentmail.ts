@@ -302,12 +302,12 @@ router.get(
     asyncHandler(async (_req: Request, res: Response) => {
         const configured = agentMailService.isConfigured();
         if (!configured) {
-            return res.json({ configured: false, message: "AGENTMAIL_API_KEY not set" });
+            return res.json({ configured: false, message: "AGENTMAIL_API_KEY and AGENTMAIL_INBOX must both be set" });
         }
         const data = await agentMailService.listThreads(1).catch(() => null);
         res.json({
             configured: true,
-            inbox: process.env.AGENTMAIL_INBOX ?? "oddjobapp@agentmail.to",
+            inbox: process.env.AGENTMAIL_INBOX,
             reachable: !!data,
         });
     })

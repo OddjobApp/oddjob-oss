@@ -33,9 +33,9 @@ The second failure does not establish a wrong database or missing app records. T
 
 Both responses ended mid-sentence in the persisted transcript. The supervisor labeled the rounds “No weakness,” correctly recognizing read-only discipline but missing the product failure. Feedback should separately score safe behavior, retrieval success, and completion of the user's requested task.
 
-![First grounding test and home state](../../../artifacts/sdlc-swarm-audit/02-chat-grounding.png)
+First grounding test and home state
 
-![Discuss app probe with failed executed tool](../../../artifacts/sdlc-swarm-audit/23-discuss-app-grounding.png)
+Discuss app probe with failed executed tool
 
 ## Surface by surface walkthrough
 
@@ -45,103 +45,103 @@ Health describes readiness for the intended workflow, not whether the page rende
 
 The five-step sequence establishes codebase, architecture, threat model, backlog, and launch. Required-field validation prevented progressing from an empty Codebase step. This is a useful foundation. Repository URL, stack, and team size were empty rather than derived from a room/project binding. Launch uses a mission name, so it inherits queued-result and identity ambiguity. Add a preflight for repository access, execution workspace, branch strategy, credentials, team roles, and budget. Preserve the wizard as a versioned project brief that later stages can read.
 
-![Sprint Zero validation](../../../artifacts/sdlc-swarm-audit/03-sprint-zero.png)
+Sprint Zero validation
 
 ### 2 PM Workbench — blocked intake, partial implementation
 
 The backlog reports 0/0 alongside a clear missing-Jira-connector error. Filtering and a document/manual intake form are present. Opening the form worked; an empty title leaves Create & Draft PRD disabled. However, the error instructs the user to use the Connectors Dashboard without a direct recovery link. The prominent Force Approval action suggests bypassing gates before normal intake is ready. Requirements, PRD, reviewed story points, and approval should share a stable change ID and selected source revisions. Signoff records use `submittedAt`, whereas VSM expects `timestamp`, adding another metric seam. The source also permits a stage handoff with run ID zero and a launch toast for a queued response.
 
-![PM intake and missing connector](../../../artifacts/sdlc-swarm-audit/25-pm-create-form.png)
+PM intake and missing connector
 
 ### 3 Scrum Master — partial, disconnected planning
 
 Capacity, Backlog, and Blockers tabs were inspected. Sprint 13, 80 engineer-days, and target velocity 45 are source defaults, not loaded planning facts. Backlog and blockers were empty while Fleet showed six blocked runs. These are separate stores, but the UI gives no scope explanation. Save & Trigger Sprint Kickoff combines two operations; its handler ignores the capacity-write result and emits a handoff whose run ID is the sprint number. Bind a real sprint and chosen backlog to worker capacity, concurrency, spend limits, file ownership, dependency readiness, and a saved capacity plan. Surface upstream blockers instead of requiring duplicate manual entry.
 
-![Scrum planning defaults](../../../artifacts/sdlc-swarm-audit/05-scrum.png)
+Scrum planning defaults
 
 ### 4 QA Workbench — release-trust blocker
 
 Suites, Defects, and Quality Gate tabs were inspected. All counts were zero. The loaded Suites view exposes Log Passing Smoke Suite; source confirms it creates fixed successful evidence. The gate treats no suites and no defects as success and swallows record-read errors. A rejected quality-gate write can still lead to downstream mission triggering because its settled result is not required to succeed. Failed-gate retry counts aggregate the whole collection rather than one change/revision; after repeated failures, HIL is created but the development retry still occurs. Require verified runner output, required-suite coverage, artifact/commit binding, durable gate storage, and a stop condition when human triage is required.
 
-![Loaded QA suites](../../../artifacts/sdlc-swarm-audit/06-qa.png)
+Loaded QA suites
 
-![Gate available with zero suites](../../../artifacts/sdlc-swarm-audit/07-qa-gate.png)
+Gate available with zero suites
 
 ### 5 Stakeholder — release-trust blocker
 
 Readiness, Approvals, and Jira & Confluence tabs were inspected. The readiness map contains six stale crisis-recovery missions, not a selected development release. Readiness is a formula over completed and blocked runs rather than a verified checklist of release artifacts. CAB approval remains enabled at 0% and defaults to approval; UAT also defaults to approved. No approval was submitted. CAB's source ignores a rejected approval-record write before triggering deployment. The digest publishes current form values rather than saved UAT/CAB decisions. Introduce a release candidate with commit/build IDs, saved QA/UAT/security evidence, authorized CAB record, rollback plan, environment, and explicit exceptional-override policy.
 
-![CAB action at zero readiness](../../../artifacts/sdlc-swarm-audit/27-release-approve-zero.png)
+CAB action at zero readiness
 
 ### 6 Fleet Command — real telemetry, incomplete swarm control
 
 Fleet, Autonomy, and SLA Monitor tabs were inspected. Live telemetry exposes six stale blocked runs and $0.00 spend. That is useful failure visibility, but the backend labels mission runs as agents, supplies an empty dependency list, and picks the latest organization cycle. The roster does not offer a visible drilldown into the backend flight recorder or specific resume/checkpoint actions. PIP records a coaching action and triggers Sprint Kickoff & Planning; it does not repair the selected stale run and suppresses errors. Autonomy policies were absent; saving them only writes app records in the wiring found. SLA Monitor shows unrelated flights/Budget Master requests with no SLA. Its notification code runs in the browser and deduplicates only during that mount, making repeated notifications and missed unattended checks possible. Separate worker identities, runs, chat participants, policies, approvals, and actual repair actions.
 
-![Fleet blocked runs](../../../artifacts/sdlc-swarm-audit/09-fleet.png)
+Fleet blocked runs
 
-![Autonomy policy form](../../../artifacts/sdlc-swarm-audit/21-fleet-autonomy.png)
+Autonomy policy form
 
-![SLA scope mismatch](../../../artifacts/sdlc-swarm-audit/22-fleet-sla.png)
+SLA scope mismatch
 
 ### 7 VSM Dashboard — partial data view, unreliable metric definitions
 
 The screen shows no deployments, incidents, or gates, with 0/day deployment frequency and green 0% change failure rate. Empty stage values are correctly labeled No data, but the zero failure rate implies evidence that is absent. Source computes temporal proximity, not change lineage: consecutive PM signoffs for PM → Dev, nearest subsequent CAB/deployment for other stages, and next deployment for incident recovery. It also expects a PM timestamp field that the signoff writer does not populate. Link work-item, commit, build, deployment, and incident IDs before reporting delivery performance. Expose date range, environment, sample size, and definitions.
 
-![VSM empty metrics](../../../artifacts/sdlc-swarm-audit/10-vsm.png)
+VSM empty metrics
 
 ### 8 DevOps Workbench — hybrid, incomplete delivery handoff
 
 QA gates/defects and Fleet are retrieved, but production-health services and CAB rows are static. The engineering branch is hardcoded to `mission/run-3913`. Read failures become empty gates/defects; “No blocking reasons” can mean no gate was evaluated. PR readiness takes the newest app-wide passing gate and zero open defects, without checking commit, branch, environment, build, or required checks. The page states Core Development creates a PR but offers only Refresh, with no visible PR ID/link or actual handoff control. Replace static infrastructure claims and branch selection with provider evidence, correlate checks to the intended artifact, and expose PR → review → merge → deploy → verify → rollback operations.
 
-![DevOps mixed live and static status](../../../artifacts/sdlc-swarm-audit/11-devops.png)
+DevOps mixed live and static status
 
 ### 9 Ops Workbench — demonstration
 
 Incident INC-9942 and hotfix OJB-552 are static table rows. Declare Incident and View Postmortems have no handlers. There is no working incident → severity/triage → hotfix → QA → release → verification → postmortem loop in this surface. Replace the demonstration with scoped incidents, accountable owners, linked production evidence, safe mitigation proposals, repair runs, and verified recovery. It should reuse development handoffs rather than create a separate parallel process.
 
-![Ops demonstration](../../../artifacts/sdlc-swarm-audit/12-ops.png)
+Ops demonstration
 
 ### 10 Sales Workbench — demonstration
 
 Pipeline stages, conversion rates, probabilities, and deals are hardcoded. Add Lead and View Forecast have no handlers. There is no customer request → approved requirement/roadmap linkage. Monetary strings omit decimal precision and currency codes. Before enabling this surface, connect real CRM records, allow a selected opportunity to become a traceable PM request, and identify the forecasting model, period, currency, and assumptions.
 
-![Sales demonstration](../../../artifacts/sdlc-swarm-audit/13-sales.png)
+Sales demonstration
 
 ### 11 Marketing Workbench — demonstration
 
 Campaign budgets, spend, ROI, and content calendar are static. Create Campaign and View Analytics have no handlers. The calendar calls June dates upcoming in the current October session. An overspent campaign is not flagged. No release-ready artifact feeds launch content, and no Scribe/Media output returns with review status. Bind campaigns to a release, versioned assets, approvals, publication results, and real measurement sources.
 
-![Marketing demonstration](../../../artifacts/sdlc-swarm-audit/14-marketing.png)
+Marketing demonstration
 
 ### 12 Customer Success — demonstration
 
 Customer onboarding progress, named contacts, and NPS are static; Start Onboarding and View Templates have no handlers. There is no feedback → bug/requirement → delivered fix → customer notification handoff. Use customer/source IDs, consented communication workflows, linked issues, acceptance outcomes, and escalation owners. Clearly distinguish aggregate feedback scores from per-customer ratings.
 
-![Customer Success demonstration](../../../artifacts/sdlc-swarm-audit/15-customer-success.png)
+Customer Success demonstration
 
 ### 13 Finance Workbench — demonstration
 
 Revenue recognition, deferred revenue, and billing rows are hardcoded; Generate Report and View Forecast have no handlers. Whole-dollar and abbreviated strings do not satisfy the requested monetary decimal display. There is no link to QuickBooks, financial snapshots, forecast provenance, or the actual development budget/spend. Mount existing financial capabilities with explicit currency, period, snapshot, scenario, and source definitions; distinguish swarm execution cost from accounting revenue.
 
-![Finance demonstration](../../../artifacts/sdlc-swarm-audit/16-finance.png)
+Finance demonstration
 
 ### 14 HR Workbench — demonstration
 
 Employee onboarding and performance-review rows are static; Start Onboarding and View Templates have no handlers. This is human HR content, not development-agent staffing or capability readiness. Label it accordingly and keep human personnel access distinct from swarm management. A development workforce view should expose agent skills, execution permissions, environment readiness, assignment, concurrency, and proven outcomes without implying these employee ratings measure agent performance.
 
-![HR demonstration](../../../artifacts/sdlc-swarm-audit/17-hr.png)
+HR demonstration
 
 ### 15 Legal Workbench — demonstration
 
 Contract rows and SOC2/GDPR Compliant labels are static; Create Contract and View Templates have no handlers. These labels cannot establish real compliance. There is no policy/license/privacy review → release gate or evidence reference. Bind actual obligations and reviews to the affected repository/release, include reviewer authority and expiration, and reserve compliance assertions for supported evidence.
 
-![Legal demonstration](../../../artifacts/sdlc-swarm-audit/18-legal.png)
+Legal demonstration
 
 ### 16 Security Auditor — simulated, unsafe to trust as execution
 
 The live-looking threat stream, commit IDs, 1,402 scanned commits, 14 prevented vulnerabilities, 92.8% patch success, and scanning status are static. The page claims history was scrubbed and DevOps alerted without executing those operations. Generate Patch PR sets a local timer and then displays a fixed PR number. The button was not exercised in the live account; source establishes the simulation. Connect a real scanner/webhook and repository identity, evidence-linked findings, remediation proposals, real PR receipts, test results, and QA/release gate integration. Never simulate a consequential success in an operational surface.
 
-![Security simulated activity](../../../artifacts/sdlc-swarm-audit/19-security.png)
+Security simulated activity
 
 ## Shared UX and accessibility risks
 
@@ -186,21 +186,21 @@ No implementation changes were made as part of this audit. Full repository verif
 
 Paths below are current repository evidence, not proof that every source revision matches the deployed app build.
 
-- [App discussion draft and context boundary](../../../client/src/components/agent-chat/AgentChatPanel.tsx:1530); request payloads at lines 786 and 827; app activity display at line 1406.
-- [App reader catalog and project resolution](../../../server/domain/apps/core/app-records-reader.service.ts:119).
-- [Workbench execution message](../../../server/blueprints/apps/sdlc-workbench/lib/workbench-bridge.ts:5) and [host canvas](../../../client/src/components/agent-chat/CrewCycleAppCanvas.tsx).
-- [Queued mission response and mutable ticket mapping](../../../server/domain/apps/platform/missions.controller.ts:87); [client result type](../../../server/blueprints/apps/sdlc-workbench/lib/platform-client.ts:51).
-- [PM signoff and launch states](../../../server/blueprints/apps/sdlc-workbench/app/pm-workbench/content.tsx:880).
-- [Planning save and handoff](../../../server/blueprints/apps/sdlc-workbench/app/scrum-master-workbench/content.tsx:117).
-- [QA rules, gate writes and synthetic suite](../../../server/blueprints/apps/sdlc-workbench/app/qa-workbench/content.tsx:88).
-- [CAB persistence and launch](../../../server/blueprints/apps/sdlc-workbench/app/stakeholder-workbench/content.tsx:139).
-- [Fleet source and identity](../../../server/domain/apps/platform/fleet.controller.ts:20); [policy, PIP and browser SLA handlers](../../../server/blueprints/apps/sdlc-workbench/app/ai-workforce-dashboard/content.tsx:96).
-- [Handoff queue identity and default scope](../../../server/blueprints/apps/sdlc-workbench/lib/handoff-queue.ts:39); [queue caller](../../../server/blueprints/apps/sdlc-workbench/app/components/HandoffToast.tsx:74).
-- [VSM computation](../../../server/blueprints/apps/sdlc-workbench/app/vsm-dashboard/content.tsx:77).
-- [DevOps hybrid data and branch](../../../server/blueprints/apps/sdlc-workbench/app/devops-workbench/page.tsx:28).
-- [Security PR simulation](../../../server/blueprints/apps/sdlc-workbench/app/security/page.tsx:11).
-- Static rows and inactive buttons: `server/blueprints/apps/sdlc-workbench/app/{ops-workbench,sales-workbench,marketing-workbench,customer-success-workbench,finance-workbench,hr-workbench,legal-workbench}/page.tsx`; [button primitive](../../../server/blueprints/apps/sdlc-workbench/app/components/Button.tsx:1).
-- [Incomplete adapter manifest](../../../shared/crew-surface-connections.ts:8).
+- App discussion draft and context boundary; request payloads at lines 786 and 827; app activity display at line 1406.
+- App reader catalog and project resolution.
+- Workbench execution message and [host canvas](../../../client/src/components/agent-chat/CrewCycleAppCanvas.tsx).
+- Queued mission response and mutable ticket mapping; client result type.
+- PM signoff and launch states.
+- Planning save and handoff.
+- QA rules, gate writes and synthetic suite.
+- CAB persistence and launch.
+- Fleet source and identity; policy, PIP and browser SLA handlers.
+- Handoff queue identity and default scope; queue caller.
+- VSM computation.
+- DevOps hybrid data and branch.
+- Security PR simulation.
+- Static rows and inactive buttons: `server/blueprints/apps/sdlc-workbench/app/{ops-workbench,sales-workbench,marketing-workbench,customer-success-workbench,finance-workbench,hr-workbench,legal-workbench}/page.tsx`; button primitive.
+- Incomplete adapter manifest.
 
 ## Implementation follow up
 
@@ -227,13 +227,13 @@ The compiled standalone preview confirmed disabled QA evaluation on unavailable 
 
 Remaining work is explicit room/repository/cycle binding, signed or otherwise authenticated runner evidence and approval authority, durable idempotent operation/handoff records, runtime policy enforcement, worker/worktree/PR orchestration, real adapters for the demonstration surfaces, and an isolated end-to-end requirement-to-test-deployment acceptance run. Required test-suite manifests and revision-scoped defect lifecycles also need to replace app-wide collection evaluation. The provenance fields checked in this phase establish shape and revision correlation; they do not authenticate a CI provider.
 
-![QA evaluation blocked in compiled preview](../../../artifacts/sdlc-swarm-audit/fix-qa-blocked.png)
+QA evaluation blocked in compiled preview
 
-![Release defaults and disabled CAB action in compiled preview](../../../artifacts/sdlc-swarm-audit/fix-cab-blocked.png)
+Release defaults and disabled CAB action in compiled preview
 
-![CAB remains disabled at zero readiness with a synthetic valid-format commit entered](../../../artifacts/sdlc-swarm-audit/fix-cab-zero-readiness.png)
+CAB remains disabled at zero readiness with a synthetic valid-format commit entered
 
-![Demonstration security surface without simulated patch creation](../../../artifacts/sdlc-swarm-audit/fix-security-demo.png)
+Demonstration security surface without simulated patch creation
 
 ### Installed org-342 verification follow-up
 

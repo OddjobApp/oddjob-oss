@@ -29,7 +29,7 @@ The Mission pod uses a decentralized testing structure. Tests are colocated with
 
 ### Test Structure
 - **[services/](./tests/services/)**: Focused tests for mission orchestration and lifecycle management (e.g., `dashboard`, `templates`).
-  - **[billing/](./tests/services/billing/)**: Cost calculation and ROI analysis for missions.
+  - **billing/**: Cost calculation and ROI analysis for missions.
 - **[integration/](./tests/integration/)**: End-to-end mission execution flows and API audits.
 
 ### Running Tests

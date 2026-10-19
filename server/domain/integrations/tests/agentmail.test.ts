@@ -106,6 +106,11 @@ describe("AgentMailService", () => {
         it("returns true when API key is set", () => {
             expect(agentMailService.isConfigured()).toBe(true);
         });
+
+        it("returns false without an inbox, rather than sending from a default one", () => {
+            delete process.env.AGENTMAIL_INBOX;
+            expect(agentMailService.isConfigured()).toBe(false);
+        });
     });
 
     describe("send()", () => {

@@ -6,7 +6,7 @@ export async function handleAgentMailSend(args: unknown, _context?: ToolContext)
     try {
         const input = AgentMailSendInput.parse(args);
         if (!agentMailService.isConfigured()) {
-            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY in environment.");
+            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY and AGENTMAIL_INBOX in environment.");
         }
         const result = await agentMailService.send(input);
         return successResponse(result, `Email sent to ${input.to.join(", ")} (thread: ${result.thread_id})`);
@@ -19,7 +19,7 @@ export async function handleAgentMailListThreads(args: unknown, _context?: ToolC
     try {
         const input = AgentMailListThreadsInput.parse(args ?? {});
         if (!agentMailService.isConfigured()) {
-            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY in environment.");
+            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY and AGENTMAIL_INBOX in environment.");
         }
         const result = await agentMailService.listThreads(input.limit);
         return successResponse(result, `Found ${result.count} thread(s)`);
@@ -32,7 +32,7 @@ export async function handleAgentMailGetThread(args: unknown, _context?: ToolCon
     try {
         const input = AgentMailGetThreadInput.parse(args);
         if (!agentMailService.isConfigured()) {
-            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY in environment.");
+            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY and AGENTMAIL_INBOX in environment.");
         }
         const result = await agentMailService.getThread(input.thread_id);
         return successResponse(result, `Thread ${input.thread_id} retrieved`);

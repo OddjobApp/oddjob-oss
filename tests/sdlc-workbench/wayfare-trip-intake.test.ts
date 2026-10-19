@@ -18,6 +18,43 @@ describe("Wayfare trip intake manifest", () => {
       "max_drive_hours",
     ]);
     expect(TRIP_INTAKE_FIELDS.every((f) => f.required)).toBe(true);
+    expect(
+      TRIP_INTAKE_FIELDS.filter((f) => f.type === "location").map((f) => f.key),
+    ).toEqual(["origin", "destination"]);
+  });
+
+  it("maps resolved location answers onto the plan's verified points", () => {
+    expect(
+      tripIntakeToPlanPatch({
+        origin: {
+          address: "Denver, Colorado",
+          lat: 39.73915,
+          lng: -104.9847,
+          resolvedAddress: "Denver, Colorado, United States",
+          accuracy: "place",
+        },
+        destination: {
+          address: "Boise, Idaho",
+          lat: 43.615,
+          lng: -116.2023,
+          resolvedAddress: "Boise, Idaho, United States",
+        },
+      }),
+    ).toEqual({
+      origin: "Denver, Colorado",
+      originPoint: { latitude: 39.73915, longitude: -104.9847 },
+      destination: "Boise, Idaho",
+      destinationPoint: { latitude: 43.615, longitude: -116.2023 },
+    });
+  });
+
+  it("keeps the address text but drops unverified picker coordinates", () => {
+    expect(
+      tripIntakeToPlanPatch({
+        origin: { address: "Denver", lat: 34.0522, lng: -118.2437 },
+        destination: { address: "Nowhere", lat: 999, lng: 0, resolvedAddress: "x" },
+      }),
+    ).toEqual({ origin: "Denver", destination: "Nowhere" });
   });
 
   it("maps a full crew-surface-request answer set onto the trip plan", () => {

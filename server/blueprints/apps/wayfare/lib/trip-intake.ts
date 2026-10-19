@@ -16,8 +16,8 @@ export const TRIP_INTAKE_TITLE = "Create Wayfare Road Trip";
 
 export const TRIP_INTAKE_FIELDS: CrewInputField[] = [
     { key: "trip_name", label: "Trip Name", type: "text", required: true },
-    { key: "origin", label: "Starting City/Point", type: "text", required: true },
-    { key: "destination", label: "Destination City/Point", type: "text", required: true },
+    { key: "origin", label: "Starting City/Point", type: "location", required: true },
+    { key: "destination", label: "Destination City/Point", type: "location", required: true },
     {
         key: "corridor_width",
         label: "Discovery Corridor Width (Miles)",
@@ -48,6 +48,38 @@ function leadingNumber(value: unknown): number | null {
     return match ? Number(match[1]) : null;
 }
 
+type TripPoint = { latitude: number; longitude: number };
+
+/**
+ * Location fields answer with a LocationPicker-style object
+ * ({address, lat, lng, resolvedAddress?}) or a bare address string. The text
+ * always maps; the point only when a lookup actually resolved it — the picker
+ * echoes fallback-center coordinates on every keystroke, so an object whose
+ * resolvedAddress/accuracy markers are absent is typed text, not a pin.
+ */
+function locationAnswer(value: unknown, max: number): { name: string; point: TripPoint | null } | null {
+    const raw =
+        typeof value === "object" && value !== null
+            ? (value as Record<string, unknown>)
+            : null;
+    const name = text(raw ? raw.address : value, max);
+    if (!name) return null;
+    let point: TripPoint | null = null;
+    const resolved =
+        raw &&
+        (typeof raw.resolvedAddress === "string" && raw.resolvedAddress.trim() ||
+            typeof raw.accuracy === "string" && raw.accuracy.trim());
+    if (resolved) {
+        const lat = Number(raw.lat), lng = Number(raw.lng);
+        if (
+            Number.isFinite(lat) && Number.isFinite(lng) &&
+            Math.abs(lat) <= 90 && Math.abs(lng) <= 180
+        )
+            point = { latitude: lat, longitude: lng };
+    }
+    return { name, point };
+}
+
 /**
  * Map crew-surface-request answers onto the TripPlan fields the intake form
  * owns. Unknown or malformed answers are dropped rather than guessed — the
@@ -57,10 +89,16 @@ export function tripIntakeToPlanPatch(data: Record<string, unknown>): Partial<Tr
     const patch: Partial<TripPlan> = {};
     const name = text(data.trip_name, 160);
     if (name) patch.name = name;
-    const origin = text(data.origin, 300);
-    if (origin) patch.origin = origin;
-    const destination = text(data.destination, 300);
-    if (destination) patch.destination = destination;
+    const origin = locationAnswer(data.origin, 300);
+    if (origin) {
+        patch.origin = origin.name;
+        if (origin.point) patch.originPoint = origin.point;
+    }
+    const destination = locationAnswer(data.destination, 300);
+    if (destination) {
+        patch.destination = destination.name;
+        if (destination.point) patch.destinationPoint = destination.point;
+    }
     const corridorMiles = leadingNumber(data.corridor_width);
     if (corridorMiles !== null && corridorMiles >= 1 && corridorMiles <= 100) patch.corridorMiles = corridorMiles;
     const maxDriveHours = leadingNumber(data.max_drive_hours);

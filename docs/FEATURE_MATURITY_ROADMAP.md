@@ -2,7 +2,7 @@
 
 > **Version:** 1.1.0  
 > **Last Updated:** August 2026  
-> **Strategic Reference:** [Platform Valuation at Full Maturity (Level 5)](./FULL_MATURITY_VALUATION.md) | [Oddjob 5-Layer AI Control Plane](../.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md)  
+> **Strategic Reference:** [Platform Valuation at Full Maturity (Level 5)](./FULL_MATURITY_VALUATION.md) | Oddjob 5-Layer AI Control Plane (`.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md`)  
 > **Purpose:** Track feature evolution from concept to production-grade autonomous operations ($5.2B+ valuation target)
 
 ---
@@ -260,7 +260,7 @@ Intelligence   │ • Event Catalog L2 [✓]│ • Rule Synthesis L2│ • St
 - **Level 1 → 2:** 100% automated test pass rate + static AST & TypeScript typecheck validation.
 - **Level 2 → 3:** Technical architecture review + security vulnerability assessment + staging canary pass.
 - **Level 3 → 4:** Beta user validation + synthetic load performance sign-off + zero unhandled exceptions.
-- **Level 4 → 5:** [5-Layer AI Control Plane](../.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md) formal policy verification + continuous self-healing MTTR < 30s benchmark.
+- **Level 4 → 5:** 5-Layer AI Control Plane (`.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md`) formal policy verification + continuous self-healing MTTR < 30s benchmark.
 
 ### Automated Circuit-Breaker Rollback Criteria
 An automated rollback is triggered within **5 seconds** without human intervention if telemetry detects any of the following over a rolling 1-hour window:
@@ -274,8 +274,8 @@ An automated rollback is triggered within **5 seconds** without human interventi
 
 ## 9. Related Documentation
 - [Platform Valuation at Full Maturity (Level 5)](./FULL_MATURITY_VALUATION.md)
-- [Oddjob 5-Layer AI Control Plane](../.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md)
-- [Decision Intelligence UI/UX Proposal](./DECISION_INTELLIGENCE_UI_UX_PROPOSAL.md)
+- Oddjob 5-Layer AI Control Plane (`.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md`)
+- Decision Intelligence UI/UX Proposal
 - [Agentic Maturity Documentation](./feature-documentation/agentic-maturity.md)
 - [Platform Maintenance Overview Component](../client/src/modules/platform-maintenance/pages/PlatformMaintenanceOverview.tsx)
 - [Capability Registry Core Service](../server/domain/capabilities/core/capability-registry.service.ts)

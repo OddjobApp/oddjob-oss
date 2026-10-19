@@ -16,7 +16,7 @@ This directory contains comprehensive documentation for all Oddjob features. Eac
 | **Specs** (`docs/specs/`) | Routes, API endpoints, config schemas, data models |
 | **Feature Docs** (this folder) | Component hierarchy, user flows, integration points, error handling |
 
-For authoritative routes and API details, see [specs README](../specs/README.md).
+For authoritative routes and API details, see specs README.
 
 ## **Documentation Standards**
 
@@ -33,44 +33,44 @@ Each feature document follows a standardized structure covering:
 ## **Feature Areas**
 
 ### **Core Features**
-- [01-jobs-system.md](./core-features/01-jobs-system.md) - Job creation, configuration, execution → [JOB_TYPES_SPEC](../specs/JOB_TYPES_SPEC.md)
+- [01-jobs-system.md](./core-features/01-jobs-system.md) - Job creation, configuration, execution → JOB_TYPES_SPEC
 - [02-pipelines-system.md](./core-features/02-pipelines-system.md) - Pipeline creation, execution, management
 - [03-knowledge-system.md](./core-features/03-knowledge-system.md) - Knowledge store, RAG, documents
-- [04-scheduling-system.md](./core-features/04-scheduling-system.md) - Schedules, cron, scheduled jobs → [SCHEDULES_SPEC](../specs/SCHEDULES_SPEC.md)
-- [05-missions-system.md](./core-features/05-missions-system.md) - Missions, blackboard, checkpoints, resume conditions → [MISSIONS_SPEC](../specs/MISSIONS_SPEC.md)
+- [04-scheduling-system.md](./core-features/04-scheduling-system.md) - Schedules, cron, scheduled jobs → SCHEDULES_SPEC
+- [05-missions-system.md](./core-features/05-missions-system.md) - Missions, blackboard, checkpoints, resume conditions → MISSIONS_SPEC
 - [06-worker-architecture.md](./core-features/06-worker-architecture.md) - BullMQ worker types, entrypoints, horizontal scaling, queue health
 - [07-openapi-auth-introspection.md](./core-features/07-openapi-auth-introspection.md) - OpenAPI securitySchemes introspection for Bearer/Basic/ApiKey/OAuth2
 - [08-template-instantiation.md](./core-features/08-template-instantiation.md) - Template gallery, parameter substitution, one-click pipeline deployment, MCP tools
 - [signal-studio.md](./signal-studio.md) - Signal Studio: Layer 0 event harvesting, universal ingress webhooks, visual JSONPath schema mapping, spatial Uber H3 telemetry, and modular industry packs
 
 ### **Integration Features**
-- [05-auth-system.md](./integration-features/05-auth-system.md) - Authentication, users, permissions
-- [06-credentials-system.md](./integration-features/06-credentials-system.md) - Credentials, API keys → [CREDENTIALS_SPEC](../specs/CREDENTIALS_SPEC.md)
-- [07-decision-inbox-hil.md](./integration-features/07-decision-inbox-hil.md) - Decision Inbox, human-in-the-loop
+- 05-auth-system.md - Authentication, users, permissions
+- 06-credentials-system.md - Credentials, API keys → CREDENTIALS_SPEC
+- 07-decision-inbox-hil.md - Decision Inbox, human-in-the-loop
 - [08-agentmail.md](./integration-features/08-agentmail.md) - AgentMail connector: inbound/outbound email, HIL approvals by reply, MCP tools
 - 09-notifications-system.md - Alerts and notifications *(Planned)*
 - [10-confluence-gdrive-sync.md](./integration-features/10-confluence-gdrive-sync.md) - Confluence full pagination, Google Drive fix, configurable caps
 
 ### **Admin Features**
 - [09-admin-dashboard.md](./admin-features/09-admin-dashboard.md) - Admin interface and controls
-- 10-system-monitoring.md - Observability → [OBSERVABILITY_SPEC](../specs/OBSERVABILITY_SPEC.md) *(Planned — spec exists)*
+- 10-system-monitoring.md - Observability → OBSERVABILITY_SPEC *(Planned — spec exists)*
 - 11-audit-logging.md - Audit trails *(Planned)*
 - 12-organization-mgmt.md - Multi-tenancy *(Planned)*
 
 ### **Additional Feature Areas** (Specs Available)
 - **Platform features index** → [features/README](../features/README.md) — Evolution Engine, Transference Engine, mission intelligence, reliability systems
-- **SaaS** → [SaaS_INTEGRATIONS_SPEC](../specs/SaaS_INTEGRATIONS_SPEC.md) — Connectors, sync, workflows
-- **Forms** → [FORMS_SPEC](../specs/FORMS_SPEC.md) — Form Builder, form-driven agents
-- **Decision Inbox** → [HUMAN_APPROVAL_SPEC](../specs/HUMAN_APPROVAL_SPEC.md), [HIL_2_ACCOUNTABILITY_SPEC](../specs/HIL_2_ACCOUNTABILITY_SPEC.md) — HIL approvals, Shadow Diff, Edit & Approve
-- **Predictive AI** → [PREDICTIVE_AI_SPEC](../specs/PREDICTIVE_AI_SPEC.md) — Failure prediction, monitoring
-- **Agent Analytics** → [AGENT_MEMORY_ANALYTICS_SPEC](../specs/AGENT_MEMORY_ANALYTICS_SPEC.md) — Agent memory, analytics
-- **AI Agent Enhancements** → [AI_AGENT_ENHANCEMENTS_SPEC](../specs/AI_AGENT_ENHANCEMENTS_SPEC.md) — Memory sharing, tool recommendations, confidence, streaming plans, fallback | [Feature Doc](./agent-features/ai-agent-enhancements.md)
+- **SaaS** → SaaS_INTEGRATIONS_SPEC — Connectors, sync, workflows
+- **Forms** → FORMS_SPEC — Form Builder, form-driven agents
+- **Decision Inbox** → HUMAN_APPROVAL_SPEC, HIL_2_ACCOUNTABILITY_SPEC — HIL approvals, Shadow Diff, Edit & Approve
+- **Predictive AI** → PREDICTIVE_AI_SPEC — Failure prediction, monitoring
+- **Agent Analytics** → AGENT_MEMORY_ANALYTICS_SPEC — Agent memory, analytics
+- **AI Agent Enhancements** → AI_AGENT_ENHANCEMENTS_SPEC — Memory sharing, tool recommendations, confidence, streaming plans, fallback | Feature Doc
 - **Transference Engine** → [TRANSFERENCE_ENGINE](../features/TRANSFERENCE_ENGINE.md) — Shadow-to-active LLM call replacement via local Python handlers (TE-101)
-- **Workgroups** → [WORKGROUPS_SPEC](../specs/WORKGROUPS_SPEC.md) — Workgroups, missions, pre-creation dependency validation
-- **MCP** → [MCP_SPEC](../specs/MCP_SPEC.md) — Model Context Protocol tokens
-- **Public Agent** → [PUBLIC_AGENT_SPEC](../specs/PUBLIC_AGENT_SPEC.md) — Agent deployment (`/a/:slug`)
-- **Forensic Analysis** → [FORENSIC_ANALYSIS_SPEC](../specs/FORENSIC_ANALYSIS_SPEC.md) — Pipeline run comparison
-- **Template Gallery** → [TEMPLATE_GALLERY_SPEC](../specs/TEMPLATE_GALLERY_SPEC.md) — Templates, wizard
+- **Workgroups** → WORKGROUPS_SPEC — Workgroups, missions, pre-creation dependency validation
+- **MCP** → MCP_SPEC — Model Context Protocol tokens
+- **Public Agent** → PUBLIC_AGENT_SPEC — Agent deployment (`/a/:slug`)
+- **Forensic Analysis** → FORENSIC_ANALYSIS_SPEC — Pipeline run comparison
+- **Template Gallery** → TEMPLATE_GALLERY_SPEC — Templates, wizard
 
 ### **Vertical Apps & Cycle Blueprints**
 - [cycle-blueprint-builder.md](./cycle-blueprint-builder.md) - Visual Cycle authoring across Timeline, Flow, and Data with governed apps, Form Agents, pipeline outputs, readiness, and runtime recovery.

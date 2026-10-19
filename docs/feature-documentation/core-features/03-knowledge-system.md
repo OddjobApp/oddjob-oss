@@ -1,6 +1,6 @@
 # Knowledge System Documentation
 
-> **Spec References:** [oddjob_feature_reference](../../specs/oddjob_feature_reference.md) (screens, routes).
+> **Spec References:** oddjob_feature_reference (screens, routes).
 
 ## **Feature Overview**
 
@@ -796,8 +796,8 @@ const bulkVerifyMutation = useMutation({
 ### **Related Documents**
 - [01-jobs-system.md](./01-jobs-system.md) - RAG integration with jobs
 - [02-pipelines-system.md](./02-pipelines-system.md) - Knowledge in pipelines
-- [05-auth-system.md](./05-auth-system.md) - Permission system
-- [13-api-architecture.md](./13-api-architecture.md) - Complete API documentation
+- 05-auth-system.md - Permission system
+- 13-api-architecture.md - Complete API documentation
 
 ### **External Documentation**
 - [Qdrant Vector Database](https://qdrant.tech/) - Vector storage and search

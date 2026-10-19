@@ -1,6 +1,6 @@
 # API Endpoints Audit
 
-> **Spec References:** [docs/specs](../specs/README.md) — Feature-specific API details in CREDENTIALS_SPEC, SCHEDULES_SPEC, SaaS_INTEGRATIONS_SPEC, etc.
+> **Spec References:** docs/specs — Feature-specific API details in CREDENTIALS_SPEC, SCHEDULES_SPEC, SaaS_INTEGRATIONS_SPEC, etc.
 
 ## Screens and Their API Endpoints
 
@@ -93,7 +93,7 @@
 
 ## Additional API Groups
 
-The following route groups are not fully enumerated in this audit. Full endpoint coverage may be documented in OpenAPI specs or route source files. See [docs/specs](../specs/README.md) for feature-specific API documentation. For a complete list of routes, see `server/routes/*.ts` and `server/index.ts`.
+The following route groups are not fully enumerated in this audit. Full endpoint coverage may be documented in OpenAPI specs or route source files. See docs/specs for feature-specific API documentation. For a complete list of routes, see `server/routes/*.ts` and `server/index.ts`.
 
 **Note:** A comprehensive audit of all route groups is out of scope for this document. The Dashboard section above documents `/api/dashboard/stats`, `/api/dashboard/timeline`, and `/api/dashboard/insights`. Other groups below are summarized for reference.
 

@@ -36,8 +36,9 @@ docker compose up -d db redis
 #   ENCRYPTION_KEY=<32+ random characters>
 #   GEMINI_API_KEY=<your key>          # development fallback only
 
-npm run setup         # applies migrations, then creates your organization and super-admin
-npm run dev           # http://localhost:5000 — sign in with the admin email and password
+npm run setup          # applies migrations, then creates your organization and super-admin
+npm run dev:no-sidecar # http://localhost:5000 — sign in with the admin email and password
+                       # (npm run dev also starts the Python service: see below)
 ```
 
 `npm run setup` is safe to re-run and on a database that already has data: it never
@@ -50,7 +51,7 @@ reads `ODDJOB_ADMIN_EMAIL`, `ODDJOB_ADMIN_PASSWORD` and optionally
 
 `server/config/env.ts` logs, at boot, every capability a missing variable switches
 off. For a throwaway demo database with sample organizations and logins, see
-[Database seeding](#5-database-seeding) — it is destructive by design.
+[Database seeding](#database-seeding) — it is destructive by design.
 
 ## Documentation
 
@@ -64,126 +65,102 @@ off. For a throwaway demo database with sample organizations and logins, see
 - [Contributing](CONTRIBUTING.md) and [working in this repository](AGENTS.md) —
   the gates to run before claiming something works.
 
-The rest of this file is the developer's setup and troubleshooting guide.
+The rest of this file covers running, testing and seeding a development install.
 
-## 0. Start Here (Evaluators)
+## Evaluating Oddjob
 
-If you are evaluating Oddjob rather than developing it, start with the guided walkthrough:
+Start with **[First Mission In 10 Minutes](docs/guides/first-mission-in-10-minutes.md)**:
+three demo paths (governed support triage, computer use with replay, and generating
+an internal ops app), each with setup, expected outcome and success criteria.
 
-**[First Mission In 10 Minutes](docs/guides/first-mission-in-10-minutes.md)** — three demo paths (governed support triage, computer use with replay, generate an internal ops app), each with setup, expected outcome, and success criteria.
-
-For a no-setup readiness check that requires no credentials and no running server:
+These checks need no credentials and no running server:
 
 ```bash
 npm run smoke:capabilities    # capability manifest is internally consistent
 npm run smoke:autonomy-policy # safe/review/blocked cases classify consistently
 npm run smoke:golden-path     # governed support-triage contract check
-npm run demo:golden-path      # database-backed mission/approval/resume execution
 ```
 
-Note that `smoke:golden-path` is a deterministic contract check over a fixture — it
-validates the scenario and re-evaluates the shared autonomy policy, but it does not
-execute a mission. Path A of the walkthrough above is the real end-to-end run.
-The separate `demo:golden-path` command automates that path against a configured
-development database and labels its output separately from fixture validation.
+`smoke:golden-path` validates a fixture against the shared autonomy policy; it does
+not execute a mission. `npm run demo:golden-path` runs that path for real against a
+configured development database.
 
-## 1. Initial Setup
+## Running the development server
 
-To get started with the project, ensure you have Node.js (>=20) and Python with a virtual environment configured.
-
-## 2. Platform Architecture Overview
-
-Oddjob is a distributed multi-agent autonomous system built around modular domain services:
-
-- **Swarm Task Marketplace** (`server/domain/swarm/`): Decentralized task bidding, capacity management, and worker payout settlement.
-- **Knowledge Engine & Graph RAG** (`server/domain/knowledge/`): Semantic memory, entity extraction, and multi-hop graph retrieval.
-- **Xray Platform Composition** (`server/domain/xray/`): Real-time event-driven architecture indexing and spec fingerprinting.
-- **Mission Orchestration** (`server/domain/mission/`): Dynamic execution engine with thinking traces and post-execution critique.
-- **AI Intervention Engine** (`server/domain/ai/`): Steering vector control, model policy distillation, and memory snapshot management.
-- **Cycle Blueprint Builder** (`server/routes/cycle-builder-drafts.ts`): Operational cycle planning, visual node flow graph, and optimistic draft governance.
-
-## 3. Running the Development Server
-
-To start the development server, use the following command:
+`npm run dev` starts three processes: the Node server (`dev:server`), the job worker
+(`start:worker`), and the Python service in `backend/` (`npm run backend`). The
+`backend` script expects a virtual environment at `backend/.venv` and uses its
+Windows path, so on macOS and Linux, or without Python set up, run:
 
 ```bash
-npm run dev
+npm run dev:no-sidecar
 ```
 
-This command runs the server, worker, and backend processes concurrently.
+To set up the Python service, create `backend/.venv` and install
+`backend/requirements.txt` into it; see [backend/README.md](backend/README.md).
 
-**Note on Backend Logging:**
-The `backend` process's output is directed to console logs.
+The server has no hot reload: restart it to pick up server-side changes.
 
-## 4. Testing & Verification
+## Where things live
 
-Run unit, integration, and E2E test suites with the following commands:
+- `server/domain/*` — the server, one directory per domain (missions, pipelines,
+  crew, knowledge, governance, tools, …). Some domains also carry UI under
+  `server/domain/*/ui/`.
+- `client/src/` — the main React client. Components live here **and** under
+  `server/domain/*/ui/`, so search both.
+- `shared/` — schema and types used by both sides; `migrations/` holds the SQL.
+- `server/blueprints/apps/*` — the generated apps that run inside CREW.
+- `backend/` — the optional Python service.
+
+[AGENTS.md](AGENTS.md) records the conventions that are not visible from a single
+file: org scoping, BYOK keys, routing and migrations.
+
+## Testing
 
 ```bash
-# Run unit & schema tests
-npm test
-
-# Run architecture lint check
-npx tsx scripts/lint-architecture.ts
-
-# Run Playwright E2E contract tests
-npx playwright test
+npm run verify            # the full gate: lints, tsc, unit tests, smoke, build
+npm test                  # unit tests only
+npx playwright test       # browser tests, against a running dev server
 ```
 
-## 5. Database Seeding
-
-> **⚠️ `db:seed` DESTROYS the target database.** It runs
-> `TRUNCATE ... RESTART IDENTITY CASCADE` on `orgs`, `users`, `jobs`, `pipelines`,
-> `apps`, `datasets` and more, cascading across the whole schema. It reads
-> `DATABASE_URL`, which in normal development points at your **development**
-> database — so running it wipes real local data, not just the seed tables.
->
-> Because of that it refuses to run unless you opt in explicitly:
->
-> ```bash
-> ALLOW_DESTRUCTIVE_SEED=true npm run db:seed
-> ```
->
-> Use it on a fresh or disposable database. If you only need the `componentIndex`
-> table populated, prefer a targeted script over a full re-seed.
-
-The `componentIndex` table, which powers the `/knowledge/components` display, needs to be populated with data.
-
-**Troubleshooting Seeding Issues:**
-`duplicate key value violates unique constraint` during seeding means the truncate
-did not cover a table your data already occupies — resolve the specific conflict
-rather than widening the truncate.
-
-## 5a. Running tests against a database
+### Tests against a database
 
 Integration tests need their own database. They never use `DATABASE_URL` from
 `.env`: `tests/configure-test-environment.ts` overwrites it and refuses any URL whose
 database name lacks a distinct `test` segment.
 
 ```bash
-npm run test:db:setup     # create + migrate + seed the test database (idempotent)
+npm run test:db:setup     # create, migrate and seed the test database (idempotent)
+npm run test:integration
 ```
 
 Set `TEST_DATABASE_URL` in `.env.test` (gitignored) to point at it.
 
-**Never hardcode a connection string in a test.** Two audit suites once embedded the
-development database URL and inserted rows straight into it. Any test that opens its
-own pool or client must obtain the URL from `requireTestDatabaseUrl()`, which applies
-the same test-database check and throws rather than falling back to a default.
+**Never hardcode a connection string in a test.** Any test that opens its own pool or
+client must obtain the URL from `requireTestDatabaseUrl()`, which applies the same
+test-database check and throws rather than falling back to a default.
 
 If suites fail with `sorry, too many clients already`, the database has run out of
-connection slots — usually orphaned `npm run dev` / worker processes from earlier
-sessions, each holding a pool. Reap those first; note that this failure aborts a suite
+connection slots, usually because of orphaned `npm run dev` or worker processes from
+earlier sessions, each holding a pool. Stop those first. This failure aborts a suite
 during setup, so every test in it reports as *skipped* rather than failed.
 
-## 6. Component Indexing
+## Database seeding
 
-The `/api/capabilities/component-index/search` API endpoint powers component lookup across platform blocks.
+> **`db:seed` DESTROYS the target database.** It runs
+> `TRUNCATE ... RESTART IDENTITY CASCADE` on `orgs`, `users`, `jobs`, `pipelines`,
+> `apps`, `datasets` and more, cascading across the whole schema. It reads
+> `DATABASE_URL`, which normally points at your **development** database.
+>
+> It refuses to run unless you opt in explicitly:
+>
+> ```bash
+> ALLOW_DESTRUCTIVE_SEED=true npm run db:seed
+> ```
+>
+> Use it only on a fresh or disposable database. For a real install, use
+> `npm run setup` instead.
 
-**Key Features:**
-- Default `minEffectiveness` filter set to `0.0` to ensure complete visibility.
-- `searchComponentIndex` handles filtering across category, query string, and effectiveness.
-
----
-
-This documentation is updated alongside project evolutions. Refer to [`docs/FEATURES.md`](./docs/FEATURES.md) and [`docs/SYSTEM_ARCHITECTURE.md`](./docs/SYSTEM_ARCHITECTURE.md) for detailed reference specs.
+`duplicate key value violates unique constraint` during seeding means the truncate
+did not cover a table your data already occupies. Resolve that specific conflict
+rather than widening the truncate.

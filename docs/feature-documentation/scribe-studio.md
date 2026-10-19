@@ -2,8 +2,8 @@
 
 > **Spec References:**
 > - [SCRIBE_STUDIO_SPEC](../../docs/CALCULATION_NODES.md)
-> - [Oddjob 5-Layer AI Control Plane](../../.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md)
-> - [Distributed Tracing & Forensic Logging](../../.agent/workflows/distributed-tracing-implementation.md)
+> - Oddjob 5-Layer AI Control Plane (`.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md`)
+> - Distributed Tracing & Forensic Logging (`.agent/workflows/distributed-tracing-implementation.md`)
 
 ---
 
@@ -207,4 +207,4 @@ export interface ScribeActionIntent {
 ## **Documentation References**
 - **Related Specs**: [`CALCULATION_NODES.md`](../../docs/CALCULATION_NODES.md)
 - **Central Index**: [`SUMMARY.md`](./SUMMARY.md)
-- **Agent Skill Guide**: [`oddjob-5layer-ai-control-plane`](../../.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md)
+- **Agent Skill Guide**: `oddjob-5layer-ai-control-plane` (`.agent/skills/oddjob-5layer-ai-control-plane/SKILL.md`)

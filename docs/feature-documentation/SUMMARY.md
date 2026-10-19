@@ -72,7 +72,7 @@ This document provides an overview of all documented features and serves as the 
 
 #### **4. Scheduling System** ✅
 - **Document**: [04-scheduling-system.md](./core-features/04-scheduling-system.md)
-- **Spec**: [SCHEDULES_SPEC](../specs/SCHEDULES_SPEC.md)
+- **Spec**: SCHEDULES_SPEC
 - **Status**: ✅ Complete
 - **Key Features**: Cron schedules, timezone, pipeline triggers, scheduled jobs
 
@@ -81,20 +81,20 @@ This document provides an overview of all documented features and serves as the 
 #### **5. Authentication System**
 - **Status**: ✅ Complete
 - **Pod Documentation**: [`server/domain/auth/README.md`](../../server/domain/auth/README.md)
-- **Document**: [`05-auth-system.md`](./integration-features/05-auth-system.md)
+- **Document**: `05-auth-system.md`
 - **Key Components**: use-auth.tsx (140+ lines), ProtectedRoute.tsx
 - **Features**: Multi-tenant auth, role-based access, session management
 - **API Endpoints**: 12+ endpoints documented
 - **Complexity**: High - Security critical, multi-tenancy, permission systems
 
 #### **6. Credentials System** ✅
-- **Document**: [06-credentials-system.md](./integration-features/06-credentials-system.md)
-- **Spec**: [CREDENTIALS_SPEC](../specs/CREDENTIALS_SPEC.md)
+- **Document**: 06-credentials-system.md
+- **Spec**: CREDENTIALS_SPEC
 - **Status**: ✅ Complete
 - **Key Component**: CredentialDetail.tsx (1,297 lines)
 
 #### **7. Decision Inbox (HIL)** ✅
-- **Document**: [07-decision-inbox-hil.md](./integration-features/07-decision-inbox-hil.md)
+- **Document**: 07-decision-inbox-hil.md
 - **Status**: ✅ Complete
 - **Features**: Human-in-the-loop approvals, Decision Inbox
 
@@ -190,11 +190,11 @@ As part of the Mach 3 Distributed Architecture, every core domain maintains loca
 
 | Domain | Mach 3 Role | Backend Pod (`server/domain`) | Frontend Module (`client/src/modules`) |
 | :--- | :--- | :--- | :--- |
-| **Missions** | `mission` | [README](../../server/domain/mission/README.md) | [README](../../client/src/modules/missions/README.md) |
-| **Pipelines** | `mission` | [README](../../server/domain/pipeline/README.md) | [README](../../client/src/modules/pipelines/README.md) |
-| **Knowledge** | `knowledge` | [README](../../server/domain/knowledge/README.md) | [README](../../client/src/modules/knowledge/README.md) |
-| **Auth** | `auth` | [README](../../server/domain/auth/README.md) | [README](../../client/src/modules/auth/README.md) |
-| **Jobs** | `worker` | [README](../../server/domain/jobs/README.md) | [README](../../client/src/modules/jobs/README.md) |
+| **Missions** | `mission` | [README](../../server/domain/mission/README.md) | README |
+| **Pipelines** | `mission` | [README](../../server/domain/pipeline/README.md) | README |
+| **Knowledge** | `knowledge` | [README](../../server/domain/knowledge/README.md) | README |
+| **Auth** | `auth` | [README](../../server/domain/auth/README.md) | README |
+| **Jobs** | `worker` | [README](../../server/domain/jobs/README.md) | README |
 
 ### **Distributed Services** (`services/`)
 - [**Ingestor Service**](../../services/ingestor/README.md): High-volume telemetry gateway.
@@ -385,11 +385,11 @@ As part of the Mach 3 Distributed Architecture, every core domain maintains loca
 
 | Domain | Mach 3 Role | Backend Pod (`server/domain`) | Frontend Module (`client/src/modules`) |
 | :--- | :--- | :--- | :--- |
-| **Missions** | `mission` | [README](../../server/domain/mission/README.md) | [README](../../client/src/modules/missions/README.md) |
-| **Pipelines** | `mission` | [README](../../server/domain/pipeline/README.md) | [README](../../client/src/modules/pipelines/README.md) |
-| **Knowledge** | `knowledge` | [README](../../server/domain/knowledge/README.md) | [README](../../client/src/modules/knowledge/README.md) |
-| **Auth** | `auth` | [README](../../server/domain/auth/README.md) | [README](../../client/src/modules/auth/README.md) |
-| **Jobs** | `worker` | [README](../../server/domain/jobs/README.md) | [README](../../client/src/modules/jobs/README.md) |
+| **Missions** | `mission` | [README](../../server/domain/mission/README.md) | README |
+| **Pipelines** | `mission` | [README](../../server/domain/pipeline/README.md) | README |
+| **Knowledge** | `knowledge` | [README](../../server/domain/knowledge/README.md) | README |
+| **Auth** | `auth` | [README](../../server/domain/auth/README.md) | README |
+| **Jobs** | `worker` | [README](../../server/domain/jobs/README.md) | README |
 
 ### **Distributed Services** (`services/`)
 - [**Ingestor Service**](../../services/ingestor/README.md): High-volume telemetry gateway.

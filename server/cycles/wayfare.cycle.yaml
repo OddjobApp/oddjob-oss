@@ -149,11 +149,11 @@ forms:
         required: true
       - name: "origin"
         label: "Starting City/Point"
-        type: "text"
+        type: "location"
         required: true
       - name: "destination"
         label: "Destination City/Point"
-        type: "text"
+        type: "location"
         required: true
       - name: "corridor_width"
         label: "Discovery Corridor Width (Miles)"

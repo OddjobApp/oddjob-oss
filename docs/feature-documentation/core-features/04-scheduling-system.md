@@ -61,5 +61,5 @@ The Scheduling System enables cron-based triggers for pipelines. Schedules run p
 
 ## Related
 
-- **Spec:** [SCHEDULES_SPEC](../../specs/SCHEDULES_SPEC.md)
-- **Guide:** [SCHEDULED_JOBS_DEBUGGING](../../guides/SCHEDULED_JOBS_DEBUGGING.md)
+- **Spec:** SCHEDULES_SPEC
+- **Guide:** SCHEDULED_JOBS_DEBUGGING

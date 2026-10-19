@@ -1,6 +1,6 @@
 # Missions System Documentation
 
-> **Spec Reference:** [MISSIONS_SPEC](../../specs/MISSIONS_SPEC.md) — Schema, API, checkpoint format, resume conditions.
+> **Spec Reference:** MISSIONS_SPEC — Schema, API, checkpoint format, resume conditions.
 
 ## **Feature Overview**
 
@@ -131,6 +131,6 @@ WorkgroupDetail/
 
 ## **Related**
 
-- [WORKGROUPS_SPEC](../../specs/WORKGROUPS_SPEC.md) — Workgroups and blackboard
-- [HUMAN_APPROVAL_SPEC](../../specs/HUMAN_APPROVAL_SPEC.md) — HIL flow
-- [MISSIONS_AND_BLACKBOARD](../../guides/MISSIONS_AND_BLACKBOARD.md) — User guide
+- WORKGROUPS_SPEC — Workgroups and blackboard
+- HUMAN_APPROVAL_SPEC — HIL flow
+- MISSIONS_AND_BLACKBOARD — User guide

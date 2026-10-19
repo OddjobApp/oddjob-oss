@@ -1,6 +1,6 @@
 # Jobs System Documentation
 
-> **Spec Reference:** [JOB_TYPES_SPEC](../../specs/JOB_TYPES_SPEC.md) — Config schemas, executor mapping, API.
+> **Spec Reference:** JOB_TYPES_SPEC — Config schemas, executor mapping, API.
 
 ## **Feature Overview**
 
@@ -554,9 +554,9 @@ const { testJob, isTesting, testResult, error } = useJobTest(jobId);
 
 ### **Related Documents**
 - [02-pipelines-system.md](./02-pipelines-system.md) - Jobs in pipeline context
-- [05-auth-system.md](./05-auth-system.md) - User permissions and access control
-- [06-credentials-system.md](./06-credentials-system.md) - Job credential integration
-- [13-api-architecture.md](./13-api-architecture.md) - Complete API documentation
+- 05-auth-system.md - User permissions and access control
+- 06-credentials-system.md - Job credential integration
+- 13-api-architecture.md - Complete API documentation
 
 ### **External Documentation**
 - [React Query Documentation](https://tanstack.com/query/latest) - State management

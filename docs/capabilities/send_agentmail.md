@@ -12,7 +12,7 @@
 
 ## Overview
 
-Send an outbound email via AgentMail (oddjobapp@agentmail.to). Supports rich styling, CC/BCC, and labels.
+Send an outbound email from the configured AgentMail inbox. Supports rich styling, CC/BCC, and labels.
 
 ---
 

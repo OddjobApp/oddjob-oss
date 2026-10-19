@@ -16,7 +16,7 @@ In the Mach 3 distributed architecture, this module is the frontend counterpart 
 - **Enterprise identity**: SAML/OIDC login and SCIM lifecycle management are not currently implemented in this UI.
 
 ## Hooks & State
-- **[`use-auth`](./hooks/use-auth.ts)**: The primary hook for accessing current `user`, `org`, and `isAuthenticated` status. It wraps React Query's session fetching logic.
+- **`use-auth`**: The primary hook for accessing current `user`, `org`, and `isAuthenticated` status. It wraps React Query's session fetching logic.
 - **Session Persistence**: Leverages HTTP-only cookies managed by the backend, with frontend state synchronized via immediate hydration on app load.
 
 ## API Integration

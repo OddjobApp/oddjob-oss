@@ -1,6 +1,6 @@
 # Pipelines System Documentation
 
-> **Spec References:** [MASTER_INTELLIGENT_AUTOMATION_SPEC](../../specs/MASTER_INTELLIGENT_AUTOMATION_SPEC.md) (control flow), [TEMPLATE_GALLERY_SPEC](../../specs/TEMPLATE_GALLERY_SPEC.md), [FORENSIC_ANALYSIS_SPEC](../../specs/FORENSIC_ANALYSIS_SPEC.md).
+> **Spec References:** MASTER_INTELLIGENT_AUTOMATION_SPEC (control flow), TEMPLATE_GALLERY_SPEC, FORENSIC_ANALYSIS_SPEC.
 
 ## **Feature Overview**
 
@@ -637,8 +637,8 @@ interface RetryConfig {
 ### **Related Documents**
 - [01-jobs-system.md](./01-jobs-system.md) - Job definitions and configurations
 - [03-knowledge-system.md](./03-knowledge-system.md) - Pipeline knowledge integration
-- [05-auth-system.md](./05-auth-system.md) - User permissions and access control
-- [13-api-architecture.md](./13-api-architecture.md) - Complete API documentation
+- 05-auth-system.md - User permissions and access control
+- 13-api-architecture.md - Complete API documentation
 
 ### **External Documentation**
 - [React Flow](https://reactflow.dev/) - Pipeline visualization library
