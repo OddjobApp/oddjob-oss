@@ -53,11 +53,26 @@ By following this pattern, we can keep our codebase clean, organized, and easy t
 
 ## Getting Started
 
-1.  Fork the repository.
-2.  Create a new branch for your feature or bug fix.
-3.  Make your changes.
-4.  Write tests for your changes.
-5.  Run the tests to make sure everything is working as expected.
-6.  Submit a pull request.
+1.  Fork the repository and get it running locally with the
+    [README quickstart](README.md#quickstart): Node 22.12+, Docker for Postgres and
+    Redis, `cp .env.example .env`, `npm run setup`, `npm run dev:no-sidecar`.
+2.  Read [AGENTS.md](AGENTS.md). It records the rules that are not visible from a
+    single file — org scoping, BYOK keys, routing and migrations — each of which
+    has caused real bugs.
+3.  Create a branch for your feature or bug fix.
+4.  Make your changes, with tests. A new migration needs an entry in the journal
+    (`npm run check:migration-journal`); a change to an app under
+    `server/blueprints/apps/` needs
+    `server/domain/apps/platform/blueprint-crew-contract.test.ts` to pass.
+5.  Run the gate before opening a pull request:
+
+    ```bash
+    npm run verify
+    ```
+
+    It runs the lints, tsc, the unit tests, the smoke checks and the build — the
+    same `verify` job CI runs. Tests that need a database are separate:
+    `npm run test:db:setup` once, then `npm run test:integration`.
+6.  Submit a pull request, saying what changed and how you checked it.
 
 We look forward to your contributions!

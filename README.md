@@ -119,15 +119,20 @@ configured development database.
 
 `npm run dev` starts three processes: the Node server (`dev:server`), the job worker
 (`start:worker`), and the Python service in `backend/` (`npm run backend`). The
-`backend` script expects a virtual environment at `backend/.venv` and uses its
-Windows path, so on macOS and Linux, or without Python set up, run:
+Python service runs from a virtual environment at `backend/.venv`; create it once:
+
+```bash
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt     # Windows: .venv\Scripts\pip
+```
+
+Without it, `npm run backend` stops with those instructions, and you can run
+everything else with:
 
 ```bash
 npm run dev:no-sidecar
 ```
-
-To set up the Python service, create `backend/.venv` and install
-`backend/requirements.txt` into it; see [backend/README.md](backend/README.md).
 
 The server has no hot reload: restart it to pick up server-side changes.
 

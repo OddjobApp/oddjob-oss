@@ -119,7 +119,7 @@
     "install:services": "npm run install:ingestor && npm run install:consumer",
     "ingestor": "cd services/ingestor && npm run dev",
     "consumer": "cd services/consumer && python -u main.py",
-    "backend": "cd backend && .venv\\Scripts\\python -u main.py",
+    "backend": "node scripts/run-backend.mjs",
     "auth": "npm run dev --workspace=@oddjob/auth-service",
     "dev:services": "concurrently \"npm run ingestor\" \"npm run consumer\" \"npm run backend\" \"npm run auth\"",
     "backup": "tsx scripts/backup-db.ts",
