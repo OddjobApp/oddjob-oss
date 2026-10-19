@@ -1,0 +1,1024 @@
+name: "Product Launch Cycle"
+version: "1.0"
+containers: {}
+description: "A cross-functional product launch cycle orchestrating Market Research, Feature Scoping, GTM Strategy, Sales Enablement, Beta Coordination, Launch Execution, and Post-Launch Feedback through 7 specialized AI agents and 5 workbenches."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Product Launch Cycle"
+  icon: "🚀"
+  theme_color: "#8b5cf6"
+  display_priority: 2
+  category: "product"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 10 # Content/strategy agents need iterations: research → draft → refine → publish
+  enforce_read_only_prod: true
+  token_budget_per_launch: 1500000 # 1.5M tokens for full launch cycle (research + strategy + content + enablement)
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.7
+  max_tokens: 4096
+  timeout_ms: 120000
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    marketing_space: "${ENV.CONFLUENCE_MARKETING_SPACE}"
+    product_space: "${ENV.CONFLUENCE_PRODUCT_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    launch_channel: "${ENV.SLACK_LAUNCH_CHANNEL}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+  hubspot:
+    enabled: false
+    api_key: "${ENV.HUBSPOT_API_KEY}"
+    portal_id: "${ENV.HUBSPOT_PORTAL_ID}"
+  google_analytics:
+    enabled: false
+    property_id: "${ENV.GA_PROPERTY_ID}"
+    measurement_id: "${ENV.GA_MEASUREMENT_ID}"
+  intercom:
+    enabled: false
+    app_id: "${ENV.INTERCOM_APP_ID}"
+    api_token: "${ENV.INTERCOM_API_TOKEN}"
+  pendo:
+    enabled: false
+    api_key: "${ENV.PENDO_API_KEY}"
+    app_id: "${ENV.PENDO_APP_ID}"
+
+prediction_intelligence:
+  launch_readiness_scoring:
+    enabled: true
+    model: "oddjob-risk-analyzer-v1"
+    threshold: 0.80
+  market_timing:
+    enabled: true
+    signals: ["competitor_launches", "seasonal_trends", "market_sentiment"]
+
+knowledge_datasets:
+  - id: "competitive_intelligence"
+    source: "docs/competitive/"
+    vectorize: true
+    primary_key: "competitor_id"
+    schema:
+      competitor_id: "string"
+      name: "string"
+      positioning: "text"
+      recent_launches: "array[object]"
+      strengths: "array[string]"
+      weaknesses: "array[string]"
+  - id: "customer_personas"
+    source: "docs/personas/"
+    vectorize: true
+    primary_key: "persona_id"
+    schema:
+      persona_id: "string"
+      name: "string"
+      role: "string"
+      pain_points: "array[string]"
+      buying_triggers: "array[string]"
+      channels: "array[string]"
+  - id: "past_launches"
+    source: "docs/launches/"
+    vectorize: true
+    primary_key: "launch_id"
+    schema:
+      launch_id: "string"
+      product_name: "string"
+      launch_date: "date"
+      outcome: "string"
+      lessons_learned: "text"
+      metrics: "json"
+  - id: "pricing_models"
+    source: "docs/pricing/"
+    vectorize: true
+    primary_key: "model_id"
+    schema:
+      model_id: "string"
+      tier_name: "string"
+      price_point: "number"
+      features_included: "array[string]"
+      conversion_rate: "number"
+  - id: "sales_playbooks"
+    source: "docs/sales/"
+    vectorize: true
+    primary_key: "playbook_id"
+    schema:
+      playbook_id: "string"
+      segment: "string"
+      talk_track: "text"
+      objection_handling: "json"
+      demo_script: "text"
+
+templates:
+  - id: "market_analysis_template"
+    path: "file://knowledge/document-templates/market_analysis_template.md"
+  - id: "gtm_strategy_template"
+    path: "file://knowledge/document-templates/gtm_strategy_template.md"
+  - id: "launch_brief_template"
+    path: "file://knowledge/document-templates/launch_brief_template.md"
+  - id: "sales_enablement_kit_template"
+    path: "file://knowledge/document-templates/sales_enablement_kit_template.md"
+  - id: "beta_program_template"
+    path: "file://knowledge/document-templates/beta_program_template.md"
+  - id: "launch_checklist_template"
+    path: "file://knowledge/document-templates/launch_checklist_template.md"
+  - id: "post_launch_report_template"
+    path: "file://knowledge/document-templates/post_launch_report_template.md"
+  - id: "press_release_template"
+    path: "file://knowledge/document-templates/press_release_template.md"
+  - id: "pricing_proposal_template"
+    path: "file://knowledge/document-templates/pricing_proposal_template.md"
+
+forms:
+  - id: "launch_brief_intake"
+    name: "Product Launch Brief"
+    description: "Define the product, target market, and launch objectives."
+    fields:
+      - name: "product_name"
+        label: "Product / Feature Name"
+        type: "text"
+        required: true
+      - name: "product_description"
+        label: "Product Description"
+        type: "text"
+        required: true
+      - name: "target_launch_date"
+        label: "Target Launch Date"
+        type: "text"
+        required: true
+      - name: "target_segments"
+        label: "Target Customer Segments"
+        type: "text"
+        required: true
+      - name: "success_metrics"
+        label: "Success Metrics (KPIs)"
+        type: "text"
+        required: true
+      - name: "budget_usd"
+        label: "Launch Budget (USD)"
+        type: "number"
+        required: false
+
+  - id: "gtm_strategy_approval"
+    name: "GTM Strategy Approval"
+    description: "Executive approval of go-to-market strategy and positioning."
+    fields:
+      - name: "positioning_approved"
+        label: "Positioning & Messaging"
+        type: "select"
+        required: true
+        options: ["Approved", "Revisions Needed"]
+      - name: "pricing_approved"
+        label: "Pricing Strategy"
+        type: "select"
+        required: true
+        options: ["Approved", "Revisions Needed"]
+      - name: "channel_strategy_approved"
+        label: "Channel Strategy"
+        type: "select"
+        required: true
+        options: ["Approved", "Revisions Needed"]
+      - name: "executive_feedback"
+        label: "Executive Feedback"
+        type: "text"
+        required: false
+
+  - id: "beta_readiness_gate"
+    name: "Beta Program Readiness Gate"
+    description: "Confirm product is ready for beta participants."
+    fields:
+      - name: "product_stability"
+        label: "Product Stability"
+        type: "select"
+        required: true
+        options: ["Stable", "Known Issues (Documented)", "Not Ready"]
+      - name: "onboarding_ready"
+        label: "Onboarding Flow Ready"
+        type: "select"
+        required: true
+        options: ["Yes", "Partial", "No"]
+      - name: "support_coverage"
+        label: "Support Coverage Plan"
+        type: "select"
+        required: true
+        options: ["Dedicated", "Shared Queue", "Self-Service Only"]
+      - name: "beta_cohort_size"
+        label: "Beta Cohort Size"
+        type: "number"
+        required: true
+
+  - id: "launch_go_nogo"
+    name: "Launch Go/No-Go Decision"
+    description: "Final executive decision to proceed with public launch."
+    fields:
+      - name: "launch_decision"
+        label: "Launch Decision"
+        type: "select"
+        required: true
+        options: ["GO", "NO-GO (Delay)", "CONDITIONAL GO"]
+      - name: "conditions"
+        label: "Conditions (if conditional)"
+        type: "text"
+        required: false
+      - name: "revised_date"
+        label: "Revised Launch Date (if delayed)"
+        type: "text"
+        required: false
+      - name: "executive_sponsor"
+        label: "Executive Sponsor Sign-off"
+        type: "text"
+        required: true
+
+  - id: "post_launch_review"
+    name: "Post-Launch Review"
+    description: "Capture launch outcomes and lessons learned."
+    fields:
+      - name: "launch_outcome"
+        label: "Overall Outcome"
+        type: "select"
+        required: true
+        options: ["Exceeded Targets", "Met Targets", "Below Targets", "Failed"]
+      - name: "key_metrics_achieved"
+        label: "Key Metrics Achieved"
+        type: "text"
+        required: true
+      - name: "lessons_learned"
+        label: "Lessons Learned"
+        type: "text"
+        required: true
+      - name: "iteration_priorities"
+        label: "Iteration Priorities (Next 30 Days)"
+        type: "text"
+        required: true
+
+agents:
+  - id: "ai-market-researcher"
+    name: "Market Insights & Competitor Researcher"
+    role: "specialist"
+    model: "claude-3.5-sonnet"
+    temperature: 0.3
+    soul_profile:
+      archetype: "The Data-Driven Strategist"
+      legend: "Obsessed with market signals, competitive positioning, and customer insights. Never launches without data."
+      traits: { analytical: 95, creativity: 60, speed: 70 }
+    system_prompt: "file://knowledge/prompts/market-researcher.md"
+    boundaries: ["docs/competitive/", "docs/personas/", "docs/market/"]
+    permissions: ["confluence:read", "confluence:write", "jira:read"]
+    tools: ["confluence_search", "knowledge_graph_query", "generate_mermaid", "slack_post_message", "searchCompetitorIntel"]
+
+  - id: "ai-product-strategist"
+    name: "Product Strategy Planner"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.4
+    soul_profile:
+      archetype: "The Visionary Prioritizer"
+      legend: "Balances customer value, business impact, and engineering feasibility. Ruthless about scope."
+      traits: { strategic: 90, empathy: 85, decisiveness: 80 }
+    system_prompt: "file://knowledge/prompts/product-strategist.md"
+    boundaries: ["docs/product/", "docs/pricing/", "docs/roadmap/"]
+    permissions: ["jira:read", "jira:write", "confluence:read", "confluence:write", "slack:write:channel"]
+    allowed_delegations: ["ai-market-researcher", "ai-gtm-strategist"]
+    tools: ["jira_jql_search", "jira_create_epic_and_stories", "confluence_publish", "slack_post_message", "knowledge_graph_query", "oddjob_prediction_windowing", "generatePositioningCanvas", "createPricingModel", "get_blackboard", "update_blackboard"]
+
+  - id: "ai-gtm-strategist"
+    name: "Go-To-Market Strategy Planner"
+    role: "specialist"
+    model: "claude-3.5-sonnet"
+    temperature: 0.5
+    soul_profile:
+      archetype: "The Growth Architect"
+      legend: "Designs launch campaigns that create momentum. Thinks in funnels, channels, and conversion rates."
+      traits: { creativity: 90, analytical: 75, speed: 80 }
+    system_prompt: "file://knowledge/prompts/gtm-strategist.md"
+    boundaries: ["docs/marketing/", "docs/campaigns/", "docs/content/"]
+    permissions: ["confluence:read", "confluence:write", "slack:write:channel"]
+    tools: ["confluence_publish", "confluence_search", "slack_post_message", "generate_mermaid", "knowledge_graph_query", "generateContentBrief"]
+
+  - id: "ai-content-creator"
+    name: "Copywriter & Content Writer"
+    role: "specialist"
+    model: "claude-3.5-sonnet"
+    temperature: 0.7
+    soul_profile:
+      archetype: "The Compelling Storyteller"
+      legend: "Turns product features into customer stories. Every word earns its place."
+      traits: { creativity: 95, empathy: 85, speed: 90 }
+    system_prompt: "file://knowledge/prompts/content-creator.md"
+    boundaries: ["docs/content/", "docs/brand/"]
+    permissions: ["confluence:read", "confluence:write"]
+    tools: ["confluence_publish", "knowledge_graph_query", "slack_post_message", "writeMarketingCopy"]
+
+  - id: "ai-sales-enablement"
+    name: "Sales Enablement Content Specialist"
+    role: "specialist"
+    model: "claude-3.5-sonnet"
+    temperature: 0.3
+    soul_profile:
+      archetype: "The Revenue Enabler"
+      legend: "Arms sales teams with everything they need to close. Thinks in objections and competitive positioning."
+      traits: { analytical: 80, empathy: 85, speed: 75 }
+    system_prompt: "file://knowledge/prompts/sales-enablement.md"
+    boundaries: ["docs/sales/", "docs/competitive/", "docs/pricing/"]
+    permissions: ["confluence:read", "confluence:write", "slack:write:channel"]
+    tools: ["confluence_publish", "confluence_search", "knowledge_graph_query", "slack_post_message", "createBattleCard"]
+
+  - id: "ai-launch-coordinator"
+    name: "Product Launch Project Coordinator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Precision Executor"
+      legend: "Nothing falls through the cracks. Tracks every dependency, deadline, and deliverable."
+      traits: { organization: 95, speed: 85, decisiveness: 80 }
+    system_prompt: "file://knowledge/prompts/launch-coordinator.md"
+    boundaries: ["docs/launches/", "docs/checklists/"]
+    permissions: ["jira:read", "jira:write", "confluence:read", "confluence:write", "slack:write:channel"]
+    allowed_delegations: ["ai-content-creator", "ai-sales-enablement", "ai-feedback-analyst"]
+    tools: ["jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message", "knowledge_graph_query", "oddjob_prediction_windowing", "trigger_hil_approval", "scoreLaunchReadiness", "get_blackboard", "update_blackboard"]
+
+  - id: "ai-feedback-analyst"
+    name: "Feedback Sentiment Analyst"
+    role: "specialist"
+    model: "claude-3.5-sonnet"
+    temperature: 0.3
+    soul_profile:
+      archetype: "The Voice of the Customer"
+      legend: "Synthesizes signal from noise. Turns raw feedback into actionable product insights."
+      traits: { analytical: 90, empathy: 90, speed: 70 }
+    system_prompt: "file://knowledge/prompts/feedback-analyst.md"
+    boundaries: ["docs/feedback/", "docs/analytics/"]
+    permissions: ["confluence:read", "confluence:write", "jira:read", "jira:write"]
+    tools: ["jira_jql_search", "jira_create_epic_and_stories", "confluence_publish", "knowledge_graph_query", "slack_post_message", "synthesizeFeedback", "createIterationTicket"]
+
+missions:
+  - id: "mission-0-launch-brief"
+    name: "Launch Brief & Market Analysis"
+    objective: "Define the product launch scope, analyze the competitive landscape, validate target personas, and produce a comprehensive market analysis."
+    type: "mission"
+    environment: "research"
+    estimated_duration_hours: 16
+    execution_strategy: "dynamic_autonomous"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "ai-market-researcher"
+    inputs: ["launch_brief_intake", "competitive_intelligence", "customer_personas"]
+    outputs: ["market_analysis", "competitive_map", "persona_validation", "tam_estimate"]
+    resources_required: ["product_leadership_review"]
+    ui_metadata:
+      icon: "🔍"
+      color: "#6366f1"
+      display_order: 1
+      category: "research"
+      description: "Deep market research and competitive analysis to inform launch strategy"
+    sequence:
+      - step_code: "BRIEF-1"
+        action: "analyze_competitive_landscape"
+        description: "Map competitors, their positioning, recent launches, and market gaps"
+        estimated_duration_minutes: 120
+        ui_metadata:
+          icon: "🗺️"
+          display_name: "Competitive Mapping"
+      - step_code: "BRIEF-2"
+        action: "validate_customer_personas"
+        description: "Validate target personas against market data and identify buying triggers"
+        estimated_duration_minutes: 90
+        ui_metadata:
+          icon: "👥"
+          display_name: "Persona Validation"
+      - step_code: "BRIEF-3"
+        action: "estimate_market_size"
+        description: "Calculate TAM/SAM/SOM with supporting methodology"
+        estimated_duration_minutes: 60
+        ui_metadata:
+          icon: "📊"
+          display_name: "Market Sizing"
+      - step_code: "BRIEF-4"
+        action: "identify_launch_risks"
+        description: "Identify market timing risks, competitive threats, and mitigation strategies"
+        estimated_duration_minutes: 45
+        ui_metadata:
+          icon: "⚠️"
+          display_name: "Risk Assessment"
+      - step_code: "BRIEF-5"
+        action: "publish_market_analysis"
+        description: "Publish comprehensive market analysis to Confluence"
+        estimated_duration_minutes: 30
+        tool: "confluence_publish"
+        ui_metadata:
+          icon: "📄"
+          display_name: "Publish Analysis"
+
+  - id: "mission-1-gtm-strategy"
+    name: "GTM Strategy & Positioning"
+    objective: "Define go-to-market strategy including positioning, messaging, pricing, channel strategy, and launch timeline."
+    type: "mission"
+    environment: "strategy"
+    estimated_duration_hours: 24
+    execution_strategy: "rolling_wave"
+    trigger:
+      type: "mission_completion"
+      source: "mission-0-launch-brief"
+    primary_agent: "ai-product-strategist"
+    inputs: ["market_analysis", "customer_personas", "pricing_models"]
+    outputs: ["positioning_document", "pricing_strategy", "channel_plan", "launch_timeline"]
+    resources_required: ["executive_approval"]
+    ui_metadata:
+      icon: "🎯"
+      color: "#8b5cf6"
+      display_order: 2
+      category: "strategy"
+      description: "Define positioning, pricing, and channel strategy for launch"
+    sequence:
+      - step_code: "GTM-1"
+        action: "define_positioning"
+        description: "Create positioning statement, value proposition, and messaging framework"
+        estimated_duration_minutes: 180
+        ui_metadata:
+          icon: "💎"
+          display_name: "Positioning & Messaging"
+      - step_code: "GTM-2"
+        action: "design_pricing_strategy"
+        description: "Define pricing tiers, packaging, and competitive pricing analysis"
+        estimated_duration_minutes: 120
+        ui_metadata:
+          icon: "💰"
+          display_name: "Pricing Strategy"
+      - step_code: "GTM-3"
+        action: "plan_channel_strategy"
+        description: "Design multi-channel launch plan with budget allocation"
+        estimated_duration_minutes: 120
+        agent: "ai-gtm-strategist"
+        ui_metadata:
+          icon: "📡"
+          display_name: "Channel Strategy"
+      - step_code: "GTM-4"
+        action: "create_launch_timeline"
+        description: "Build detailed launch timeline with milestones and dependencies"
+        estimated_duration_minutes: 60
+        tool: "generate_mermaid"
+        ui_metadata:
+          icon: "📅"
+          display_name: "Launch Timeline"
+      - step_code: "GTM-5"
+        action: "trigger_hil_approval_gtm"
+        description: "Request executive approval for GTM strategy"
+        estimated_duration_minutes: 240
+        requires_human: true
+        form_ref: "gtm_strategy_approval"
+        routing_channel: "approvals_channel"
+        ui_metadata:
+          icon: "✅"
+          display_name: "Executive Approval"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-1-gtm-strategy"
+
+  - id: "mission-2-content-creation"
+    name: "Content & Asset Creation"
+    objective: "Produce all launch content assets: landing pages, blog posts, email sequences, social content, press release, and sales collateral."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 40
+    execution_strategy: "parallel_fan_out"
+    trigger:
+      type: "mission_completion"
+      source: "mission-1-gtm-strategy"
+      condition: "gtm_strategy_approved == true"
+    primary_agent: "ai-content-creator"
+    inputs: ["positioning_document", "customer_personas", "channel_plan"]
+    outputs: ["landing_page_copy", "blog_posts", "email_sequences", "social_calendar", "press_release", "sales_collateral"]
+    ui_metadata:
+      icon: "✍️"
+      color: "#ec4899"
+      display_order: 3
+      category: "execution"
+      description: "Create all marketing and sales content assets for launch"
+    sequence:
+      - step_code: "CONTENT-1"
+        action: "write_landing_page_copy"
+        description: "Write hero copy, feature sections, social proof, and CTAs for landing page"
+        estimated_duration_minutes: 180
+        ui_metadata:
+          icon: "🌐"
+          display_name: "Landing Page Copy"
+      - step_code: "CONTENT-2"
+        action: "write_blog_posts"
+        description: "Create launch announcement blog post and 3 supporting thought leadership pieces"
+        estimated_duration_minutes: 240
+        ui_metadata:
+          icon: "📝"
+          display_name: "Blog Content"
+      - step_code: "CONTENT-3"
+        action: "create_email_sequences"
+        description: "Design nurture sequence, launch announcement, and onboarding emails"
+        estimated_duration_minutes: 180
+        ui_metadata:
+          icon: "📧"
+          display_name: "Email Sequences"
+      - step_code: "CONTENT-4"
+        action: "plan_social_content"
+        description: "Create 30-day social media content calendar with copy and visual briefs"
+        estimated_duration_minutes: 120
+        ui_metadata:
+          icon: "📱"
+          display_name: "Social Calendar"
+      - step_code: "CONTENT-5"
+        action: "draft_press_release"
+        description: "Write press release and media pitch for launch announcement"
+        estimated_duration_minutes: 90
+        ui_metadata:
+          icon: "📰"
+          display_name: "Press Release"
+      - step_code: "CONTENT-6"
+        action: "create_sales_collateral"
+        description: "Produce one-pagers, battle cards, and demo scripts"
+        estimated_duration_minutes: 180
+        agent: "ai-sales-enablement"
+        ui_metadata:
+          icon: "📋"
+          display_name: "Sales Collateral"
+
+  - id: "mission-3-sales-enablement"
+    name: "Sales Enablement & Training"
+    objective: "Arm the sales team with playbooks, demo scripts, objection handling guides, competitive battle cards, and certification training."
+    type: "mission"
+    environment: "enablement"
+    estimated_duration_hours: 16
+    execution_strategy: "rolling_wave"
+    trigger:
+      type: "mission_completion"
+      source: "mission-1-gtm-strategy"
+    primary_agent: "ai-sales-enablement"
+    inputs: ["positioning_document", "pricing_strategy", "competitive_intelligence", "sales_playbooks"]
+    outputs: ["sales_playbook", "demo_scripts", "battle_cards", "objection_guide", "training_materials"]
+    ui_metadata:
+      icon: "🎓"
+      color: "#f59e0b"
+      display_order: 4
+      category: "enablement"
+      description: "Prepare sales team with tools and training for launch"
+    sequence:
+      - step_code: "ENABLE-1"
+        action: "create_sales_playbook"
+        description: "Build comprehensive sales playbook with talk tracks per persona"
+        estimated_duration_minutes: 180
+        ui_metadata:
+          icon: "📖"
+          display_name: "Sales Playbook"
+      - step_code: "ENABLE-2"
+        action: "write_demo_scripts"
+        description: "Create persona-specific demo scripts with discovery questions"
+        estimated_duration_minutes: 120
+        ui_metadata:
+          icon: "🎬"
+          display_name: "Demo Scripts"
+      - step_code: "ENABLE-3"
+        action: "build_battle_cards"
+        description: "Create competitive battle cards with win/loss positioning"
+        estimated_duration_minutes: 90
+        ui_metadata:
+          icon: "⚔️"
+          display_name: "Battle Cards"
+      - step_code: "ENABLE-4"
+        action: "design_training_certification"
+        description: "Create sales training module with knowledge check quiz"
+        estimated_duration_minutes: 120
+        ui_metadata:
+          icon: "🏆"
+          display_name: "Training & Certification"
+      - step_code: "ENABLE-5"
+        action: "publish_enablement_kit"
+        description: "Publish complete enablement kit to Confluence and notify sales channel"
+        estimated_duration_minutes: 30
+        tool: "confluence_publish"
+        ui_metadata:
+          icon: "📦"
+          display_name: "Publish Kit"
+
+  - id: "mission-4-beta-program"
+    name: "Beta Program Coordination"
+    objective: "Recruit beta participants, coordinate onboarding, collect structured feedback, and synthesize insights for product iteration."
+    type: "mission"
+    environment: "validation"
+    estimated_duration_hours: 80
+    execution_strategy: "rolling_wave"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "ai-launch-coordinator"
+    inputs: ["customer_personas", "beta_readiness_gate"]
+    outputs: ["beta_cohort", "feedback_synthesis", "iteration_priorities", "beta_metrics"]
+    resources_required: ["product_stability_confirmation"]
+    ui_metadata:
+      icon: "🧪"
+      color: "#10b981"
+      display_order: 5
+      category: "validation"
+      description: "Run beta program, collect feedback, and validate product-market fit"
+    sequence:
+      - step_code: "BETA-1"
+        action: "trigger_beta_readiness_gate"
+        description: "Confirm product stability and support readiness for beta"
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "beta_readiness_gate"
+        ui_metadata:
+          icon: "🔒"
+          display_name: "Readiness Gate"
+      - step_code: "BETA-2"
+        action: "recruit_beta_cohort"
+        description: "Identify and invite beta participants from target segments"
+        estimated_duration_minutes: 120
+        ui_metadata:
+          icon: "👥"
+          display_name: "Cohort Recruitment"
+      - step_code: "BETA-3"
+        action: "coordinate_beta_onboarding"
+        description: "Manage beta participant onboarding and initial setup"
+        estimated_duration_minutes: 180
+        ui_metadata:
+          icon: "🚪"
+          display_name: "Beta Onboarding"
+      - step_code: "BETA-4"
+        action: "collect_feedback"
+        description: "Aggregate feedback from beta participants via surveys and interviews"
+        estimated_duration_minutes: 240
+        agent: "ai-feedback-analyst"
+        ui_metadata:
+          icon: "💬"
+          display_name: "Feedback Collection"
+      - step_code: "BETA-5"
+        action: "synthesize_beta_insights"
+        description: "Analyze feedback patterns and produce iteration recommendations"
+        estimated_duration_minutes: 120
+        agent: "ai-feedback-analyst"
+        ui_metadata:
+          icon: "🔬"
+          display_name: "Insight Synthesis"
+
+  - id: "mission-5-launch-execution"
+    name: "Launch Day Execution"
+    objective: "Execute the launch checklist, coordinate cross-functional activities, monitor real-time metrics, and manage day-of communications."
+    type: "mission"
+    environment: "execution"
+    estimated_duration_hours: 8
+    execution_strategy: "pre_planned"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "ai-launch-coordinator"
+    inputs: ["launch_checklist_template", "launch_timeline", "launch_go_nogo"]
+    outputs: ["launch_status_report", "day1_metrics", "issue_log"]
+    resources_required: ["executive_go_decision"]
+    ui_metadata:
+      icon: "🎬"
+      color: "#ef4444"
+      display_order: 6
+      category: "execution"
+      description: "Coordinate and execute launch day activities"
+    sequence:
+      - step_code: "LAUNCH-1"
+        action: "trigger_go_nogo_decision"
+        description: "Final go/no-go decision from executive sponsor"
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "launch_go_nogo"
+        routing_channel: "approvals_channel"
+        ui_metadata:
+          icon: "🚦"
+          display_name: "Go/No-Go Decision"
+        on_reject:
+          action: "pause_mission"
+      - step_code: "LAUNCH-2"
+        action: "execute_pre_launch_checklist"
+        description: "Verify all pre-launch items are complete (content live, integrations active, support ready)"
+        estimated_duration_minutes: 60
+        ui_metadata:
+          icon: "✅"
+          display_name: "Pre-Launch Checklist"
+      - step_code: "LAUNCH-3"
+        action: "activate_campaigns"
+        description: "Trigger email sends, social posts, paid campaigns, and PR distribution"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "🚀"
+          display_name: "Activate Campaigns"
+      - step_code: "LAUNCH-4"
+        action: "notify_stakeholders"
+        description: "Send launch announcement to internal teams, partners, and press"
+        estimated_duration_minutes: 15
+        tool: "slack_post_message"
+        ui_metadata:
+          icon: "📢"
+          display_name: "Launch Announcement"
+      - step_code: "LAUNCH-5"
+        action: "monitor_launch_metrics"
+        description: "Track real-time signup rates, page views, conversion, and error rates"
+        estimated_duration_minutes: 240
+        ui_metadata:
+          icon: "📈"
+          display_name: "Metrics Monitoring"
+      - step_code: "LAUNCH-6"
+        action: "publish_day1_report"
+        description: "Publish Day-1 launch report with metrics and issues to Confluence"
+        estimated_duration_minutes: 30
+        tool: "confluence_publish"
+        ui_metadata:
+          icon: "📊"
+          display_name: "Day-1 Report"
+
+  - id: "mission-6-post-launch"
+    name: "Post-Launch Analysis & Iteration"
+    objective: "Analyze launch performance, collect early customer feedback, identify iteration priorities, and plan fast-follow improvements."
+    type: "mission"
+    environment: "analysis"
+    estimated_duration_hours: 40
+    execution_strategy: "dynamic_autonomous"
+    trigger:
+      type: "schedule"
+      cron: "0 9 * * 1"
+      condition: "launch_completed == true"
+    primary_agent: "ai-feedback-analyst"
+    inputs: ["day1_metrics", "customer_feedback", "support_tickets"]
+    outputs: ["post_launch_report", "iteration_backlog", "lessons_learned"]
+    ui_metadata:
+      icon: "📊"
+      color: "#06b6d4"
+      display_order: 7
+      category: "analysis"
+      description: "Analyze launch results and plan product iterations"
+    sequence:
+      - step_code: "POST-1"
+        action: "aggregate_launch_metrics"
+        description: "Collect and analyze all launch KPIs vs. targets"
+        estimated_duration_minutes: 120
+        ui_metadata:
+          icon: "📉"
+          display_name: "Metrics Analysis"
+      - step_code: "POST-2"
+        action: "analyze_customer_feedback"
+        description: "Synthesize early customer feedback, support tickets, and NPS data"
+        estimated_duration_minutes: 180
+        ui_metadata:
+          icon: "💬"
+          display_name: "Feedback Analysis"
+      - step_code: "POST-3"
+        action: "identify_iteration_priorities"
+        description: "Prioritize product improvements based on feedback and metrics"
+        estimated_duration_minutes: 90
+        ui_metadata:
+          icon: "🎯"
+          display_name: "Iteration Priorities"
+      - step_code: "POST-4"
+        action: "create_iteration_backlog"
+        description: "Create Jira tickets for top iteration items"
+        estimated_duration_minutes: 60
+        tool: "jira_create_epic_and_stories"
+        ui_metadata:
+          icon: "📋"
+          display_name: "Backlog Creation"
+      - step_code: "POST-5"
+        action: "publish_post_launch_report"
+        description: "Publish comprehensive post-launch report and lessons learned"
+        estimated_duration_minutes: 60
+        tool: "confluence_publish"
+        ui_metadata:
+          icon: "📄"
+          display_name: "Post-Launch Report"
+      - step_code: "POST-6"
+        action: "trigger_post_launch_review"
+        description: "Capture executive review and close the launch cycle"
+        estimated_duration_minutes: 30
+        requires_human: true
+        form_ref: "post_launch_review"
+        ui_metadata:
+          icon: "🏁"
+          display_name: "Launch Review"
+
+  - id: "mission-7-ongoing-optimization"
+    name: "Continuous Launch Optimization"
+    objective: "Monitor ongoing performance, optimize campaigns, track competitive responses, and surface growth opportunities."
+    type: "mission"
+    environment: "monitoring"
+    estimated_duration_hours: -1
+    execution_strategy: "reactive"
+    trigger:
+      type: "schedule"
+      cron: "0 8 * * *"
+    primary_agent: "ai-gtm-strategist"
+    inputs: ["launch_metrics", "competitive_intelligence", "customer_feedback"]
+    outputs: ["optimization_recommendations", "competitive_alerts", "growth_opportunities"]
+    ui_metadata:
+      icon: "🔄"
+      color: "#84cc16"
+      display_order: 8
+      category: "optimization"
+      description: "Daily monitoring and optimization of launch performance"
+    sequence:
+      - step_code: "OPT-1"
+        action: "check_performance_metrics"
+        description: "Review daily conversion, engagement, and revenue metrics"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "📊"
+          display_name: "Daily Metrics"
+      - step_code: "OPT-2"
+        action: "scan_competitive_activity"
+        description: "Monitor competitor responses and market changes"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "👁️"
+          display_name: "Competitive Scan"
+      - step_code: "OPT-3"
+        action: "recommend_optimizations"
+        description: "Suggest campaign, messaging, or pricing optimizations"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "💡"
+          display_name: "Optimization Recs"
+
+platform_capabilities:
+  - datasets
+  - hil
+  - missions
+  - integrations
+  - knowledge
+  - pipelines
+  - agents
+  - fleet
+  - telemetry
+  - predictions
+
+apps:
+  - id: "product-launch-workbench"
+    name: "Product Launch Workbench"
+    description: "Shared Next.js server hosting all Product Launch workbenches: Command Center, Market Research, Content Studio, Sales Enablement, and Feedback & Insights"
+    type: "shared-server"
+    blueprint: "product-launch-workbench"
+    path: "file://product-launch-workbench"
+    interaction_model: "shared-server"
+    enabled: true
+    dependent_missions: ["mission-0-launch-brief", "mission-1-gtm-strategy", "mission-2-content-creation", "mission-3-sales-enablement", "mission-4-beta-program", "mission-5-launch-execution", "mission-6-post-launch", "mission-7-ongoing-optimization"]
+    required_roles: ["Product Manager", "Marketing Lead", "Sales Lead", "Executive Sponsor"]
+    workbench_modules:
+      - id: "launch-command-center"
+        name: "Launch Command Center"
+        purpose: "Central dashboard showing launch readiness score, timeline progress, cross-functional status, and real-time metrics."
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        interaction_model: "analytics-dashboard"
+        datasets: ["launch_readiness_scores", "launch_timeline_milestones", "launch_metrics"]
+        primary_actions:
+          - "view_launch_readiness_score"
+          - "track_timeline_progress"
+          - "monitor_cross_functional_status"
+          - "view_real_time_metrics"
+          - "flag_blockers"
+          - "trigger_launch_execution"
+          - "chat_with_launch_coordinator"
+        platform_capabilities: ["datasets", "fleet", "missions", "telemetry", "predictions"]
+        dependent_missions: ["mission-0-launch-brief", "mission-1-gtm-strategy", "mission-2-content-creation", "mission-3-sales-enablement", "mission-4-beta-program", "mission-5-launch-execution"]
+        agent_dependencies: ["ai-launch-coordinator"]
+
+      - id: "market-research-workbench"
+        name: "Market Research Workbench"
+        purpose: "Interactive workspace for competitive analysis, persona validation, market sizing, and research synthesis."
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        interaction_model: "form-workbench"
+        datasets: ["competitive_intelligence", "customer_personas", "market_analysis_reports"]
+        primary_actions:
+          - "search_competitive_intelligence"
+          - "validate_persona_assumptions"
+          - "calculate_market_size"
+          - "generate_competitive_map"
+          - "chat_with_research_agent"
+          - "publish_analysis_to_confluence"
+        platform_capabilities: ["datasets", "knowledge", "integrations", "agents", "telemetry"]
+        integration_dependencies: ["confluence"]
+        agent_dependencies: ["ai-market-researcher"]
+        dependent_missions: ["mission-0-launch-brief"]
+
+      - id: "content-studio"
+        name: "Content Studio"
+        purpose: "Content creation workspace with AI-assisted copywriting, asset tracking, approval workflows, and publishing."
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        interaction_model: "form-workbench"
+        datasets: ["content_assets", "content_calendar", "content_approvals"]
+        primary_actions:
+          - "generate_landing_page_copy"
+          - "write_blog_post"
+          - "create_email_sequence"
+          - "plan_social_calendar"
+          - "draft_press_release"
+          - "track_asset_status"
+          - "submit_for_approval"
+          - "publish_to_confluence"
+        platform_capabilities: ["datasets", "agents", "pipelines", "integrations", "telemetry"]
+        integration_dependencies: ["confluence"]
+        agent_dependencies: ["ai-content-creator"]
+        dependent_missions: ["mission-2-content-creation"]
+
+      - id: "sales-enablement-hub"
+        name: "Sales Enablement Hub"
+        purpose: "Sales readiness center with playbooks, battle cards, demo scripts, training materials, and certification tracking."
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        interaction_model: "form-workbench"
+        datasets: ["sales_playbooks", "battle_cards", "demo_scripts", "training_completions"]
+        primary_actions:
+          - "view_sales_playbook"
+          - "access_battle_cards"
+          - "run_demo_script"
+          - "complete_training_module"
+          - "track_certification_status"
+          - "chat_with_enablement_agent"
+          - "publish_enablement_kit"
+        platform_capabilities: ["datasets", "agents", "knowledge", "integrations", "telemetry"]
+        integration_dependencies: ["confluence", "slack"]
+        agent_dependencies: ["ai-sales-enablement"]
+        dependent_missions: ["mission-3-sales-enablement"]
+
+      - id: "feedback-insights"
+        name: "Feedback & Insights"
+        purpose: "Customer feedback aggregation, sentiment analysis, NPS tracking, and iteration priority recommendations."
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        interaction_model: "analytics-dashboard"
+        datasets: ["beta_feedback", "customer_nps", "support_tickets_summary", "iteration_priorities"]
+        primary_actions:
+          - "view_feedback_dashboard"
+          - "analyze_sentiment_trends"
+          - "track_nps_over_time"
+          - "view_iteration_priorities"
+          - "create_jira_from_feedback"
+          - "chat_with_feedback_agent"
+          - "publish_feedback_report"
+        platform_capabilities: ["datasets", "agents", "knowledge", "integrations", "predictions", "telemetry"]
+        integration_dependencies: ["jira", "confluence"]
+        agent_dependencies: ["ai-feedback-analyst"]
+        dependent_missions: ["mission-4-beta-program", "mission-6-post-launch"]
+
+environment_variables:
+  LAUNCH_READINESS_THRESHOLD: "${ENV.LAUNCH_READINESS_THRESHOLD}"
+  BETA_COHORT_TARGET_SIZE: "${ENV.BETA_COHORT_TARGET_SIZE}"
+  LAUNCH_BUDGET_USD: "${ENV.LAUNCH_BUDGET_USD}"
+  CONTENT_APPROVAL_SLA_HOURS: "${ENV.CONTENT_APPROVAL_SLA_HOURS}"
+  SALES_CERTIFICATION_PASS_RATE: "${ENV.SALES_CERTIFICATION_PASS_RATE}"
+  POST_LAUNCH_REVIEW_WINDOW_DAYS: "${ENV.POST_LAUNCH_REVIEW_WINDOW_DAYS}"
+  NPS_TARGET_SCORE: "${ENV.NPS_TARGET_SCORE}"
+  CONVERSION_RATE_TARGET: "${ENV.CONVERSION_RATE_TARGET}"
+  COMPETITIVE_SCAN_FREQUENCY_HOURS: "${ENV.COMPETITIVE_SCAN_FREQUENCY_HOURS}"
+  FEEDBACK_SYNTHESIS_FREQUENCY_HOURS: "${ENV.FEEDBACK_SYNTHESIS_FREQUENCY_HOURS}"
+
+seed_data:
+  source: "file://server/cycles/product-launch-seed-data.ts"
+  collections:
+    - competitive_intelligence
+    - customer_personas
+    - past_launches
+    - pricing_models
+    - sales_playbooks
+
+defaults:
+  LAUNCH_READINESS_THRESHOLD: "80"
+  BETA_COHORT_TARGET_SIZE: "25"
+  LAUNCH_BUDGET_USD: "25000"
+  CONTENT_APPROVAL_SLA_HOURS: "48"
+  SALES_CERTIFICATION_PASS_RATE: "80"
+  POST_LAUNCH_REVIEW_WINDOW_DAYS: "14"
+  NPS_TARGET_SCORE: "40"
+  CONVERSION_RATE_TARGET: "8"
+  COMPETITIVE_SCAN_FREQUENCY_HOURS: "24"
+  FEEDBACK_SYNTHESIS_FREQUENCY_HOURS: "12"

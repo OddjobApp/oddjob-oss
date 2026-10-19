@@ -1,0 +1,312 @@
+name: "Knowledge Base Management"
+version: "1.0"
+containers: {}
+description: "Automated documentation generation and maintenance from code, PRDs, and other sources. Maintains knowledge base with version control and updates."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Knowledge Base Management"
+  icon: "📖"
+  theme_color: "#3b82f6"
+  display_priority: 3
+  category: "operations"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "kb_article_template"
+    path: "file://knowledge/document-templates/kb_article_template.md"
+  - id: "api_doc_template"
+    path: "file://knowledge/document-templates/api_doc_template.md"
+  - id: "runbook_template"
+    path: "file://knowledge/document-templates/runbook_template.md"
+
+forms:
+  - id: "kb_scope"
+    name: "Knowledge Base Scope"
+    description: "Define the scope of knowledge base generation."
+    fields:
+      - name: "source_type"
+        label: "Source Type"
+        type: "select"
+        required: true
+        options: ["Code", "PRD", "Architecture Docs", "All Sources"]
+      - name: "target_module"
+        label: "Target Module"
+        type: "text"
+        required: false
+      - name: "doc_type"
+        label: "Documentation Type"
+        type: "select"
+        required: true
+        options: ["API Documentation", "Runbooks", "Architecture Docs", "User Guides", "All Types"]
+      - name: "update_strategy"
+        label: "Update Strategy"
+        type: "select"
+        required: true
+        options: ["Create New Articles", "Update Existing Articles", "Create and Update"]
+      - name: "include_examples"
+        label: "Include Code Examples"
+        type: "select"
+        required: true
+        options: ["Yes - Include Examples", "No - Reference Only"]
+
+  - id: "kb_review"
+    name: "Knowledge Base Review"
+    description: "Review and approve the generated knowledge base articles."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Publish", "Request Revisions", "Reject"]
+      - name: "accuracy_check"
+        label: "Documentation Accurate"
+        type: "select"
+        required: true
+        options: ["Yes - Accurate", "No - Corrections Needed"]
+      - name: "completeness_check"
+        label: "Documentation Complete"
+        type: "select"
+        required: true
+        options: ["Yes - Complete", "No - Missing Sections"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-systems-analyst"
+    name: "Product Requirement Systems Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    max_iterations: 3
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Precision Architect"
+      legend: "Generates comprehensive documentation from code and specs."
+      traits: { compliance: 90, creativity: 30, speed: 50 }
+    system_prompt: "file://knowledge/prompts/systems-analyst.md"
+    boundaries: ["server/", "client/", "knowledge/", "docs/"]
+    permissions: ["confluence:read", "confluence:write", "github:read"]
+    tools: ["workspace_read_file", "workspace_search", "knowledge_graph_query", "confluence_read", "confluence_publish", "git_diff"]
+
+  - id: "ai-technical-writer"
+    name: "Technical Documentation Writer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.4
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Documentarian"
+      legend: "Transforms technical content into clear, user-friendly documentation."
+      traits: { creativity: 80, compliance: 70, speed: 60 }
+    system_prompt: "file://knowledge/prompts/technical-writer.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["confluence:read", "confluence:write"]
+    tools: ["workspace_read_file", "confluence_publish", "knowledge_graph_query"]
+
+missions:
+  - id: "mission-analyze-sources"
+    name: "Analyze Documentation Sources"
+    objective: "Analyze code, PRDs, and other sources for documentation"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "stakeholder_workbench"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["kb_scope"]
+    outputs: ["source_analysis"]
+    sequence:
+      - step_code: "ANALYZE-1"
+        action: "scan_code"
+        description: "Scan code for documentation opportunities"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+      - step_code: "ANALYZE-2"
+        action: "analyze_prds"
+        description: "Analyze PRDs for documentation content"
+        estimated_duration_minutes: 15
+        tool: "workspace_read_file"
+      - step_code: "ANALYZE-3"
+        action: "check_existing_docs"
+        description: "Check existing documentation in Confluence"
+        estimated_duration_minutes: 15
+        tool: "confluence_read"
+      - step_code: "ANALYZE-4"
+        action: "identify_gaps"
+        description: "Identify documentation gaps"
+        estimated_duration_minutes: 10
+
+  - id: "mission-generate-articles"
+    name: "Generate Knowledge Base Articles"
+    objective: "Generate knowledge base articles from sources"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 3
+    trigger: "on_success(mission-analyze-sources)"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["source_analysis"]
+    outputs: ["kb_articles"]
+    sequence:
+      - step_code: "GEN-1"
+        action: "generate_api_docs"
+        description: "Generate API documentation"
+        estimated_duration_minutes: 45
+        template: "api_doc_template"
+      - step_code: "GEN-2"
+        action: "generate_runbooks"
+        description: "Generate operational runbooks"
+        estimated_duration_minutes: 45
+        template: "runbook_template"
+      - step_code: "GEN-3"
+        action: "generate_architecture_docs"
+        description: "Generate architecture documentation"
+        estimated_duration_minutes: 45
+        template: "kb_article_template"
+      - step_code: "GEN-4"
+        action: "generate_user_guides"
+        description: "Generate user guides"
+        estimated_duration_minutes: 45
+        template: "kb_article_template"
+
+  - id: "mission-refine-content"
+    name: "Refine Content"
+    objective: "Refine and polish documentation content"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-generate-articles)"
+    primary_agent: "ai-technical-writer"
+    inputs: ["kb_articles"]
+    outputs: ["refined_articles"]
+    sequence:
+      - step_code: "REFINE-1"
+        action: "improve_clarity"
+        description: "Improve clarity and readability"
+        estimated_duration_minutes: 30
+      - step_code: "REFINE-2"
+        action: "add_examples"
+        description: "Add code examples and use cases"
+        estimated_duration_minutes: 30
+      - step_code: "REFINE-3"
+        action: "format_content"
+        description: "Format content for Confluence"
+        estimated_duration_minutes: 30
+      - step_code: "REFINE-4"
+        action: "add_navigation"
+        description: "Add navigation and cross-references"
+        estimated_duration_minutes: 30
+
+  - id: "mission-review-articles"
+    name: "Review Knowledge Base Articles"
+    objective: "Human review and approval of articles"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-refine-content)"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["refined_articles"]
+    outputs: ["approved_articles"]
+    requires_human: true
+    form_ref: "kb_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_articles"
+        description: "Present articles for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_feedback"
+        description: "Collect team feedback and approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_articles"
+        description: "Finalize articles based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-publish-kb"
+    name: "Publish Knowledge Base"
+    objective: "Publish articles to Confluence knowledge base"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-articles)"
+    primary_agent: "ai-technical-writer"
+    inputs: ["approved_articles"]
+    outputs: ["published_kb"]
+    sequence:
+      - step_code: "PUB-1"
+        action: "publish_to_confluence"
+        description: "Publish articles to Confluence"
+        estimated_duration_minutes: 30
+        tool: "confluence_publish"
+      - step_code: "PUB-2"
+        action: "update_index"
+        description: "Update knowledge base index"
+        estimated_duration_minutes: 15
+        tool: "confluence_publish"
+      - step_code: "PUB-3"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

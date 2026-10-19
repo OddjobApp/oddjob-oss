@@ -1,0 +1,212 @@
+name: Verify Suite
+
+on:
+  # Release workflows call this gate directly; separate push-triggered runs
+  # do not create dependencies between workflows.
+  workflow_call:
+  # Branch filters are case-sensitive. This repo's integration branch is
+  # "Development" — the previous "develop"/"master" entries matched nothing,
+  # so the verify suite never ran on any branch actually in use.
+  #
+  # That fix replaced one hardcoded list with another, and the list went stale
+  # the same way: an allowlist of "feat/**, feature/**, fix/**, evolution/**"
+  # silently skipped refactor/** (and chore/**, codex/**, pr/**), so work on
+  # those branches got no verify run and no schema-drift check at all. The
+  # schema-drift job below exists precisely to catch a table declared without a
+  # migration, and it missed two of them on refactor/crew-round-context for
+  # exactly this reason — the job was never scheduled.
+  #
+  # Inverted to a denylist so a new branch prefix is covered by default. A gate
+  # that silently does not run is worse than no gate, because it reads as green.
+  push:
+    branches-ignore:
+      - "backup/**"
+      - "review-base/**"
+      - "gh-pages"
+  pull_request:
+    branches: [ "Development", "main" ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    # FlightHub fixtures use a real browser with local HTML, without credentials.
+    - name: Install browser fixture runtime
+      run: npm run playwright:install
+
+    - name: Run Verify Suite
+      run: npm run verify
+
+  # These suites boot the real server or execute database queries. Keep them
+  # outside the hermetic unit gate, but run them against provisioned services.
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oddjob_integration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      qdrant:
+        image: qdrant/qdrant:v1.8.1
+        ports:
+          - 6333:6333
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/oddjob_integration_test
+      REDIS_URL: redis://127.0.0.1:6379
+      QDRANT_URL: http://127.0.0.1:6333
+      SESSION_SECRET: integration-test-session-secret-at-least-32-chars
+      ENCRYPTION_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      JWT_SECRET: integration-test-jwt-secret
+      INTERNAL_RPC_KEY: integration-test-internal-rpc-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build workspace packages
+        run: npm run build:packages
+      - name: Provision test database and fixtures
+        run: npm run test:db:setup
+      - name: Run integration tests
+        run: npm run test:integration
+
+  # ---------------------------------------------------------------------------
+  # Coverage thresholds
+  # ---------------------------------------------------------------------------
+  #
+  # vitest.config.ts has declared thresholds (lines 70, functions 65, branches
+  # 60, statements 70) for some time, but nothing ever ran `--coverage`: not
+  # `npm run verify`, not any workflow. A threshold that is never evaluated is
+  # decoration.
+  #
+  # It is a separate job rather than a step in `verify` because the suite runs
+  # with `fileParallelism: false`, and under v8 instrumentation a full local run
+  # takes the better part of an hour — inside `npm run verify` that would simply
+  # stop people running verify at all. CI can afford the wall time; a developer
+  # pre-commit cannot.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build:packages
+
+      - name: Install browser fixture runtime
+        run: npm run playwright:install
+
+      - name: Unit tests with coverage thresholds
+        run: npm run test:unit:coverage
+
+  # ---------------------------------------------------------------------------
+  # Schema drift — does the migration chain produce what the code expects?
+  # ---------------------------------------------------------------------------
+  #
+  # Nothing else in the pipeline can answer this. `tsc` checks the schema against
+  # itself; unit tests mock the database; the migration chain is never compared
+  # to the schema it is supposed to build. So a table or column declared in
+  # shared/schema with no migration behind it passes every existing gate and
+  # fails at runtime, in production, on the first query that touches it —
+  # drizzle selects every declared column.
+  #
+  # Four such defects were found by hand on 2026-08-08 (project-scoping columns,
+  # component_index, and the transference engine's two tables); introducing the
+  # check surfaced 12 more. One of them had been reported as "admins can't see
+  # components", which read as a permissions bug and was not one.
+  #
+  # A separate job, not a step in `verify`, because this one needs a database.
+  # It is built from the migration chain ALONE — no db:push, no seed — because
+  # that is precisely the property under test.
+  schema-drift:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oddjob_ci_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/oddjob_ci_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply the migration chain
+        run: npm run db:migrate
+
+      - name: Check for schema drift
+        run: npm run check:schema-drift
+
+      # The DB-bound half of the smoke set. `npm run smoke` (hermetic) runs
+      # inside `npm run verify` in the job above; these two need a real
+      # database, and this is the only job that has one. Before this, all
+      # eight smoke scripts were hand-run only — they appeared nowhere in any
+      # workflow, so nothing they assert was ever checked automatically.
+      - name: DB smoke checks
+        run: npm run smoke:db

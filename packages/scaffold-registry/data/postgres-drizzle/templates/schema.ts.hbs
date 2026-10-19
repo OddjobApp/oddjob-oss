@@ -1,0 +1,29 @@
+import { pgTable, uuid, jsonb, timestamp, index } from "drizzle-orm/pg-core";
+
+/**
+ * The {{appName}} dataset.
+ *
+ * `payload` is JSON rather than a column per field, because the scaffold runs
+ * before the dataset's fields are known: the proposal that triggers assembly
+ * carries an app name and a pack list, not a field list. Records are therefore
+ * accepted from the first request, and the shape is tightened by adding typed
+ * columns here and running `npm run dataset:push` once the fields settle.
+ *
+ * Treat this as the starting point of the dataset, not its final shape.
+ */
+export const {{datasetIdent}} = pgTable(
+  "{{datasetTable}}",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    payload: jsonb("payload").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    // Records are read newest-first by the router below; without this that scan
+    // degrades as soon as the dataset is anything but small.
+    createdAtIdx: index("{{datasetTable}}_created_at_idx").on(table.createdAt),
+  }),
+);
+
+export type {{datasetIdent}}Record = typeof {{datasetIdent}}.$inferSelect;
+export type New{{datasetIdent}}Record = typeof {{datasetIdent}}.$inferInsert;

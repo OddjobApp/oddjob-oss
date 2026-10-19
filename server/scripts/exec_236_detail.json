@@ -1,0 +1,57 @@
+﻿[dotenv@17.2.3] injecting env (20) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+--- Detail for Execution 236 ---
+[
+  {
+    "id": 236,
+    "run_uuid": "bf704e4a-f071-4318-b9dc-b3e97f01adcc",
+    "pipeline_id": 42,
+    "status": "completed",
+    "started_at": "2026-02-13T22:27:03.480Z",
+    "completed_at": "2026-02-14T06:27:03.953Z",
+    "cancelled_at": null,
+    "error": null,
+    "organization_id": null,
+    "created_by": "supervisor-executor",
+    "start_step_id": null,
+    "ttl": null,
+    "trace_id": "584df5e439db1aa9fea37487d2145206",
+    "sampling_rate": "1.00",
+    "trace_source": "manual",
+    "last_heartbeat": null,
+    "parent_execution_id": 235,
+    "workgroup_id": 71,
+    "version": 1
+  }
+]
+
+Steps: [
+  {
+    "id": 212,
+    "pipeline_execution_id": 236,
+    "pipeline_step_id": 36,
+    "job_id": 54,
+    "step_order": 0,
+    "run_group": null,
+    "idempotency_key": null,
+    "trace_id": null,
+    "output_uri": null,
+    "error_uri": null,
+    "output_name": "health_status",
+    "output": "",
+    "error": null,
+    "status": "success",
+    "executed_at": "2026-02-14T06:27:03.482Z",
+    "completed_at": "2026-02-14T06:27:03.942Z",
+    "cancelled_at": null,
+    "span_id": null,
+    "parent_span_id": null,
+    "trace_flags": "01",
+    "retry_count": 0,
+    "parent_step_execution_id": null,
+    "output_schema": null,
+    "execution_stats": null,
+    "version": 1,
+    "sleep_until": null,
+    "suspension_metadata": null
+  }
+]

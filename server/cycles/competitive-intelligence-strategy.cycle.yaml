@@ -1,0 +1,158 @@
+name: "Competitive Intelligence & Product Strategy"
+version: "1.0.0"
+description: "Autonomous market signal ingestion, competitive threat intelligence, TrustGraph causal blast radius mapping, governed PM strategy approval, and automated roadmap epic generation for Jira."
+author: "Oddjob Product Strategy"
+
+ui_metadata:
+  display_name: "Competitive Intelligence & Strategy"
+  icon: "globe"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "product_strategy"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-1.5-pro-latest"
+  fallback_model: "gemini-flash-latest"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+  mobile_framework: "React Native"
+
+portfolio_classification:
+  group_type: "project"
+  capitalization_category: "CapEx"
+  cost_center: "CC-PRODUCT-01"
+
+organizational_guidelines:
+  constitution:
+    required: true
+    path: "knowledge/guidelines/ai_constitution.md"
+  coding_standards:
+    required: true
+    path: "knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: false
+  database:
+    required: true
+    dialect: "postgres"
+    dev_url: "${ENV.DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: false
+    alerts_channel: "#product-intel"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    export_prometheus: true
+
+directories:
+  knowledge_base: "knowledge/"
+  backend: ["server/"]
+  frontend: ["client/"]
+
+agents:
+  - id: "ai-product-strategist"
+    name: "AI Product Strategist"
+    role: "worker"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.2
+    system_prompt: "You are the Lead Competitive Intelligence & Product Strategist. Ingest market signals, parse competitor capabilities, map causal impact onto internal modules, and draft counter-strategy epics."
+    boundaries: ["market-research", "strategy", "roadmap"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write"]
+    tools:
+      - "ingest_market_signals"
+      - "map_causal_blast_radius"
+      - "generate_counter_strategy_epics"
+      - "knowledge_graph_query"
+
+  - id: "product-ops-lead"
+    name: "Product Operations Supervisor"
+    role: "supervisor"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.1
+    system_prompt: "Coordinate PM HIL strategy sign-off, reconcile roadmap priorities, and sync approved counter-strategy stories to Jira and the SDLC backlog."
+    boundaries: ["operations", "jira-sync", "hil-gate"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write", "hil:trigger"]
+    tools:
+      - "generate_counter_strategy_epics"
+      - "trigger_hil_approval"
+      - "knowledge_graph_query"
+
+phases:
+  - id: "phase_1_signal_ingestion_and_causal_mapping"
+    name: "Market Signal Ingestion & Causal Blast Radius Mapping"
+    description: "Ingests live technology signals across RSS, Hacker News, and TechCrunch, mapping competitor capabilities to internal modules."
+    tasks:
+      - id: "task_ingest_signals"
+        name: "Ingest Market Signals"
+        type: "system_computation"
+        agent: "ai-product-strategist"
+        instructions: "Execute ingest_market_signals to capture competitor launches and technical primitives."
+      - id: "task_causal_blast_radius"
+        name: "Calculate Causal Blast Radius"
+        type: "system_computation"
+        agent: "ai-product-strategist"
+        instructions: "Execute map_causal_blast_radius to calculate market overlap and identify affected internal product modules."
+
+  - id: "phase_2_hil_strategy_approval"
+    name: "Governed Product Manager Strategy Sign-off"
+    description: "Presents competitive impact scores and counter-strategy proposals for Product Leadership approval."
+    tasks:
+      - id: "task_pm_signoff"
+        name: "Product Strategy Approval Gate"
+        type: "human_in_the_loop"
+        form_schema:
+          title: "Competitive Strategy & Feature Roadmap Approval"
+          description: "Review detected competitor announcements, threat level, and recommended counter-strategy."
+          fields:
+            - name: "approved"
+              type: "boolean"
+              label: "Approve Counter-Strategy Roadmap Epics"
+              required: true
+            - name: "targetSprint"
+              type: "select"
+              label: "Target Roadmap Sprint Priority"
+              options:
+                - "Sprint 1 (Immediate Execution)"
+                - "Sprint 2 (Next Development Cycle)"
+                - "Q4 Strategic Backlog"
+              required: true
+            - name: "managerNotes"
+              type: "textarea"
+              label: "Strategic Guidance / Focus Notes"
+              required: false
+
+  - id: "phase_3_roadmap_backlog_sync"
+    name: "Roadmap Epics Generation & Backlog Synchronization"
+    description: "Generates structured backlog user stories and syncs them into Jira/GitHub."
+    tasks:
+      - id: "task_generate_epics"
+        name: "Generate Roadmap Epics"
+        type: "ai_generation"
+        agent: "product-ops-lead"
+        instructions: "Execute generate_counter_strategy_epics based on approved PM guidance and sync to the backlog."

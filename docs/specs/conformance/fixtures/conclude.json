@@ -1,0 +1,18 @@
+{
+  "description": "CONCLUDE action must transition run to waiting_on_human and write result to missionContext",
+  "assertions": ["ACT-004", "BB-002"],
+  "input": {
+    "action": "CONCLUDE",
+    "action_details": { "final_product": "Research complete: the market is growing at 12% YoY." },
+    "missionRunId": 1,
+    "initialRunStatus": "active"
+  },
+  "expectedBlackboardDelta": {},
+  "expectedMissionContextDelta": {
+    "result": "Research complete: the market is growing at 12% YoY."
+  },
+  "expectedTraceEvents": [
+    { "type": "system", "event": "mission_concluded_review" }
+  ],
+  "expectedRunStatus": "waiting_on_human"
+}

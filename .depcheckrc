@@ -1,0 +1,41 @@
+{
+  "ignores": [
+    "bin",
+    "eslint",
+    "jest",
+    "ts-jest",
+    "depcheck",
+    "lint-staged",
+    "prettier",
+    "typescript"
+  ],
+  "ignore-patterns": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
+  "parsers": {
+    "**/*.ts": "typescript",
+    "**/*.tsx": "typescript"
+  },
+  "specials": [
+    "bin",
+    "eslint",
+    "jest",
+    "ts-jest",
+    "depcheck",
+    "lint-staged",
+    "prettier",
+    "typescript"
+  ],
+  "package": {
+    "dependencies": {
+      "@/": ["./client/src/"],
+      "@shared/": ["./shared/"],
+      "@server/": ["./server/"],
+      "@domain/": ["./server/domain/"],
+      "@domain-ui/": ["./server/domain/"],
+      "@oddjob/shared-utils/": ["./packages/shared-utils/src/"]
+    }
+  }
+}

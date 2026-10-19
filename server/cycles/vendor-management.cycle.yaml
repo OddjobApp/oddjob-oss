@@ -1,0 +1,378 @@
+name: "Vendor Management"
+version: "1.0"
+containers: {}
+description: "Automated vendor onboarding, performance monitoring, contract renewal, and relationship management. Integrates with ERP systems, JIRA for vendor tasks, and Confluence for documentation."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Vendor Management"
+  icon: "🏢"
+  theme_color: "#8b5cf6"
+  display_priority: 2
+  category: "operations"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  vendor_policies:
+    required: true
+    path: "file://knowledge/guidelines/vendor_policies.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "vendor_profile_template"
+    path: "file://knowledge/document-templates/vendor_profile_template.md"
+  - id: "performance_review_template"
+    path: "file://knowledge/document-templates/performance_review_template.md"
+
+forms:
+  - id: "vendor_onboarding"
+    name: "Vendor Onboarding"
+    description: "Submit new vendor for onboarding."
+    fields:
+      - name: "vendor_name"
+        label: "Vendor Name"
+        type: "text"
+        required: true
+      - name: "vendor_type"
+        label: "Vendor Type"
+        type: "select"
+        required: true
+        options: ["Software", "Hardware", "Services", "Consulting", "Other"]
+      - name: "contact_name"
+        label: "Primary Contact"
+        type: "text"
+        required: true
+      - name: "contact_email"
+        label: "Contact Email"
+        type: "text"
+        required: true
+      - name: "contact_phone"
+        label: "Contact Phone"
+        type: "text"
+        required: false
+      - name: "street_address"
+        label: "Street Address"
+        type: "text"
+        required: true
+      - name: "city"
+        label: "City"
+        type: "text"
+        required: true
+      - name: "state"
+        label: "State/Province"
+        type: "text"
+        required: true
+      - name: "postal_code"
+        label: "Postal Code"
+        type: "text"
+        required: true
+      - name: "country"
+        label: "Country"
+        type: "text"
+        required: true
+      - name: "payment_terms"
+        label: "Payment Terms"
+        type: "select"
+        required: true
+        options: ["Net 15", "Net 30", "Net 45", "Net 60", "Net 90", "Other"]
+      - name: "msa_compliance"
+        label: "MSA Compliance"
+        type: "select"
+        required: true
+        options: ["MSA Signed", "MSA Pending", "No MSA Required", "MSA Not Compliant"]
+      - name: "procurement_type"
+        label: "Procurement Type"
+        type: "select"
+        required: true
+        options: ["Single Source", "Competitive Bid", "Sole Source", "Emergency"]
+      - name: "services_offered"
+        label: "Services Offered"
+        type: "textarea"
+        required: true
+      - name: "estimated_annual_spend"
+        label: "Estimated Annual Spend"
+        type: "text"
+        required: true
+      - name: "compliance_requirements"
+        label: "Compliance Requirements"
+        type: "multiselect"
+        required: true
+        options: ["SOC2", "GDPR", "HIPAA", "ISO 27001", "None"]
+
+  - id: "vendor_review"
+    name: "Vendor Review"
+    description: "Review and approve vendor onboarding."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Onboard", "Request Additional Info", "Reject"]
+      - name: "risk_assessment"
+        label: "Risk Assessment"
+        type: "select"
+        required: true
+        options: ["Low Risk", "Medium Risk", "High Risk"]
+      - name: "compliance_verified"
+        label: "Compliance Verified"
+        type: "select"
+        required: true
+        options: ["Yes - All Required", "Yes - Partial", "No - Not Verified"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-vendor-manager"
+    name: "Vendor Manager"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Relationship Builder"
+      legend: "Manages vendor relationships and performance."
+      traits: { compliance: 90, creativity: 20, speed: 70 }
+    system_prompt: "file://knowledge/prompts/vendor-manager.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-compliance-auditor"
+    name: "Compliance Auditor"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Compliance Guardian"
+      legend: "Reviews vendor compliance and risk."
+      traits: { compliance: 100, creativity: 5, persistence: 95 }
+    system_prompt: "file://knowledge/prompts/compliance-auditor.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-onboard-vendor"
+    name: "Onboard Vendor"
+    objective: "Process and onboard new vendor"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger:
+      type: "manual"
+      source: "vendor_workbench"
+    primary_agent: "ai-vendor-manager"
+    inputs: ["vendor_onboarding"]
+    outputs: ["vendor_profile"]
+    sequence:
+      - step_code: "ONBOARD-1"
+        action: "validate_vendor"
+        description: "Validate vendor information"
+        estimated_duration_minutes: 15
+      - step_code: "ONBOARD-2"
+        action: "check_duplicates"
+        description: "Check for duplicate vendors"
+        estimated_duration_minutes: 10
+        tool: "knowledge_graph_query"
+      - step_code: "ONBOARD-3"
+        action: "assess_requirements"
+        description: "Assess compliance requirements"
+        estimated_duration_minutes: 20
+      - step_code: "ONBOARD-4"
+        action: "generate_profile"
+        description: "Generate vendor profile"
+        estimated_duration_minutes: 15
+        template: "vendor_profile_template"
+      - step_code: "ONBOARD-5"
+        action: "create_onboarding_tasks"
+        description: "Create JIRA tasks for onboarding"
+        estimated_duration_minutes: 20
+        tool: "jira_create_sprint"
+
+  - id: "mission-compliance-check"
+    name: "Compliance Check"
+    objective: "Verify vendor compliance"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-onboard-vendor)"
+    primary_agent: "ai-compliance-auditor"
+    inputs: ["vendor_profile"]
+    outputs: ["compliance_assessment"]
+    sequence:
+      - step_code: "COMPLIANCE-1"
+        action: "verify_certifications"
+        description: "Verify vendor certifications"
+        estimated_duration_minutes: 20
+      - step_code: "COMPLIANCE-2"
+        action: "check_security"
+        description: "Check security posture"
+        estimated_duration_minutes: 15
+      - step_code: "COMPLIANCE-3"
+        action: "assess_risk"
+        description: "Assess vendor risk level"
+        estimated_duration_minutes: 15
+      - step_code: "COMPLIANCE-4"
+        action: "generate_assessment"
+        description: "Generate compliance assessment"
+        estimated_duration_minutes: 10
+
+  - id: "mission-vendor-review"
+    name: "Vendor Review"
+    objective: "Human review and approval of vendor"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-compliance-check)"
+    primary_agent: "ai-vendor-manager"
+    inputs: ["compliance_assessment"]
+    outputs: ["approved_vendor"]
+    requires_human: true
+    form_ref: "vendor_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_vendor"
+        description: "Present vendor for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect manager approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_vendor"
+        description: "Finalize vendor based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-complete-onboarding"
+    name: "Complete Onboarding"
+    objective: "Complete vendor onboarding process"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-vendor-review)"
+    primary_agent: "ai-vendor-manager"
+    inputs: ["approved_vendor"]
+    outputs: ["onboarded_vendor"]
+    sequence:
+      - step_code: "COMPLETE-1"
+        action: "setup_vendor_account"
+        description: "Setup vendor account in system"
+        estimated_duration_minutes: 20
+      - step_code: "COMPLETE-2"
+        action: "publish_profile"
+        description: "Publish vendor profile to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "COMPLETE-3"
+        action: "notify_stakeholders"
+        description: "Notify stakeholders via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+      - step_code: "COMPLETE-4"
+        action: "schedule_review"
+        description: "Schedule performance review"
+        estimated_duration_minutes: 5
+
+  - id: "mission-performance-review"
+    name: "Performance Review"
+    objective: "Review vendor performance"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "vendor_workbench"
+    primary_agent: "ai-vendor-manager"
+    inputs: []
+    outputs: ["performance_report"]
+    sequence:
+      - step_code: "PERF-1"
+        action: "query_vendors"
+        description: "Query vendors for review"
+        estimated_duration_minutes: 10
+        tool: "jira_jql_search"
+      - step_code: "PERF-2"
+        action: "collect_metrics"
+        description: "Collect performance metrics"
+        estimated_duration_minutes: 15
+      - step_code: "PERF-3"
+        action: "assess_performance"
+        description: "Assess vendor performance"
+        estimated_duration_minutes: 15
+      - step_code: "PERF-4"
+        action: "generate_report"
+        description: "Generate performance report"
+        estimated_duration_minutes: 10
+        template: "performance_review_template"
+      - step_code: "PERF-5"
+        action: "publish_report"
+        description: "Publish report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+
+apps:
+  - id: "vendor-workbench"
+    name: "Vendor Management Portal"
+    description: "Vendor onboarding, performance monitoring, contract renewal, and relationship management."
+    path: "file://vendor-workbench"
+    blueprint: "vendor-management"
+    interaction_model: "shared-server"

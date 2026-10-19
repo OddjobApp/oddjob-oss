@@ -1,0 +1,77 @@
+- [ ] Amazon shopping service onboarding (added October 8, 2026): add credential setup fields for Amazon Creators API, Rainforest, and SerpApi; securely store provider secrets and organization-scoped metadata; provide a guided connection walkthrough and a live connection test. Enable a provider for organization 342, then verify search → select → discuss → propose → approve → open Amazon cart. Purchases remain completed by the user on Amazon.
+- [x] Initial Research and Architecture Planning
+- [x] Design System Foundation Setup
+- [x] Component Hardening (UI Core)
+- [x] Batch 4: Critical Action Pods (Notifications, Search)
+- [x] Batch 5: Platform Scaffolding & Shared Hardening
+- [x] Batch 6: Auth Domain ("Secure Ingress Point")
+    - [x] Upgrade `Login.tsx` & `Register.tsx`
+    - [x] Upgrade `ForgotPassword.tsx` & `ResetPassword.tsx`
+- [x] Batch 7: Integrations Domain Core ("Bridge_Commander")
+    - [x] Upgrade `IntegrationsAdmin.tsx` & `ConnectorsDashboard.tsx`
+    - [x] Upgrade `McpServersSettings.tsx`
+    - [x] Refine `ToolRegistry.tsx` (Tactical Armory overhaul)
+- [x] Batch 8: SaaS Advanced Feature Hardening ("Integration_Matrix")
+    - [x] `EventWorkflows.tsx`: Automated Neural Pathways transformation
+    - [x] `IntegrationAnalytics.tsx`: Systems Telemetry & Diagnostics transformation
+    - [x] `SyncConfiguration.tsx`: Bidirectional Data Linkups transformation
+    - [x] Harden SaaS sync sub-components (`SyncOverview`, `SyncList`, etc.)
+- [x] Post-Hardening Bug Fixes (Batch 8 stabilization)
+    - [x] `SyncConfigDialog.tsx`: Fix imports and types
+    - [x] Mirror warm-forged code to standard workspace in `AppForgeService`
+    - [x] Stabilize `AppRegistryService.provisionInstance` to handle warm apps and avoid redundant containers
+    - [x] Manually repair App 109 ("WHATWEATHER")
+        - [x] Sync files from `prewarm-pool/warm-1` to `forge-workspace/whatweather`
+        - [x] Restart crashing container or replace it
+    - [x] Phase 1: Infrastructure Stabilization
+    - [x] Build `oddjob-dev-base` Docker image
+    - [x] Implement `WarmPoolManager` in `AppForgeService`
+    - [x] Implement "Fast Path" forge workspace claiming
+    - [x] Hook initialization into `ForgeWorker` startup
+- [x] Phase 1: Service Unification
+    - [x] Create `unified-schedule.service.ts` in `server/domain/core` (Created in `server/domain/schedules/core/schedule.service.ts` for pod alignment)
+    - [x] Merge Mission scheduler logic (Holidays, Calendar support)
+    - [x] Merge Pipeline scheduler logic (Credential access, Triggering)
+    - [x] Redirect `ScheduledJobService` references to the unified model
+- [x] Resolve Startup Hang (Apps Domain)
+    - [x] Fix broken import in `forge-codegen.service.ts`
+    - [x] Fix template literal syntax in `forge-design-specialists.ts`
+- [x] Resolve Vite Resolution Errors
+    - [x] Add `react-map-gl` alias to `vite.config.ts`
+    - [x] Add `react-map-gl/mapbox` to `optimizeDeps.include`
+- [x] Verify Server Readiness
+    - [x] Start development server (`npm run dev`)
+    - [x] Monitor logs for "Server listening" confirmation
+    - [x] Verify app loads in browser (`http://localhost:5000`)
+- [x] Phase 2: Titan QA Expansion
+    - [x] Integrate `axe-playwright` into `SeleniumAgentService`
+    - [x] Implement `runAccessibilityAudit` skill
+    - [x] Capture and store reports in `runtimeMetadata`
+- [x] Phase 3: Domain Aesthetic Alignment (Bridge Commander)
+    - [x] Generate missing migration for `mission_runs.cost_usd` (Pivoted to surgical repair for safety)
+    - [x] Apply repair via `scripts/repair-schema.js`
+    - [x] Verify fix in the database
+- [x] Final visual audit and functional validation of Integrations domain
+- [x] Batch: Integration Evaluation (JIRA & Confluence)
+    - [x] Correct dashboard 404s (API route registrations for /api/settings, /api/org-settings)
+- [x] Mitigate AI Quota (429) failures (Optimized throttler configs and gap reset)
+- [/] Execute and validate Mission Scenario A (End-to-End App Forge Lifecycle)
+    - [x] Create validation script
+    - [x] Fix routing mismatches in script
+    - [x] Update prompts to match MissionWaveBlueprintSchema
+    - [/] Poll until completion
+- [ ] Platform-wide consistency pass (Governance gates and telemetry)
+- [ ] Finalize remaining Phase: Mission Validation checklist
+- [x] Phase: App Forge Evolution (Autonomous Delivery)
+    - [x] Backend Telemetry Sink (POST /api/platform/app/telemetry)
+    - [x] Audit Log Persistence (app_audit_logs table)
+    - [x] Governance Gate: Plan Review Overlay in UI
+    - [x] Live Telemetry Feed in Builder Tab
+    - [x] Shadow Audit Console in Builder Tab
+- [/] Phase: Mission Validation (6 Scenarios)
+    - [ ] Scenario A: End-to-End App Forge Lifecycle (Pre-planned)
+    - [ ] Scenario B: System Governance & Maintenance (Pre-planned)
+    - [ ] Scenario C: Competitive Intelligence Synthesis (Dynamic)
+    - [ ] Scenario D: Autonomous UI Refinement (Dynamic)
+    - [ ] Scenario E: Knowledge Graph Expansion (Rolling Wave)
+    - [ ] Scenario F: Recursive Self-Healing Drill (Rolling Wave)

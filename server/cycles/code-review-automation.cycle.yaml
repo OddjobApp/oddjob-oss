@@ -1,0 +1,267 @@
+name: "Code Review Automation"
+version: "1.0"
+containers: {}
+description: "Automated PR analysis and review recommendations using security checks, quality gates, and pattern matching. Integrates with GitHub for PR analysis and JIRA for ticket linking."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Code Review Automation"
+  icon: "🔍"
+  theme_color: "#3b82f6"
+  display_priority: 2
+  category: "development"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 200000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "code_review_checklist"
+    path: "file://knowledge/document-templates/code_review_checklist.md"
+  - id: "security_review_template"
+    path: "file://knowledge/document-templates/security_review_template.md"
+
+forms:
+  - id: "pr_intake"
+    name: "Pull Request Intake"
+    description: "Provide PR details for automated review."
+    fields:
+      - name: "pr_url"
+        label: "Pull Request URL"
+        type: "text"
+        required: true
+      - name: "pr_number"
+        label: "PR Number"
+        type: "number"
+        required: true
+      - name: "jira_ticket"
+        label: "Associated JIRA Ticket"
+        type: "text"
+        required: true
+      - name: "review_type"
+        label: "Review Type"
+        type: "select"
+        required: true
+        options: ["Standard Review", "Security Review", "Performance Review"]
+
+  - id: "review_approval"
+    name: "Code Review Approval"
+    description: "Review and approve the automated code review."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve PR", "Request Changes", "Reject PR"]
+      - name: "additional_comments"
+        label: "Additional Comments"
+        type: "textarea"
+        required: false
+      - name: "security_concerns"
+        label: "Security Concerns Addressed"
+        type: "select"
+        required: true
+        options: ["Yes - All Addressed", "Yes - Minor Concerns", "No - Critical Issues Found"]
+
+agents:
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Reviews code for quality, security, and compliance."
+      traits: { compliance: 85, speed: 70, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/", "tests/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["workspace_read_file", "workspace_write_file", "git_diff", "github_create_pr", "workspace_health_check", "knowledge_graph_query"]
+
+  - id: "ai-qa-engineer"
+    name: "End-to-End Test Suite Auditor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Relentless Auditor"
+      legend: "Validates test coverage and quality gates."
+      traits: { compliance: 95, creativity: 10, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/qa-engineer.md"
+    boundaries: ["tests/e2e/", "tests/integration/", "server/", "client/"]
+    permissions: ["github:read", "jira:write:bug", "slack:write:channel"]
+    tools: ["execute_playwright_test", "run_dependency_audit", "workspace_read_file", "git_diff"]
+
+missions:
+  - id: "mission-analyze-pr"
+    name: "Analyze Pull Request"
+    objective: "Fetch PR diff and analyze code changes"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "webhook"
+      source: "github"
+      condition: "event.type == 'pull_request'"
+    primary_agent: "ai-backend-dev"
+    inputs: ["pr_intake"]
+    outputs: ["pr_analysis"]
+    sequence:
+      - step_code: "PR-1"
+        action: "fetch_pr_diff"
+        description: "Fetch PR diff from GitHub"
+        estimated_duration_minutes: 5
+        tool: "git_diff"
+      - step_code: "PR-2"
+        action: "analyze_code_changes"
+        description: "Analyze code changes for quality and patterns"
+        estimated_duration_minutes: 20
+      - step_code: "PR-3"
+        action: "check_coding_standards"
+        description: "Verify compliance with coding standards"
+        estimated_duration_minutes: 15
+        template: "code_review_checklist"
+      - step_code: "PR-4"
+        action: "link_jira_ticket"
+        description: "Link PR to associated JIRA ticket"
+        estimated_duration_minutes: 5
+
+  - id: "mission-security-review"
+    name: "Security Review"
+    objective: "Perform security analysis on code changes"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-analyze-pr)"
+    primary_agent: "ai-backend-dev"
+    inputs: ["pr_analysis"]
+    outputs: ["security_analysis"]
+    sequence:
+      - step_code: "SEC-1"
+        action: "scan_vulnerabilities"
+        description: "Scan for security vulnerabilities"
+        estimated_duration_minutes: 15
+        tool: "run_dependency_audit"
+      - step_code: "SEC-2"
+        action: "check_secrets"
+        description: "Check for exposed secrets or credentials"
+        estimated_duration_minutes: 10
+      - step_code: "SEC-3"
+        action: "validate_input_sanitization"
+        description: "Validate input sanitization and output encoding"
+        estimated_duration_minutes: 15
+      - step_code: "SEC-4"
+        action: "generate_security_report"
+        description: "Generate security review report"
+        estimated_duration_minutes: 10
+        template: "security_review_template"
+
+  - id: "mission-quality-review"
+    name: "Quality Review"
+    objective: "Validate test coverage and quality gates"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-analyze-pr)"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["pr_analysis"]
+    outputs: ["quality_analysis"]
+    sequence:
+      - step_code: "QUAL-1"
+        action: "check_test_coverage"
+        description: "Verify test coverage for changed files"
+        estimated_duration_minutes: 15
+      - step_code: "QUAL-2"
+        action: "run_tests"
+        description: "Run relevant tests"
+        estimated_duration_minutes: 20
+        tool: "execute_playwright_test"
+      - step_code: "QUAL-3"
+        action: "check_linting"
+        description: "Verify linting passes"
+        estimated_duration_minutes: 10
+      - step_code: "QUAL-4"
+        action: "generate_quality_report"
+        description: "Generate quality review report"
+        estimated_duration_minutes: 15
+
+  - id: "mission-generate-review"
+    name: "Generate Code Review"
+    objective: "Compile comprehensive code review with recommendations"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-security-review)"
+    primary_agent: "ai-backend-dev"
+    inputs: ["security_analysis", "quality_analysis"]
+    outputs: ["code_review"]
+    sequence:
+      - step_code: "REV-1"
+        action: "compile_findings"
+        description: "Compile security and quality findings"
+        estimated_duration_minutes: 15
+      - step_code: "REV-2"
+        action: "generate_recommendations"
+        description: "Generate actionable recommendations"
+        estimated_duration_minutes: 20
+      - step_code: "REV-3"
+        action: "post_review_comments"
+        description: "Post review comments to PR"
+        estimated_duration_minutes: 15
+        tool: "github_create_pr"
+      - step_code: "REV-4"
+        action: "notify_reviewer"
+        description: "Notify reviewer via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

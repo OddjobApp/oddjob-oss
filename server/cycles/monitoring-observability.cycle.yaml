@@ -1,0 +1,318 @@
+name: "Monitoring & Observability"
+version: "1.0"
+containers: {}
+description: "Real-time monitoring, alerting, and observability for cycle execution. Integrates with Datadog, Prometheus, and custom metrics endpoints for live tracking of agent performance, mission status, and system health."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Monitoring & Observability"
+  icon: "📊"
+  theme_color: "#06b6d4"
+  display_priority: 1
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 200000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  monitoring_standards:
+    required: true
+    path: "file://knowledge/guidelines/monitoring_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+  datadog:
+    required: true
+    api_key: "${ENV.DATADOG_API_KEY}"
+    app_key: "${ENV.DATADOG_APP_KEY}"
+    endpoint: "${ENV.DATADOG_ENDPOINT}"
+  prometheus:
+    required: true
+    endpoint: "${ENV.PROMETHEUS_ENDPOINT}"
+
+templates:
+  - id: "monitoring_report_template"
+    path: "file://knowledge/document-templates/monitoring_report_template.md"
+  - id: "alert_escalation_template"
+    path: "file://knowledge/document-templates/alert_escalation_template.md"
+
+forms:
+  - id: "alert_configuration"
+    name: "Alert Configuration"
+    description: "Configure monitoring alerts."
+    fields:
+      - name: "metric_name"
+        label: "Metric Name"
+        type: "text"
+        required: true
+      - name: "threshold"
+        label: "Threshold Value"
+        type: "number"
+        required: true
+      - name: "comparison"
+        label: "Comparison Operator"
+        type: "select"
+        required: true
+        options: [">", "<", "=", ">=", "<="]
+      - name: "duration"
+        label: "Duration (minutes)"
+        type: "number"
+        required: true
+      - name: "severity"
+        label: "Alert Severity"
+        type: "select"
+        required: true
+        options: ["P0 - Critical", "P1 - High", "P2 - Medium", "P3 - Low"]
+      - name: "notification_channels"
+        label: "Notification Channels"
+        type: "multiselect"
+        required: true
+        options: ["Slack", "Email", "PagerDuty", "JIRA"]
+
+  - id: "incident_response"
+    name: "Incident Response"
+    description: "Respond to monitoring alert."
+    fields:
+      - name: "response_action"
+        label: "Response Action"
+        type: "select"
+        required: true
+        options: ["Acknowledge", "Investigate", "Escalate", "Ignore"]
+      - name: "investigation_notes"
+        label: "Investigation Notes"
+        type: "textarea"
+        required: false
+      - name: "escalation_target"
+        label: "Escalation Target"
+        type: "select"
+        required: false
+        options: ["On-call Engineer", "Team Lead", "Manager", "Executive"]
+
+agents:
+  - id: "ai-observability-engineer"
+    name: "Observability Engineer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The System Watcher"
+      legend: "Monitors system health and performance metrics."
+      traits: { compliance: 95, creativity: 10, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/observability-engineer.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-sre-lead"
+    name: "SRE Lead"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Incident Commander"
+      legend: "Coordinates incident response and system recovery."
+      traits: { compliance: 100, creativity: 5, persistence: 100 }
+    system_prompt: "file://knowledge/prompts/sre-lead.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-collect-metrics"
+    name: "Collect Metrics"
+    objective: "Collect system and application metrics"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger:
+      type: "scheduled"
+      schedule: "*/5 * * * *"
+    primary_agent: "ai-observability-engineer"
+    inputs: []
+    outputs: ["metrics_data"]
+    sequence:
+      - step_code: "METRICS-1"
+        action: "query_datadog"
+        description: "Query Datadog for application metrics"
+        estimated_duration_minutes: 5
+      - step_code: "METRICS-2"
+        action: "query_prometheus"
+        description: "Query Prometheus for system metrics"
+        estimated_duration_minutes: 5
+      - step_code: "METRICS-3"
+        action: "aggregate_metrics"
+        description: "Aggregate and normalize metrics"
+        estimated_duration_minutes: 5
+      - step_code: "METRICS-4"
+        action: "store_metrics"
+        description: "Store metrics in database"
+        estimated_duration_minutes: 5
+
+  - id: "mission-analyze-performance"
+    name: "Analyze Performance"
+    objective: "Analyze system performance trends"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-collect-metrics)"
+    primary_agent: "ai-observability-engineer"
+    inputs: ["metrics_data"]
+    outputs: ["performance_analysis"]
+    sequence:
+      - step_code: "ANALYZE-1"
+        action: "detect_anomalies"
+        description: "Detect performance anomalies"
+        estimated_duration_minutes: 15
+      - step_code: "ANALYZE-2"
+        action: "trend_analysis"
+        description: "Analyze performance trends"
+        estimated_duration_minutes: 15
+      - step_code: "ANALYZE-3"
+        action: "capacity_planning"
+        description: "Assess capacity requirements"
+        estimated_duration_minutes: 15
+      - step_code: "ANALYZE-4"
+        action: "generate_analysis_report"
+        description: "Generate performance analysis report"
+        estimated_duration_minutes: 15
+        template: "monitoring_report_template"
+
+  - id: "mission-check-alerts"
+    name: "Check Alerts"
+    objective: "Check and evaluate monitoring alerts"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger:
+      type: "scheduled"
+      schedule: "*/1 * * * *"
+    primary_agent: "ai-observability-engineer"
+    inputs: ["performance_analysis"]
+    outputs: ["alert_status"]
+    sequence:
+      - step_code: "ALERT-1"
+        action: "check_thresholds"
+        description: "Check metric thresholds"
+        estimated_duration_minutes: 10
+      - step_code: "ALERT-2"
+        action: "evaluate_severity"
+        description: "Evaluate alert severity"
+        estimated_duration_minutes: 10
+      - step_code: "ALERT-3"
+        action: "trigger_notifications"
+        description: "Trigger notifications if needed"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+  - id: "mission-incident-response"
+    name: "Incident Response"
+    objective: "Respond to critical alerts"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-check-alerts)"
+    primary_agent: "ai-sre-lead"
+    inputs: ["alert_status"]
+    outputs: ["incident_report"]
+    sequence:
+      - step_code: "INCIDENT-1"
+        action: "assess_impact"
+        description: "Assess incident impact"
+        estimated_duration_minutes: 15
+      - step_code: "INCIDENT-2"
+        action: "coordinate_response"
+        description: "Coordinate incident response"
+        estimated_duration_minutes: 20
+      - step_code: "INCIDENT-3"
+        action: "create_jira_ticket"
+        description: "Create JIRA incident ticket"
+        estimated_duration_minutes: 10
+        tool: "jira_create_sprint"
+      - step_code: "INCIDENT-4"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+  - id: "mission-generate-report"
+    name: "Generate Monitoring Report"
+    objective: "Generate comprehensive monitoring report"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "scheduled"
+      schedule: "0 0 * * *"
+    primary_agent: "ai-observability-engineer"
+    inputs: ["performance_analysis", "alert_status"]
+    outputs: ["monitoring_report"]
+    sequence:
+      - step_code: "REPORT-1"
+        action: "compile_metrics"
+        description: "Compile metrics for report"
+        estimated_duration_minutes: 15
+      - step_code: "REPORT-2"
+        action: "summarize_incidents"
+        description: "Summarize incidents"
+        estimated_duration_minutes: 15
+      - step_code: "REPORT-3"
+        action: "recommend_improvements"
+        description: "Recommend improvements"
+        estimated_duration_minutes: 15
+      - step_code: "REPORT-4"
+        action: "publish_report"
+        description: "Publish report to Confluence"
+        estimated_duration_minutes: 15
+        tool: "confluence_publish"

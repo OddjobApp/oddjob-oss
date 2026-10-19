@@ -1,0 +1,481 @@
+name: "Sales Pipeline Management"
+version: "1.0"
+containers: {}
+description: "Automated lead qualification, pipeline tracking, and revenue forecasting. Integrates with CRM for lead management and JIRA for opportunity tracking."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Sales Pipeline Management"
+  icon: "💼"
+  theme_color: "#3b82f6"
+  display_priority: 2
+  category: "sales"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "sales"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+# ── Knowledge Datasets (Sales Pipeline Data Schema) ─────────────────────────────
+knowledge_datasets:
+  - id: "leads"
+    source: "manual"
+    primary_key: "lead_id"
+    vectorize: false
+    schema:
+      lead_id: "string"
+      name: "string"
+      company: "string"
+      email: "string"
+      phone: "string"
+      source: "string"
+      estimated_value: "number"
+      timeline: "string"
+      status: "string"
+      qualification_score: "number"
+      created_at: "string"
+
+  - id: "accounts"
+    source: "manual"
+    primary_key: "account_id"
+    vectorize: false
+    schema:
+      account_id: "string"
+      name: "string"
+      domain: "string"
+      industry: "string"
+      segment: "string"
+      owner_rep: "string"
+
+  - id: "opportunities"
+    source: "manual"
+    primary_key: "opportunity_id"
+    vectorize: true
+    schema:
+      opportunity_id: "string"
+      account_id: "string"
+      lead_id: "string"
+      name: "string"
+      amount: "number"
+      currency: "string"
+      stage: "string"
+      stage_entitlement: "number"
+      owner_rep: "string"
+      opened_at: "string"
+      expected_close: "string"
+      outcome: "string"
+      closed_at: "string"
+
+  - id: "activities"
+    source: "manual"
+    primary_key: "activity_id"
+    vectorize: false
+    schema:
+      activity_id: "string"
+      opportunity_id: "string"
+      type: "string"
+      occurred_at: "string"
+      actor: "string"
+      summary: "string"
+      is_rearm_signal: "boolean"
+      rearm_effect: "string"
+      weight: "number"
+
+  - id: "stage_history"
+    source: "manual"
+    primary_key: "entry_id"
+    vectorize: false
+    schema:
+      entry_id: "string"
+      opportunity_id: "string"
+      from_stage: "string"
+      to_stage: "string"
+      changed_at: "string"
+      changed_by: "string"
+
+  - id: "opportunity_windows"
+    source: "manual"
+    primary_key: "window_id"
+    vectorize: false
+    schema:
+      window_id: "string"
+      opportunity_id: "string"
+      amount: "number"
+      opened_at: "string"
+      cycle_length_days: "number"
+      gate_ladder: "string"
+      current_gate_index: "number"
+      current_ceiling: "number"
+      next_gate_deadline: "string"
+      grace_period_hours: "number"
+      rearm_signals: "string"
+      last_rearm_at: "string"
+      status: "string"
+      outcome: "string"
+      closed_at: "string"
+
+  - id: "window_snapshots"
+    source: "manual"
+    primary_key: "snapshot_id"
+    vectorize: false
+    schema:
+      snapshot_id: "string"
+      window_id: "string"
+      opportunity_id: "string"
+      taken_at: "string"
+      gate_index: "number"
+      ceiling_before: "number"
+      ceiling_after: "number"
+      amount_at_snapshot: "number"
+      weighted_value: "number"
+      trigger: "string"
+      realized_outcome: "number"
+
+  - id: "forecasts"
+    source: "manual"
+    primary_key: "forecast_id"
+    vectorize: false
+    schema:
+      forecast_id: "string"
+      period: "string"
+      generated_at: "string"
+      weighted_pipeline: "number"
+      committed: "number"
+      best_case: "number"
+      deal_count: "number"
+      generated_by: "string"
+
+  - id: "quotas"
+    source: "manual"
+    primary_key: "quota_id"
+    vectorize: false
+    schema:
+      quota_id: "string"
+      owner_rep: "string"
+      period: "string"
+      target_amount: "number"
+      attainment: "number"
+
+  - id: "sales_recommendations"
+    source: "manual"
+    primary_key: "rec_id"
+    vectorize: true
+    schema:
+      rec_id: "string"
+      opportunity_id: "string"
+      kind: "string"
+      title: "string"
+      body: "string"
+      status: "string"
+      payload: "json"
+      created_at: "string"
+
+templates:
+  - id: "lead_qualification_template"
+    path: "file://knowledge/document-templates/lead_qualification_template.md"
+  - id: "forecast_template"
+    path: "file://knowledge/document-templates/forecast_template.md"
+
+forms:
+  - id: "lead_intake"
+    name: "Lead Intake"
+    description: "Provide lead details for qualification."
+    fields:
+      - name: "lead_name"
+        label: "Lead Name"
+        type: "text"
+        required: true
+      - name: "company"
+        label: "Company"
+        type: "text"
+        required: true
+      - name: "email"
+        label: "Email"
+        type: "text"
+        required: true
+      - name: "phone"
+        label: "Phone"
+        type: "text"
+        required: false
+      - name: "source"
+        label: "Lead Source"
+        type: "select"
+        required: true
+        options: ["Website", "Referral", "LinkedIn", "Cold Outreach", "Event", "Partner"]
+      - name: "estimated_value"
+        label: "Estimated Deal Value"
+        type: "text"
+        required: true
+      - name: "timeline"
+        label: "Expected Timeline"
+        type: "select"
+        required: true
+        options: ["Immediate", "1-3 months", "3-6 months", "6-12 months", "Unknown"]
+
+  - id: "pipeline_review"
+    name: "Pipeline Review"
+    description: "Review and approve pipeline updates."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Update Pipeline", "Request Revisions", "Reject"]
+      - name: "stage_update"
+        label: "Stage Update"
+        type: "select"
+        required: true
+        options: ["Move to Qualified", "Move to Proposal", "Move to Negotiation", "Close Won", "Close Lost"]
+      - name: "probability"
+        label: "Win Probability"
+        type: "select"
+        required: true
+        options: ["10%", "25%", "50%", "75%", "90%"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-sales-rep"
+    name: "Sales Outreach Representative"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Relationship Builder"
+      legend: "Qualifies leads, manages pipeline, and forecasts revenue."
+      traits: { compliance: 80, creativity: 40, speed: 70 }
+    system_prompt: "file://knowledge/prompts/sales-rep.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-sales-manager"
+    name: "Sales Strategy & Performance Manager"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Pipeline Strategist"
+      legend: "Analyzes pipeline health and forecasts revenue."
+      traits: { compliance: 90, creativity: 20, speed: 60 }
+    system_prompt: "file://knowledge/prompts/sales-manager.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-qualify-lead"
+    name: "Qualify Lead"
+    objective: "Qualify lead and determine fit"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "sales_workbench"
+    primary_agent: "ai-sales-rep"
+    inputs: ["lead_intake"]
+    outputs: ["lead_qualification"]
+    sequence:
+      - step_code: "QUAL-1"
+        action: "research_company"
+        description: "Research company and decision makers"
+        estimated_duration_minutes: 15
+        tool: "knowledge_graph_query"
+      - step_code: "QUAL-2"
+        action: "assess_fit"
+        description: "Assess product fit and needs"
+        estimated_duration_minutes: 15
+      - step_code: "QUAL-3"
+        action: "calculate_score"
+        description: "Calculate lead qualification score"
+        estimated_duration_minutes: 10
+      - step_code: "QUAL-4"
+        action: "generate_qualification_report"
+        description: "Generate qualification report"
+        estimated_duration_minutes: 10
+        template: "lead_qualification_template"
+      - step_code: "QUAL-5"
+        action: "assign_to_territory"
+        description: "Assign to territory"
+        estimated_duration_minutes: 5
+
+  - id: "mission-add-to-pipeline"
+    name: "Add to Pipeline"
+    objective: "Add qualified lead to sales pipeline"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-qualify-lead)"
+    primary_agent: "ai-sales-rep"
+    inputs: ["lead_qualification"]
+    outputs: ["pipeline_entry"]
+    sequence:
+      - step_code: "PIPE-1"
+        action: "create_opportunity"
+        description: "Create opportunity in JIRA"
+        estimated_duration_minutes: 10
+        tool: "jira_create_sprint"
+      - step_code: "PIPE-2"
+        action: "assign_stage"
+        description: "Assign to appropriate pipeline stage"
+        estimated_duration_minutes: 5
+      - step_code: "PIPE-3"
+        action: "set_probability"
+        description: "Set win probability"
+        estimated_duration_minutes: 5
+      - step_code: "PIPE-4"
+        action: "sync_with_crm"
+        description: "Synchronize with CRM"
+        estimated_duration_minutes: 5
+      - step_code: "PIPE-5"
+        action: "create_quote"
+        description: "Create a new quote"
+        estimated_duration_minutes: 5
+
+  - id: "mission-generate-forecast"
+    name: "Generate Revenue Forecast"
+    objective: "Generate revenue forecast from pipeline"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "sales_workbench"
+    primary_agent: "ai-sales-manager"
+    inputs: []
+    outputs: ["revenue_forecast"]
+    sequence:
+      - step_code: "FORECAST-1"
+        action: "query_pipeline"
+        description: "Query current pipeline from JIRA"
+        estimated_duration_minutes: 10
+        tool: "jira_jql_search"
+      - step_code: "FORECAST-2"
+        action: "analyze_stage_velocity"
+        description: "Analyze stage velocity and conversion rates"
+        estimated_duration_minutes: 20
+      - step_code: "FORECAST-3"
+        action: "calculate_forecast"
+        description: "Calculate revenue forecast"
+        estimated_duration_minutes: 15
+      - step_code: "FORECAST-4"
+        action: "generate_forecast_report"
+        description: "Generate forecast report"
+        estimated_duration_minutes: 15
+        template: "forecast_template"
+      - step_code: "FORECAST-5"
+        action: "generate_sales_analytics"
+        description: "Generate sales analytics"
+        estimated_duration_minutes: 5
+
+  - id: "mission-review-pipeline"
+    name: "Review Pipeline Updates"
+    objective: "Human review and approval of pipeline updates"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-add-to-pipeline)"
+    primary_agent: "ai-sales-manager"
+    inputs: ["pipeline_entry"]
+    outputs: ["approved_pipeline"]
+    requires_human: true
+    form_ref: "pipeline_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_pipeline_update"
+        description: "Present pipeline update for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect sales manager approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_pipeline"
+        description: "Finalize pipeline based on feedback"
+        estimated_duration_minutes: 20
+      - step_code: "REVIEW-4"
+        action: "sync_with_crm"
+        description: "Synchronize with CRM"
+        estimated_duration_minutes: 5
+
+  - id: "mission-publish-forecast"
+    name: "Publish Forecast"
+    objective: "Publish forecast to Confluence"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-generate-forecast)"
+    primary_agent: "ai-sales-manager"
+    inputs: ["revenue_forecast"]
+    outputs: ["published_forecast"]
+    sequence:
+      - step_code: "PUB-1"
+        action: "publish_to_confluence"
+        description: "Publish forecast to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "PUB-2"
+        action: "notify_team"
+        description: "Notify sales team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

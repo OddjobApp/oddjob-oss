@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "ui-oddjob-design-system",
+  "name": "Oddjob Component Library & Design System",
+  "version": "1.0.0",
+  "category": "ui",
+  "extends": "core-node-express",
+  "requires": [],
+  "conflicts": [],
+  "recommends": ["auth-jwt"],
+  "provides": ["ui-component-library", "formal-layout-primitives", "wcag-aa-tokens"],
+  "layoutInvariants": {
+    "continuousContainment": true,
+    "spatialDisjointness": true,
+    "minTouchTargetPx": 48
+  },
+  "inject": [
+    {
+      "target": "package.json",
+      "action": "MERGE_JSON",
+      "path": "dependencies",
+      "content": {
+        "@oddjob/design-system": "*",
+        "lucide-react": "^0.368.0",
+        "clsx": "^2.1.0",
+        "tailwind-merge": "^2.2.2"
+      }
+    }
+  ],
+  "templates": [
+    {
+      "source": "design-system.provider.tsx.hbs",
+      "destination": "src/components/DesignSystemProvider.tsx"
+    }
+  ]
+}

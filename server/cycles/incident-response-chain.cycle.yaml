@@ -1,0 +1,358 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "Incident Triage & Diagnosis"
+version: "1.0"
+
+description: "Phase 1 of the Incident Response Chain: Monitors error alerts, parses telemetry logs, queries past resolutions, and triggers manual triaging."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "Incident Triage & Diagnosis"
+  icon: "🚨"
+  theme_color: "#ef4444"
+  display_priority: 1
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+containers: []
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 1.0
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+forms:
+  - id: "incident_triage_decision"
+    name: "Incident Triage Sign-off"
+    description: "Verify triage diagnosis and approve follow-up mitigation strategy."
+    fields:
+      - name: "incident_severity"
+        label: "Severity Level"
+        type: "select"
+        required: true
+        options: ["P1 - Critical", "P2 - High", "P3 - Moderate", "P4 - Low"]
+      - name: "action_plan"
+        label: "Approved Action Plan"
+        type: "select"
+        required: true
+        options: ["Deploy Hotfix", "Rollback Last Release", "Database Revert", "False Alarm / Close"]
+      - name: "comments"
+        label: "Triage & Rationale Comments"
+        type: "text"
+        required: true
+
+  - id: "mitigation_deployment_approval"
+    name: "Mitigation Deployment Approval"
+    description: "Approve deployment of hotfix code/mitigation to production (CAB Approval Gate)."
+    fields:
+      - name: "approve_deployment"
+        label: "Approve Production Deployment?"
+        type: "select"
+        required: true
+        options: ["Approve & Deploy", "Reject / Requires Rework"]
+      - name: "cab_comments"
+        label: "Change Advisory Board Comments"
+        type: "text"
+        required: true
+
+agents:
+  - id: "ai-incident-commander"
+    name: "Incident Resolution Lead"
+    role: "supervisor"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Calm Commander"
+      legend: "Maintains operational composure, directing tasks under high pressure."
+    system_prompt: "file://knowledge/prompts/incident-commander.md"
+    boundaries: ["*"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel"]
+    allowed_delegations: ["ai-sre-agent", "ai-postmortem-writer"]
+    tools: ["slack_post_message", "jira_jql_search"]
+
+  - id: "ai-sre-agent"
+    name: "SRE Debugging & Diagnosis Agent"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Systems Sentry"
+      legend: "Deep logs scanner and system reliability auditor."
+    system_prompt: "file://knowledge/prompts/sre-agent.md"
+    boundaries: ["*"]
+    permissions: ["github:read", "slack:write:channel"]
+    tools: ["slack_post_message"]
+
+  - id: "ai-postmortem-writer"
+    name: "Incident Post-Mortem Documentation Writer"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Historian & Analyst"
+      legend: "Deep systems chronicler and root-cause investigator."
+    system_prompt: "file://knowledge/prompts/post-mortem-writer.md"
+    boundaries: ["*"]
+    permissions: ["jira:write", "slack:write:channel"]
+    tools: ["slack_post_message"]
+
+missions:
+  - id: "mission-triage-1"
+    name: "Analyze Telemetry & Logs"
+    objective: "Scrape system logs, trace traceIds, and map the incident error vectors."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger:
+      type: "webhook"
+      source: "slack"
+      condition: "text.contains('incident')"
+    primary_agent: "ai-incident-commander"
+    inputs: ["alert_payload"]
+    outputs: ["incident_diagnosis_report"]
+    sequence:
+      - step_code: "TRIAGE-1"
+        action: "fetch_recent_logs"
+        description: "Scrape stack traces and log segments."
+        estimated_duration_minutes: 20
+        agent: "ai-sre-agent"
+      - step_code: "TRIAGE-2"
+        action: "query_knowledge_base"
+        description: "Check if similar issues were resolved in past incident reports."
+        estimated_duration_minutes: 15
+        agent: "ai-sre-agent"
+      - step_code: "TRIAGE-3"
+        action: "compile_diagnosis_report"
+        description: "Formulate containment and mitigation recommendations."
+        estimated_duration_minutes: 25
+        agent: "ai-sre-agent"
+
+  - id: "mission-triage-2"
+    name: "Incident Triage Sign-off"
+    objective: "Gather human validation of the logs analysis and select the containment path."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-triage-1)"
+    primary_agent: "ai-incident-commander"
+    inputs: ["incident_diagnosis_report"]
+    outputs: ["containment_strategy"]
+    sequence:
+      - step_code: "TRIAGE_SIGNOFF-1"
+        action: "request_human_triage"
+        description: "Route the triage sign-off form to approvals channel."
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "Incident Triage Sign-off"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-mitigation-1"
+    name: "Hotfix Code Mitigation"
+    objective: "Prepare the required hotfix code modifications or execute database/configuration rollback."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 4
+    trigger: "manual"
+    primary_agent: "ai-incident-commander"
+    inputs: ["containment_strategy"]
+    outputs: ["hotfix_pull_request"]
+    sequence:
+      - step_code: "HOTFIX-1"
+        action: "develop_code_fix"
+        description: "Write the code or configuration fix based on the triage containment strategy."
+        estimated_duration_minutes: 120
+        agent: "ai-sre-agent"
+      - step_code: "HOTFIX-2"
+        action: "create_pull_request"
+        description: "Open a pull request on the repository targeting the release branch."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+
+  - id: "mission-mitigation-2"
+    name: "Verify & Run Deployment Gates"
+    objective: "Trigger tests in staging environment and roll out containment fixes to production."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 3
+    trigger: "on_success(mission-mitigation-1)"
+    primary_agent: "ai-incident-commander"
+    inputs: ["hotfix_pull_request"]
+    outputs: ["mitigation_deployment_report"]
+    sequence:
+      - step_code: "DEPLOY_GATE-1"
+        action: "run_regression_tests"
+        description: "Run automated regression tests and check build status on the hotfix branch."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+      - step_code: "DEPLOY_GATE-2"
+        action: "request_cab_approval"
+        description: "Route the production deployment promotion request to the Change Advisory Board (CAB)."
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "Mitigation Deployment Approval"
+        routing_channel: "approvals_channel"
+      - step_code: "DEPLOY_GATE-3"
+        action: "merge_and_deploy"
+        description: "Merge the pull request and deploy the verified hotfix to production."
+        estimated_duration_minutes: 45
+        agent: "ai-sre-agent"
+      - step_code: "DEPLOY_GATE-4"
+        action: "compile_deployment_report"
+        description: "Verify production service health metrics and draft the deployment report."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+
+  - id: "mission-postmortem-1"
+    name: "Synthesize Timeline & RCA"
+    objective: "Compile incident logs and run a blameless 5-Whys query to isolate root cause."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger: "manual"
+    primary_agent: "ai-incident-commander"
+    inputs: ["mitigation_deployment_report"]
+    outputs: ["timeline_and_root_cause"]
+    sequence:
+      - step_code: "RCA-1"
+        action: "retrieve_incident_logs"
+        description: "Collect timestamps and coordinator traces to build the initial incident timeline."
+        estimated_duration_minutes: 45
+        agent: "ai-postmortem-writer"
+      - step_code: "RCA-2"
+        action: "perform_5_whys_rca"
+        description: "Analyze timeline anomalies and execute a 5-Whys root cause discovery."
+        estimated_duration_minutes: 60
+        agent: "ai-postmortem-writer"
+
+  - id: "mission-postmortem-2"
+    name: "Generate Post-Mortem Document"
+    objective: "Draft the post-mortem report using the standard markdown template and file JIRA remediation tickets."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 3
+    trigger: "on_success(mission-postmortem-1)"
+    primary_agent: "ai-incident-commander"
+    inputs: ["timeline_and_root_cause"]
+    outputs: ["completed_postmortem_report", "jira_followup_tickets"]
+    sequence:
+      - step_code: "POSTMORTEM-1"
+        action: "write_postmortem_report"
+        description: "Synthesize the timeline, 5-Whys RCA, and draft the blameless post-mortem report."
+        estimated_duration_minutes: 90
+        agent: "ai-postmortem-writer"
+      - step_code: "POSTMORTEM-2"
+        action: "file_remediation_tickets"
+        description: "File preventive maintenance items in JIRA tracking system."
+        estimated_duration_minutes: 45
+        agent: "ai-postmortem-writer"
+
+# Chaining metadata: when Phase 1 (Incident Triage & Diagnosis) completes, launch Phase 2
+follow_up_cycle:
+  name: "Incident Mitigation & Hotfix"
+  description: "Phase 2 of the Incident Response Chain: Focuses on writing code hotfixes, running regression test suites, and executing rollback or rollforward deployments."
+  objective: "Remediate service anomaly and verify recovery using automated test suites."
+  priority: 4
+  budgetLimitUsd: "150.00"
+  requiresApproval: true
+  blueprints:
+    - name: "Hotfix Code Mitigation"
+      objective: "Prepare the required hotfix code modifications or execute database/configuration rollback."
+      type: "mission"
+      estimatedDays: 1
+      inputs: ["containment_strategy"]
+      outputs: ["hotfix_pull_request"]
+    - name: "Verify & Run Deployment Gates"
+      objective: "Trigger tests in staging environment and roll out containment fixes to production."
+      type: "mission"
+      estimatedDays: 1
+      dependsOn: ["Hotfix Code Mitigation"]
+      inputs: ["hotfix_pull_request"]
+      outputs: ["mitigation_deployment_report"]
+  metadata:
+    # Chaining metadata nested within Phase 2: when Phase 2 completes, launch Phase 3
+    follow_up_cycle:
+      name: "Incident Post-Mortem & Remediation"
+      description: "Phase 3 of the Incident Response Chain: Reviews timelines, completes a blameless 5-Whys analysis, and drafts the incident post-mortem report."
+      objective: "Compile the post-mortem incident report and file preventive JIRA items to prevent future occurrences."
+      priority: 5
+      budgetLimitUsd: "50.00"
+      requiresApproval: true
+      blueprints:
+        - name: "Synthesize Timeline & RCA"
+          objective: "Compile incident logs and run a blameless 5-Whys query to isolate root cause."
+          type: "mission"
+          estimatedDays: 1
+          inputs: ["mitigation_deployment_report"]
+          outputs: ["timeline_and_root_cause"]
+        - name: "Generate Post-Mortem Document"
+          objective: "Draft the post-mortem report using the standard markdown template and file JIRA remediation tickets."
+          type: "mission"
+          estimatedDays: 1
+          dependsOn: ["Synthesize Timeline & RCA"]
+          inputs: ["timeline_and_root_cause"]
+          outputs: ["completed_postmortem_report", "jira_followup_tickets"]
+
+apps:
+  - id: incident-response-workbench
+    name: Incident Response
+    blueprint: incident-response-workbench
+    path: file://incident-response-workbench
+    interaction_model: shared-server
+    enabled: true
+    integration_dependencies: []
+    description: Durable CREW incident coordination. External remediation requires separately connected provider tools and approvals.

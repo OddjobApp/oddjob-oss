@@ -1,0 +1,26 @@
+﻿[dotenv@17.2.3] injecting env (20) from .env -- tip: ΓÜÖ∩╕Å  suppress all logs with { quiet: true }
+--- Steps for Pipeline 43 (System Triage Master) ---
+[
+  {
+    "id": 37,
+    "pipeline_id": 43,
+    "job_id": 55,
+    "order": 0,
+    "output_name": "triage_summary",
+    "run_on_condition": "on_success",
+    "wait_duration_seconds": 0,
+    "on_failure_action": "Stop Pipeline",
+    "parallel_group": null,
+    "condition_expression": null,
+    "module_type": null,
+    "destination_step_id": null,
+    "decision_node_config": null,
+    "knowledge_graph_config": null,
+    "retry_config": null,
+    "created_at": "2026-02-08T19:39:43.220Z",
+    "expected_input_schema": null,
+    "guaranteed_output_schema": null,
+    "tool_name": null,
+    "tool_arguments": null
+  }
+]

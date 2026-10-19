@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+
+    container_name: oddjob-postgres-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: oddjob_dev
+    ports:
+      - "5434:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/seed-dev-data.sql:/docker-entrypoint-initdb.d/seed.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: oddjob-redis-dev
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: oddjob-qdrant-dev
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: oddjob-rabbitmq-dev
+    environment:
+      RABBITMQ_DEFAULT_USER: oddjob
+      RABBITMQ_DEFAULT_PASS: devpassword
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mock JIRA API (for testing)
+  mock-jira:
+    image: mockserver/mockserver:latest
+    container_name: oddjob-mock-jira
+    ports:
+      - "1080:1080"
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/jira-expectations.json
+    volumes:
+      - ./dev/mocks/jira-expectations.json:/config/jira-expectations.json
+
+  # Mock Slack API (for testing)
+  mock-slack:
+    image: mockserver/mockserver:latest
+    container_name: oddjob-mock-slack
+    ports:
+      - "1081:1080"
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/slack-expectations.json
+    volumes:
+      - ./dev/mocks/slack-expectations.json:/config/slack-expectations.json
+
+volumes:
+  postgres_data:
+  qdrant_data:
+
+
+networks:
+  default:
+    name: oddjob-dev-network

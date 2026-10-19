@@ -1,0 +1,10 @@
+{
+  "name": "@oddjob/shared-redis",
+  "version": "1.0.0",
+  "description": "Shared Redis client and utilities for Oddjob",
+  "main": "src/index.ts",
+  "type": "module",
+  "dependencies": {
+    "ioredis": "^5.0.0"
+  }
+}

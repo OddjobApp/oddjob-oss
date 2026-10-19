@@ -1,0 +1,13 @@
+const path = require('path');
+
+module.exports = {
+  reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_SPRINT_LENGTH_DAYS:         process.env.SCRUM_MASTER_WORKBENCH_SPRINT_LENGTH_DAYS         ?? '14',
+    NEXT_PUBLIC_VELOCITY_ANOMALY_THRESHOLD: process.env.SCRUM_MASTER_WORKBENCH_VELOCITY_ANOMALY_THRESHOLD ?? '0.20',
+    NEXT_PUBLIC_BLOCKER_SLA_HOURS:          process.env.SCRUM_MASTER_WORKBENCH_BLOCKER_SLA_HOURS          ?? '24',
+    NEXT_PUBLIC_CONFLUENCE_SPACE:           process.env.SCRUM_MASTER_WORKBENCH_CONFLUENCE_SPACE           ?? '',
+    NEXT_PUBLIC_SLACK_STANDUP_CHANNEL:      process.env.SCRUM_MASTER_WORKBENCH_SLACK_STANDUP_CHANNEL      ?? '',
+    NEXT_PUBLIC_QUARTERLY_GOAL_SP:          process.env.SCRUM_MASTER_WORKBENCH_QUARTERLY_GOAL_SP          ?? '0',
+  },
+};

@@ -1,0 +1,14 @@
+apiVersion: v2
+name: oddjob
+description: Enterprise Agentic SDLC & Multi-Agent Swarm Platform Helm Chart
+type: application
+version: 1.0.0
+appVersion: "2026.3.0"
+maintainers:
+  - name: Oddjob Platform Engineering
+    email: engineering@oddjob.app
+keywords:
+  - agentic-sdlc
+  - multi-agent-swarm
+  - devops
+  - graph-rag

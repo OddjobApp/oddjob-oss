@@ -1,0 +1,13 @@
+import type { Config } from "drizzle-kit";
+
+/**
+ * `npm run dataset:push` applies src/dataset/schema.ts to the dataset.
+ */
+export default {
+  schema: "./src/dataset/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+} satisfies Config;

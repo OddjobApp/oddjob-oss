@@ -1,0 +1,1892 @@
+openapi: 3.0.3
+info:
+  title: Oddjob AI Research API
+  description: |
+    Comprehensive API for Priority 1 and Priority 2 AI research modules.
+    
+    ## Priority 1 (Immediate)
+    - **Graph RAG**: Hybrid vector + graph search with explainable paths
+    - **Constitutional AI**: Agent safety with principled review
+    - **Multi-Modal**: Vision analysis and document processing
+    - **Speculative Execution**: MCTS-based planning with rollback
+    
+    ## Priority 2 (Medium-term)
+    - **Neuro-Symbolic AI**: NL to logic translation with verification
+    - **Federated Learning**: Privacy-preserving collaborative training
+    - **Causal Reasoning**: Do-calculus for causal inference
+    - **Liquid Neural Networks**: Continuous-time adaptive agents
+    
+    ## Authentication
+    All endpoints require Bearer token authentication.
+  version: 1.0.0
+  contact:
+    name: Oddjob Engineering
+    email: api@oddjob.io
+  license:
+    name: Proprietary
+    
+servers:
+  - url: https://api.oddjob.io/v1
+    description: Production
+  - url: https://staging-api.oddjob.io/v1
+    description: Staging
+  - url: http://localhost:3000/api
+    description: Local Development
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================================================
+  # Health & Status
+  # ============================================================================
+  /research/health:
+    get:
+      tags:
+        - Health
+      summary: Get health status of all research services
+      operationId: getResearchHealth
+      responses:
+        '200':
+          description: All services healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Some services unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  # ============================================================================
+  # Graph RAG
+  # ============================================================================
+  /research/graph-rag/query:
+    post:
+      tags:
+        - Graph RAG
+      summary: Execute hybrid graph + vector search
+      description: |
+        Performs hybrid retrieval combining vector similarity search with 
+        knowledge graph traversal for multi-hop reasoning.
+      operationId: graphRAGQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRAGQueryRequest'
+      responses:
+        '200':
+          description: Query successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRAGQueryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /research/graph-rag/explain-path:
+    post:
+      tags:
+        - Graph RAG
+      summary: Generate human-readable explanation of graph path
+      operationId: explainGraphPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExplainPathRequest'
+      responses:
+        '200':
+          description: Explanation generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExplainPathResponse'
+
+  /research/graph-rag/metrics:
+    get:
+      tags:
+        - Graph RAG
+        - Metrics
+      summary: Get Graph RAG service metrics
+      operationId: getGraphRAGMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRAGMetrics'
+
+  # ============================================================================
+  # Constitutional AI
+  # ============================================================================
+  /research/constitutional/review:
+    post:
+      tags:
+        - Constitutional AI
+      summary: Review agent action against constitutional principles
+      description: |
+        Reviews an agent action against constitutional principles including
+        privacy, security, ethics, accuracy, transparency, and accountability.
+      operationId: constitutionalReview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstitutionalReviewRequest'
+      responses:
+        '200':
+          description: Review completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstitutionalReviewResponse'
+
+  /research/constitutional/principles:
+    get:
+      tags:
+        - Constitutional AI
+      summary: Get constitutional principles
+      operationId: getConstitutionalPrinciples
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [privacy, security, ethics, accuracy, transparency, accountability]
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [info, warning, violation]
+      responses:
+        '200':
+          description: Principles retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstitutionalPrinciplesResponse'
+
+  /research/constitutional/metrics:
+    get:
+      tags:
+        - Constitutional AI
+        - Metrics
+      summary: Get Constitutional AI metrics
+      operationId: getConstitutionalMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstitutionalMetrics'
+
+  # ============================================================================
+  # Multi-Modal
+  # ============================================================================
+  /research/multimodal/vision:
+    post:
+      tags:
+        - Multi-Modal
+      summary: Analyze images with vision models
+      description: |
+        Analyze images using GPT-4V, Gemini, or Claude vision models.
+        Supports OCR, object detection, layout analysis, and more.
+      operationId: visionAnalysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisionAnalysisRequest'
+      responses:
+        '200':
+          description: Analysis complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisionAnalysisResponse'
+
+  /research/multimodal/ocr:
+    post:
+      tags:
+        - Multi-Modal
+      summary: Extract text from images (OCR)
+      operationId: ocrExtraction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OCRRequest'
+      responses:
+        '200':
+          description: Text extracted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OCRResponse'
+
+  /research/multimodal/document:
+    post:
+      tags:
+        - Multi-Modal
+      summary: Process documents (PDF, Word, images)
+      operationId: documentProcessing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentProcessingRequest'
+      responses:
+        '200':
+          description: Document processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentProcessingResponse'
+
+  /research/multimodal/ui-element:
+    post:
+      tags:
+        - Multi-Modal
+      summary: Find UI element visually in screenshot
+      operationId: findUIElement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UIElementRequest'
+      responses:
+        '200':
+          description: UI element found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UIElementResponse'
+
+  # ============================================================================
+  # Speculative Execution
+  # ============================================================================
+  /research/speculative/plan:
+    post:
+      tags:
+        - Speculative Execution
+      summary: Create MCTS-based execution plan
+      description: |
+        Uses Monte Carlo Tree Search to generate optimal action sequences
+        with predicted outcomes and success probabilities.
+      operationId: speculativePlanning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeculativePlanRequest'
+      responses:
+        '200':
+          description: Plan created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeculativePlanResponse'
+
+  /research/speculative/execute:
+    post:
+      tags:
+        - Speculative Execution
+      summary: Speculatively execute an action with rollback
+      operationId: speculativeExecution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeculativeExecuteRequest'
+      responses:
+        '200':
+          description: Execution complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeculativeExecuteResponse'
+
+  /research/speculative/rollback:
+    post:
+      tags:
+        - Speculative Execution
+      summary: Rollback to checkpoint
+      operationId: rollbackExecution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - checkpointId
+              properties:
+                checkpointId:
+                  type: string
+      responses:
+        '200':
+          description: Rollback complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RollbackResponse'
+
+  /research/speculative/metrics:
+    get:
+      tags:
+        - Speculative Execution
+        - Metrics
+      summary: Get speculative execution metrics
+      operationId: getSpeculativeMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeculativeMetrics'
+
+  # ============================================================================
+  # Neuro-Symbolic AI
+  # ============================================================================
+  /research/neuro-symbolic/query:
+    post:
+      tags:
+        - Neuro-Symbolic AI
+      summary: Execute neuro-symbolic query (NL → Logic → Inference)
+      description: |
+        Translates natural language to formal logic, runs symbolic inference,
+        and returns verified answers with proof traces.
+      operationId: neuroSymbolicQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NeuroSymbolicQueryRequest'
+      responses:
+        '200':
+          description: Query successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NeuroSymbolicQueryResponse'
+
+  /research/neuro-symbolic/datalog/query:
+    post:
+      tags:
+        - Neuro-Symbolic AI
+      summary: Direct Datalog query (bypass NL translation)
+      operationId: datalogQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatalogQueryRequest'
+      responses:
+        '200':
+          description: Query successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatalogQueryResponse'
+
+  /research/neuro-symbolic/compliance/aml:
+    post:
+      tags:
+        - Neuro-Symbolic AI
+        - Compliance
+      summary: AML compliance check
+      operationId: amlComplianceCheck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AMLComplianceRequest'
+      responses:
+        '200':
+          description: Check complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AMLComplianceResponse'
+
+  /research/neuro-symbolic/domains:
+    get:
+      tags:
+        - Neuro-Symbolic AI
+      summary: List available domain rulesets
+      operationId: getNeuroSymbolicDomains
+      responses:
+        '200':
+          description: Domains retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NeuroSymbolicDomainsResponse'
+
+  /research/neuro-symbolic/metrics:
+    get:
+      tags:
+        - Neuro-Symbolic AI
+        - Metrics
+      summary: Get neuro-symbolic service metrics
+      operationId: getNeuroSymbolicMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NeuroSymbolicMetrics'
+
+  # ============================================================================
+  # Federated Learning
+  # ============================================================================
+  /research/federated/jobs:
+    post:
+      tags:
+        - Federated Learning
+      summary: Create new federated training job
+      operationId: createFederatedJob
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FederatedJobRequest'
+      responses:
+        '201':
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FederatedJobResponse'
+    get:
+      tags:
+        - Federated Learning
+      summary: List all federated training jobs
+      operationId: listFederatedJobs
+      responses:
+        '200':
+          description: Jobs retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FederatedJobsListResponse'
+
+  /research/federated/jobs/{id}/start:
+    post:
+      tags:
+        - Federated Learning
+      summary: Start federated training job
+      operationId: startFederatedJob
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  jobId:
+                    type: string
+
+  /research/federated/jobs/{id}:
+    get:
+      tags:
+        - Federated Learning
+      summary: Get job details
+      operationId: getFederatedJob
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FederatedJobDetailResponse'
+        '404':
+          description: Job not found
+
+  /research/federated/orgs:
+    post:
+      tags:
+        - Federated Learning
+      summary: Register organization
+      operationId: registerFederatedOrg
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FederatedOrgRequest'
+      responses:
+        '201':
+          description: Organization registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FederatedOrgResponse'
+
+  /research/federated/metrics:
+    get:
+      tags:
+        - Federated Learning
+        - Metrics
+      summary: Get federated learning metrics
+      operationId: getFederatedMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FederatedMetrics'
+
+  # ============================================================================
+  # Causal Reasoning
+  # ============================================================================
+  /research/causal/graphs:
+    post:
+      tags:
+        - Causal Reasoning
+      summary: Load causal graph
+      operationId: loadCausalGraph
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CausalGraphRequest'
+      responses:
+        '201':
+          description: Graph loaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  graphId:
+                    type: string
+                  variables:
+                    type: integer
+                  edges:
+                    type: integer
+
+  /research/causal/estimate/ate:
+    post:
+      tags:
+        - Causal Reasoning
+      summary: Estimate Average Treatment Effect
+      description: |
+        Estimates ATE (E[Y|do(X=1)] - E[Y|do(X=0)]) using backdoor adjustment
+        or frontdoor criterion.
+      operationId: estimateATE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ATERequest'
+      responses:
+        '200':
+          description: Estimate computed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ATEResponse'
+
+  /research/causal/counterfactual:
+    post:
+      tags:
+        - Causal Reasoning
+      summary: Compute counterfactual scenario
+      description: |
+        Computes "what if" scenarios using Pearl's three-step counterfactual process.
+      operationId: computeCounterfactual
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CounterfactualRequest'
+      responses:
+        '200':
+          description: Counterfactual computed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterfactualResponse'
+
+  /research/causal/root-cause:
+    post:
+      tags:
+        - Causal Reasoning
+      summary: Analyze root cause
+      operationId: analyzeRootCause
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RootCauseRequest'
+      responses:
+        '200':
+          description: Analysis complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RootCauseResponse'
+
+  /research/causal/metrics:
+    get:
+      tags:
+        - Causal Reasoning
+        - Metrics
+      summary: Get causal reasoning metrics
+      operationId: getCausalMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CausalMetrics'
+
+  # ============================================================================
+  # Liquid Neural Networks
+  # ============================================================================
+  /research/lnn/agents:
+    post:
+      tags:
+        - Liquid Neural Networks
+      summary: Create LNN agent
+      operationId: createLNNAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LNNAgentRequest'
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LNNAgentResponse'
+    get:
+      tags:
+        - Liquid Neural Networks
+      summary: List all LNN agents
+      operationId: listLNNAgents
+      responses:
+        '200':
+          description: Agents retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LNNAgentsListResponse'
+
+  /research/lnn/agents/{id}/forward:
+    post:
+      tags:
+        - Liquid Neural Networks
+      summary: Run forward pass through LNN
+      description: |
+        Solves Neural ODE: τ * dx/dt = -x + f(W*x + I)
+        using RK4 integration.
+      operationId: lnnForward
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - input
+              properties:
+                input:
+                  type: array
+                  items:
+                    type: number
+                  description: Input vector
+      responses:
+        '200':
+          description: Forward pass complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LNNForwardResponse'
+
+  /research/lnn/agents/{id}/adapt:
+    post:
+      tags:
+        - Liquid Neural Networks
+      summary: Adapt agent to new data
+      description: |
+        Performs real-time weight adaptation based on prediction error.
+      operationId: lnnAdapt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - input
+                - target
+              properties:
+                input:
+                  type: array
+                  items:
+                    type: number
+                target:
+                  type: array
+                  items:
+                    type: number
+      responses:
+        '200':
+          description: Adaptation complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LNNAdaptResponse'
+
+  /research/lnn/metrics:
+    get:
+      tags:
+        - Liquid Neural Networks
+        - Metrics
+      summary: Get LNN service metrics
+      operationId: getLNNMetrics
+      responses:
+        '200':
+          description: Metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LNNMetrics'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+              details:
+                type: object
+    Unauthorized:
+      description: Authentication required
+    NotFound:
+      description: Resource not found
+    ServiceUnavailable:
+      description: Service not initialized or temporarily unavailable
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+  schemas:
+    # ============================================================================
+    # Common Schemas
+    # ============================================================================
+    HealthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        services:
+          type: object
+          properties:
+            graphRAG:
+              type: boolean
+            constitutionalAI:
+              type: boolean
+            multiModal:
+              type: boolean
+            speculativeExecution:
+              type: boolean
+            neuroSymbolic:
+              type: boolean
+            federatedLearning:
+              type: boolean
+            causalReasoning:
+              type: boolean
+            liquidNeuralNetworks:
+              type: boolean
+        timestamp:
+          type: string
+          format: date-time
+
+    # ============================================================================
+    # Graph RAG Schemas
+    # ============================================================================
+    GraphRAGQueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: Search query
+          example: "What is machine learning?"
+        maxHops:
+          type: integer
+          default: 3
+          description: Maximum graph traversal depth
+        topK:
+          type: integer
+          default: 5
+          description: Number of results to return
+        traversalStrategy:
+          type: string
+          enum: [bfs, dfs, hybrid]
+          default: bfs
+        entityTypes:
+          type: array
+          items:
+            type: string
+        minRelationshipWeight:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.5
+        includePaths:
+          type: boolean
+          default: true
+        generateAnswer:
+          type: boolean
+          default: false
+
+    GraphRAGQueryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        query:
+          type: string
+        result:
+          type: object
+          properties:
+            answer:
+              type: string
+            contextNodes:
+              type: array
+              items:
+                type: object
+            traversedPaths:
+              type: array
+              items:
+                type: object
+            metrics:
+              type: object
+
+    ExplainPathRequest:
+      type: object
+      required:
+        - path
+      properties:
+        path:
+          type: object
+          required:
+            - pathId
+            - edges
+            - pathScore
+            - explanation
+            - seedNodeId
+            - targetNodeId
+        query:
+          type: string
+
+    ExplainPathResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        explanation:
+          type: string
+        citation:
+          type: string
+        structured:
+          type: object
+
+    GraphRAGMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+          properties:
+            totalQueries:
+              type: integer
+            avgLatencyMs:
+              type: number
+            cacheHitRate:
+              type: number
+
+    # ============================================================================
+    # Constitutional AI Schemas
+    # ============================================================================
+    ConstitutionalReviewRequest:
+      type: object
+      required:
+        - action
+        - context
+      properties:
+        action:
+          type: object
+          required:
+            - id
+            - type
+            - content
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+            content:
+              type: string
+        context:
+          type: object
+          properties:
+            agentId:
+              type: string
+            organizationId:
+              type: integer
+            userId:
+              type: string
+            missionId:
+              type: string
+        constitutionId:
+          type: string
+          default: default
+
+    ConstitutionalReviewResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        review:
+          type: object
+          properties:
+            reviewId:
+              type: string
+            approved:
+              type: boolean
+            requiresEscalation:
+              type: boolean
+            checks:
+              type: array
+              items:
+                type: object
+            blockingViolations:
+              type: array
+              items:
+                type: object
+            warnings:
+              type: array
+              items:
+                type: object
+            finalAction:
+              type: object
+            reviewTimeMs:
+              type: integer
+
+    ConstitutionalPrinciplesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        constitution:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            principles:
+              type: array
+              items:
+                type: object
+
+    ConstitutionalMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+          properties:
+            totalReviews:
+              type: integer
+            approvalRate:
+              type: number
+            avgReviewTimeMs:
+              type: number
+
+    # ============================================================================
+    # Multi-Modal Schemas
+    # ============================================================================
+    VisionAnalysisRequest:
+      type: object
+      required:
+        - images
+        - prompt
+      properties:
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              base64:
+                type: string
+              mimeType:
+                type: string
+              url:
+                type: string
+        prompt:
+          type: string
+        model:
+          type: string
+          enum: [gpt-4-vision, gemini, claude]
+          default: gpt-4-vision
+        maxTokens:
+          type: integer
+          default: 1000
+        temperature:
+          type: number
+          default: 0.7
+        outputFormat:
+          type: string
+          enum: [text, json, markdown]
+          default: text
+
+    VisionAnalysisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: object
+          properties:
+            description:
+              type: string
+            extractedText:
+              type: string
+            detectedObjects:
+              type: array
+              items:
+                type: object
+            structuredData:
+              type: object
+            confidence:
+              type: number
+            model:
+              type: string
+            tokensUsed:
+              type: integer
+            processingTimeMs:
+              type: integer
+
+    OCRRequest:
+      type: object
+      required:
+        - images
+      properties:
+        images:
+          type: array
+          items:
+            type: object
+        language:
+          type: string
+          default: auto
+
+    OCRResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        fullText:
+          type: string
+        byImage:
+          type: array
+          items:
+            type: object
+
+    DocumentProcessingRequest:
+      type: object
+      required:
+        - source
+        - type
+      properties:
+        source:
+          type: object
+        type:
+          type: string
+          enum: [pdf, word, image]
+        extractLayout:
+          type: boolean
+          default: true
+        extractTables:
+          type: boolean
+          default: true
+        extractImages:
+          type: boolean
+          default: false
+        ocr:
+          type: boolean
+          default: true
+
+    DocumentProcessingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        document:
+          type: object
+
+    UIElementRequest:
+      type: object
+      required:
+        - screenshot
+        - description
+      properties:
+        screenshot:
+          type: object
+        description:
+          type: string
+        elementType:
+          type: string
+        hints:
+          type: object
+
+    UIElementResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: object
+
+    # ============================================================================
+    # Speculative Execution Schemas
+    # ============================================================================
+    SpeculativePlanRequest:
+      type: object
+      required:
+        - initialState
+        - goal
+        - availableActions
+      properties:
+        initialState:
+          type: object
+        goal:
+          type: string
+        availableActions:
+          type: array
+          items:
+            type: object
+        constraints:
+          type: object
+        horizon:
+          type: string
+          enum: [short, medium, long]
+        successCriteria:
+          type: object
+        mctsConfig:
+          type: object
+
+    SpeculativePlanResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: object
+          properties:
+            requestId:
+              type: string
+            bestPlan:
+              type: array
+            expectedValue:
+              type: number
+            successProbability:
+              type: number
+            expectedCost:
+              type: number
+            alternativePlans:
+              type: array
+            treeStats:
+              type: object
+            planningTimeMs:
+              type: integer
+            statesExplored:
+              type: integer
+            confidence:
+              type: number
+
+    SpeculativeExecuteRequest:
+      type: object
+      required:
+        - action
+        - currentState
+      properties:
+        action:
+          type: object
+        currentState:
+          type: object
+        speculationDepth:
+          type: integer
+          default: 3
+        enableRollback:
+          type: boolean
+          default: true
+
+    SpeculativeExecuteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: object
+          properties:
+            requestId:
+              type: string
+            success:
+              type: boolean
+            outcome:
+              type: object
+            sideEffects:
+              type: array
+            valueEstimate:
+              type: number
+            recommendExecution:
+              type: boolean
+            checkpointId:
+              type: string
+            estimatedRollbackTimeMs:
+              type: integer
+
+    RollbackResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: object
+          properties:
+            stepsCompleted:
+              type: integer
+            totalSteps:
+              type: integer
+            rollbackTimeMs:
+              type: integer
+            failedSteps:
+              type: array
+
+    SpeculativeMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+
+    # ============================================================================
+    # Neuro-Symbolic Schemas
+    # ============================================================================
+    NeuroSymbolicQueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+        domain:
+          type: string
+          default: general
+        requiresVerification:
+          type: boolean
+          default: false
+        maxDepth:
+          type: integer
+          default: 10
+        timeoutMs:
+          type: integer
+          default: 5000
+        includeProof:
+          type: boolean
+          default: true
+
+    NeuroSymbolicQueryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        query:
+          type: string
+        result:
+          type: object
+          properties:
+            naturalAnswer:
+              type: string
+            formalAnswer:
+              type: array
+            inference:
+              type: object
+            explanation:
+              type: object
+            confidence:
+              type: number
+            metadata:
+              type: object
+
+    DatalogQueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        program:
+          type: string
+        query:
+          type: object
+        maxDepth:
+          type: integer
+          default: 10
+
+    DatalogQueryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        derivedFacts:
+          type: array
+        bindings:
+          type: array
+        inferenceTimeMs:
+          type: integer
+        iterations:
+          type: integer
+
+    AMLComplianceRequest:
+      type: object
+      required:
+        - subject
+      properties:
+        subject:
+          type: object
+        context:
+          type: array
+          items:
+            type: object
+        jurisdiction:
+          type: string
+          default: US
+
+    AMLComplianceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        check:
+          type: object
+          properties:
+            passed:
+              type: boolean
+            riskScore:
+              type: number
+            violations:
+              type: array
+            recommendations:
+              type: array
+            explanation:
+              type: string
+
+    NeuroSymbolicDomainsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        domains:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              rules:
+                type: array
+                items:
+                  type: string
+
+    NeuroSymbolicMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+
+    # ============================================================================
+    # Federated Learning Schemas
+    # ============================================================================
+    FederatedJobRequest:
+      type: object
+      required:
+        - name
+        - modelType
+        - participants
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        modelType:
+          type: string
+          enum: [agent_policy, classification, prediction, embedding]
+        targetSkills:
+          type: array
+          items:
+            type: string
+        participants:
+          type: array
+          items:
+            type: string
+        config:
+          type: object
+        rounds:
+          type: integer
+          default: 100
+
+    FederatedJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        job:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            modelType:
+              type: string
+            targetSkills:
+              type: array
+            participants:
+              type: array
+            totalRounds:
+              type: integer
+            currentRound:
+              type: integer
+            status:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+
+    FederatedJobsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        jobs:
+          type: array
+          items:
+            type: object
+
+    FederatedJobDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        job:
+          type: object
+
+    FederatedOrgRequest:
+      type: object
+      required:
+        - id
+        - name
+        - publicKey
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        publicKey:
+          type: string
+        dataProfile:
+          type: object
+
+    FederatedOrgResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        org:
+          type: object
+
+    FederatedMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+          properties:
+            totalJobs:
+              type: integer
+            activeJobs:
+              type: integer
+            totalRounds:
+              type: integer
+            totalOrgs:
+              type: integer
+            activeOrgs:
+              type: integer
+
+    # ============================================================================
+    # Causal Reasoning Schemas
+    # ============================================================================
+    CausalGraphRequest:
+      type: object
+      required:
+        - graph
+      properties:
+        graph:
+          type: object
+          required:
+            - id
+            - name
+            - variables
+            - edges
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            variables:
+              type: array
+            edges:
+              type: array
+
+    ATERequest:
+      type: object
+      required:
+        - graphId
+        - treatment
+        - outcome
+        - data
+      properties:
+        graphId:
+          type: string
+        treatment:
+          type: string
+        outcome:
+          type: string
+        data:
+          type: object
+
+    ATEResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        estimate:
+          type: object
+          properties:
+            type:
+              type: string
+            value:
+              type: number
+            confidenceInterval:
+              type: object
+            standardError:
+              type: number
+            pValue:
+              type: number
+            method:
+              type: string
+            identification:
+              type: string
+            adjustmentSet:
+              type: array
+
+    CounterfactualRequest:
+      type: object
+      required:
+        - graphId
+        - factualEvidence
+        - hypothetical
+        - outcomeVar
+      properties:
+        graphId:
+          type: string
+        factualEvidence:
+          type: object
+        hypothetical:
+          type: object
+        outcomeVar:
+          type: string
+
+    CounterfactualResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        scenario:
+          type: object
+          properties:
+            id:
+              type: string
+            factualEvidence:
+              type: object
+            hypothetical:
+              type: object
+            counterfactualOutcome:
+              type: object
+            explanation:
+              type: string
+
+    RootCauseRequest:
+      type: object
+      required:
+        - graphId
+        - outcome
+      properties:
+        graphId:
+          type: string
+        outcome:
+          type: object
+        context:
+          type: object
+
+    RootCauseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        analysis:
+          type: object
+          properties:
+            id:
+              type: string
+            outcome:
+              type: object
+            rootCauses:
+              type: array
+            causalChains:
+              type: array
+            recommendations:
+              type: array
+
+    CausalMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+          properties:
+            totalQueries:
+              type: integer
+            successfulEstimates:
+              type: integer
+            failedEstimates:
+              type: integer
+            avgProcessingTimeMs:
+              type: number
+            rootCauseAnalyses:
+              type: integer
+
+    # ============================================================================
+    # Liquid Neural Networks Schemas
+    # ============================================================================
+    LNNAgentRequest:
+      type: object
+      required:
+        - name
+        - taskType
+      properties:
+        name:
+          type: string
+        taskType:
+          type: string
+          enum: [monitoring, prediction, control, classification]
+        config:
+          type: object
+          properties:
+            numNeurons:
+              type: integer
+            timeConstant:
+              type: number
+            inputDim:
+              type: integer
+            outputDim:
+              type: integer
+        realTimeAdaptation:
+          type: boolean
+          default: true
+        edgeOptimized:
+          type: boolean
+          default: false
+
+    LNNAgentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        agent:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            taskType:
+              type: string
+            config:
+              type: object
+            realTimeAdaptation:
+              type: boolean
+            edgeOptimized:
+              type: boolean
+
+    LNNAgentsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        agents:
+          type: array
+          items:
+            type: object
+
+    LNNForwardResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: object
+          properties:
+            output:
+              type: array
+            activations:
+              type: array
+            computeTimeMs:
+              type: integer
+            stepsTaken:
+              type: integer
+
+    LNNAdaptResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        adaptation:
+          type: object
+          properties:
+            timestamp:
+              type: integer
+            error:
+              type: number
+            stateChange:
+              type: number
+
+    LNNMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        metrics:
+          type: object
+          properties:
+            activeAgents:
+              type: integer
+            totalInferences:
+              type: integer
+            avgInferenceTimeMs:
+              type: number

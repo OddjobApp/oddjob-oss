@@ -1,0 +1,67 @@
+{
+  "include": [
+    "client/src/**/*",
+    "shared/**/*",
+    "server/**/*",
+    "scripts/**/*",
+    "verify-dataset-flow.ts",
+    "*.ts"
+  ],
+  "exclude": [
+    "server/blueprints",
+    "node_modules",
+    "build",
+    "dist",
+    "scan_today.ts",
+    "seed-changelog-example.ts",
+    "trigger_reindex.ts",
+    "scripts/debug/debug-full-execution.ts",
+    "scripts/test-evolution.ts"
+  ],
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
+    "noEmit": true,
+    "module": "ESNext",
+    "strict": true,
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable"
+    ],
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2020",
+    "downlevelIteration": true,
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "bundler",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@/*": [
+        "./client/src/*"
+      ],
+      "@shared/*": [
+        "./shared/*"
+      ],
+      "@server/*": [
+        "./server/*"
+      ],
+      "@domain/*": [
+        "./server/domain/*"
+      ],
+      "@domain-ui/*": [
+        "./server/domain/*"
+      ],
+      "@oddjob/shared-utils/*": [
+        "./packages/shared-utils/src/*"
+      ],
+      "@oddjob/shared-utils": [
+        "./packages/shared-utils/src/index.ts"
+      ]
+    }
+  }
+}

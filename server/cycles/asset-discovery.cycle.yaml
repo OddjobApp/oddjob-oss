@@ -1,0 +1,312 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "Asset Discovery Pipeline"
+version: "1.1"
+description: "Guided asset discovery pipeline that indexes managed assets, opens the Location Search app, ranks nearby matches, and records each search/selection so future runs get more accurate."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "Asset Discovery"
+  icon: "Compass"
+  theme_color: "#6366f1"
+  display_priority: 3
+  category: "Logistics"
+  show_in_gallery: true
+
+tech_stack:
+  backend_language: "typescript"
+  frontend_framework: "nextjs"
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 2
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 75000
+  token_budget_per_launch: 250000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+directories:
+  backend: ["server/blueprints/apps/location-search"]
+  frontend: ["server/blueprints/apps/location-search"]
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: false
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    dispatch_channel: "${ENV.SLACK_DISPATCH_CHANNEL}"
+  mapping:
+    required: false
+    provider: "${ENV.MAPS_PROVIDER}"
+    api_key: "${ENV.MAPS_API_KEY}"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 0.5
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+knowledge_datasets:
+  - id: "managed_assets"
+    source: "dataset:Managed Assets"
+    primary_key: "assetId"
+    vectorize: true
+    schema:
+      assetId: "string"
+      name: "string"
+      type: "string"
+      status: "string"
+      building: "string"
+      floor: "string"
+      room: "string"
+      address: "string"
+      lat: "number"
+      lng: "number"
+      qr_data_url: "string"
+      lastServiceDate: "string"
+      warrantyExpiry: "string"
+
+  - id: "asset_discovery_sessions"
+    source: "manual"
+    primary_key: "session_id"
+    vectorize: false
+    schema:
+      session_id: "string"
+      user_id: "string"
+      search_query: "string"
+      user_lat: "number"
+      user_lng: "number"
+      radius_miles: "number"
+      results_returned: "number"
+      selected_asset_id: "string"
+      created_at: "string"
+
+  - id: "asset_selection_events"
+    source: "manual"
+    primary_key: "event_id"
+    vectorize: false
+    schema:
+      event_id: "string"
+      session_id: "string"
+      assetId: "string"
+      rank_position: "number"
+      distance_miles: "number"
+      action_taken: "string"
+      created_at: "string"
+
+forms:
+  - id: "asset_discovery_search"
+    name: "Asset Discovery Search"
+    description: "Collect the location and search criteria needed to launch a useful asset discovery run."
+    fields:
+      - name: "search_query"
+        label: "Search Query"
+        type: "text"
+        required: true
+      - name: "asset_type_filter"
+        label: "Asset Type"
+        type: "text"
+        required: false
+      - name: "radius_miles"
+        label: "Radius Miles"
+        type: "number"
+        required: true
+      - name: "user_location"
+        label: "Location"
+        type: "text"
+        required: false
+
+agents:
+  - id: "logistics-coordinator"
+    name: "Logistics & Fleet Operations Coordinator"
+    role: "supervisor"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Field Navigator"
+      legend: "Keeps the asset index usable in the field by grounding every search in live coordinates, asset status, and past selection signals."
+    system_prompt: "You are an AI coordinator responsible for managed asset discovery. Use the managed_assets dataset as the source of truth, rank nearby matches by distance, operational status, and historical selection quality, and record user selection signals after every run."
+    boundaries: ["managed_assets", "asset_discovery_sessions", "asset_selection_events"]
+    permissions: ["datasets:read", "datasets:write"]
+    tools: ["dataset_query", "dataset_write", "geo_discovery", "app_provision"]
+
+missions:
+  - id: "mission-discover-assets"
+    name: "Discover Nearby Assets"
+    objective: "Help the user find nearby managed assets, launch the Location Search app with ranked candidates, and persist the search context for future tuning."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    primary_agent: "logistics-coordinator"
+    trigger: "on_launch"
+    inputs: ["user_location", "search_query", "asset_type_filter", "radius_miles"]
+    outputs: ["ranked_assets", "location_search_url", "asset_discovery_session"]
+    sequence:
+      - step_code: "DISCOVERY-1"
+        action: "capture_search_context"
+        description: "Capture user coordinates when available, search query, asset type filter, and requested radius."
+        estimated_duration_minutes: 2
+        requires_human: true
+        agent: "logistics-coordinator"
+      - step_code: "DISCOVERY-2"
+        action: "normalize_asset_index"
+        description: "Query managed_assets and normalize records into the location-search schema: id, name, category, status, lat, lng."
+        estimated_duration_minutes: 3
+        agent: "logistics-coordinator"
+      - step_code: "DISCOVERY-3"
+        action: "query_nearby_assets"
+        description: "Filter by asset type, status, and radius; calculate distance from the user's coordinates when available."
+        estimated_duration_minutes: 3
+        agent: "logistics-coordinator"
+      - step_code: "DISCOVERY-4"
+        action: "rank_discovery_results"
+        description: "Rank candidates by distance, asset health/status, recency of successful selection, and exact query match."
+        estimated_duration_minutes: 2
+        agent: "logistics-coordinator"
+      - step_code: "DISCOVERY-5"
+        action: "provision_location_search_app"
+        description: "Open the Location Search app with the ranked managed-assets collection bound to this cycle."
+        estimated_duration_minutes: 2
+        requires_human: true
+        agent: "logistics-coordinator"
+        app: "location-search"
+      - step_code: "DISCOVERY-6"
+        action: "record_discovery_session"
+        description: "Write session metadata and result count to asset_discovery_sessions for analytics and ranking improvement."
+        estimated_duration_minutes: 2
+        agent: "logistics-coordinator"
+
+  - id: "mission-route-to-selected-asset"
+    name: "Route To Selected Asset"
+    objective: "When the user selects an asset, persist the selection event and provide the best route or QR triage handoff."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "app_event"
+      source: "location-search"
+      condition: "event.type == 'asset_selected'"
+    primary_agent: "logistics-coordinator"
+    inputs: ["asset_discovery_session", "selected_asset_id", "user_location"]
+    outputs: ["asset_selection_event", "route_payload", "qr_triage_url"]
+    sequence:
+      - step_code: "ROUTE-1"
+        action: "load_selected_asset"
+        description: "Load the selected managed asset and verify it still has valid coordinates and service status."
+        estimated_duration_minutes: 2
+        agent: "logistics-coordinator"
+      - step_code: "ROUTE-2"
+        action: "record_selection_event"
+        description: "Write selected asset, rank position, distance, and action taken to asset_selection_events."
+        estimated_duration_minutes: 2
+        agent: "logistics-coordinator"
+      - step_code: "ROUTE-3"
+        action: "prepare_route_or_triage_handoff"
+        description: "Return route metadata, access instructions, and QR triage URL when the asset needs service."
+        estimated_duration_minutes: 3
+        agent: "logistics-coordinator"
+
+  - id: "mission-discovery-learning-loop"
+    name: "Discovery Ranking Learning Loop"
+    objective: "Continuously improve asset ranking by comparing searches, selections, no-result sessions, and stale coordinate records after every discovery run."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-route-to-selected-asset)"
+    primary_agent: "logistics-coordinator"
+    inputs: ["asset_discovery_sessions", "asset_selection_events", "managed_assets"]
+    outputs: ["ranking_adjustments", "stale_asset_coordinate_flags"]
+    sequence:
+      - step_code: "LEARN-1"
+        action: "analyze_selection_quality"
+        description: "Compare result rank against selected asset and identify assets repeatedly skipped or selected from low positions."
+        estimated_duration_minutes: 5
+        agent: "logistics-coordinator"
+      - step_code: "LEARN-2"
+        action: "flag_data_quality_issues"
+        description: "Flag missing coordinates, stale statuses, duplicate asset names, and no-result query patterns for admin cleanup."
+        estimated_duration_minutes: 5
+        agent: "logistics-coordinator"
+      - step_code: "LEARN-3"
+        action: "persist_ranking_adjustments"
+        description: "Persist lightweight ranking hints so the next discovery run benefits from previous behavior."
+        estimated_duration_minutes: 3
+        agent: "logistics-coordinator"
+
+schedules:
+  - id: "daily_asset_discovery_quality_review"
+    cron: "0 6 * * *"
+    action: "run mission-discovery-learning-loop"
+    agent: "logistics-coordinator"
+
+escalations:
+  - mission_ref: "mission-discover-assets"
+    alert_channels: ["slack:alerts_channel"]
+    warning_threshold_minutes: 15
+    critical_threshold_minutes: 30
+
+apps:
+  - id: "location-search"
+    name: "Location Search"
+    description: "Map and list view for discovering nearby managed assets from the cycle-owned asset index."
+    path: "server/blueprints/apps/location-search"
+    blueprint: "location-search"
+    interaction_model: "standalone-app"
+    enabled: true
+    dependent_missions:
+      - "mission-discover-assets"
+      - "mission-route-to-selected-asset"
+    bindings:
+      - mission: "mission-discover-assets"
+        role: "primary"
+        label: "Open Asset Map"
+        openMode: "modal"
+      - mission: "mission-route-to-selected-asset"
+        role: "primary"
+        label: "Selected Asset"
+        openMode: "modal"
+    workbench_modules:
+      - id: "asset-map"
+        name: "Asset Map"
+        purpose: "Search, filter, and select nearby assets from managed_assets."
+        route: "/"
+        datasets: ["managed_assets", "asset_discovery_sessions", "asset_selection_events"]
+        primary_actions:
+          - "request_location"
+          - "search_assets"
+          - "select_asset"

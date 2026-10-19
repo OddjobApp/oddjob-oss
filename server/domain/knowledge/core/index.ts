@@ -1,0 +1,12 @@
+export * from "./types.js";
+export { knowledgeService } from "./knowledge.service.js";
+export { graphService } from "./graph/graph-service.js";
+export { topicService } from "./topic-service.js";
+export { documentService } from "./extraction/document-service.js";
+export { ragService } from "./rag.service.js";
+export { analysisService } from "./analysis-service.js";
+export { searchService } from "./search/search-service.js";
+export { statsService } from "./stats-service.js";
+export { contextService } from "./rag/context-service.js";
+export { qdrantPublisher } from "./indexing/qdrant-publisher.js";
+export { reindexKnowledgeDocument, deleteKnowledgeDocumentVectors } from "./knowledge-store.js";

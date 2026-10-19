@@ -1,0 +1,192 @@
+﻿[dotenv@17.2.3] injecting env (20) from .env -- tip: ≡ƒæÑ sync secrets across teammates & machines: https://dotenvx.com/ops
+--- Recent Executions (Last 20) ---
+[
+  {
+    "id": 236,
+    "pipeline_id": 42,
+    "workgroup_id": 71,
+    "status": "completed",
+    "started_at": "2026-02-13T22:27:03.480Z",
+    "error": null
+  },
+  {
+    "id": 235,
+    "pipeline_id": 43,
+    "workgroup_id": 71,
+    "status": "running",
+    "started_at": "2026-02-13T22:26:59.943Z",
+    "error": null
+  },
+  {
+    "id": 234,
+    "pipeline_id": 43,
+    "workgroup_id": 71,
+    "status": "running",
+    "started_at": "2026-02-13T22:08:24.365Z",
+    "error": null
+  },
+  {
+    "id": 233,
+    "pipeline_id": 42,
+    "workgroup_id": 70,
+    "status": "completed",
+    "started_at": "2026-02-13T22:08:05.509Z",
+    "error": null
+  },
+  {
+    "id": 232,
+    "pipeline_id": 43,
+    "workgroup_id": 70,
+    "status": "running",
+    "started_at": "2026-02-13T22:07:59.655Z",
+    "error": null
+  },
+  {
+    "id": 231,
+    "pipeline_id": 42,
+    "workgroup_id": 70,
+    "status": "completed",
+    "started_at": "2026-02-13T22:05:53.700Z",
+    "error": null
+  },
+  {
+    "id": 230,
+    "pipeline_id": 43,
+    "workgroup_id": 70,
+    "status": "running",
+    "started_at": "2026-02-13T22:05:29.493Z",
+    "error": null
+  },
+  {
+    "id": 229,
+    "pipeline_id": 42,
+    "workgroup_id": 69,
+    "status": "completed",
+    "started_at": "2026-02-13T22:03:37.031Z",
+    "error": null
+  },
+  {
+    "id": 228,
+    "pipeline_id": 43,
+    "workgroup_id": 69,
+    "status": "running",
+    "started_at": "2026-02-13T22:03:33.391Z",
+    "error": null
+  },
+  {
+    "id": 227,
+    "pipeline_id": 42,
+    "workgroup_id": 69,
+    "status": "completed",
+    "started_at": "2026-02-13T22:02:41.454Z",
+    "error": null
+  },
+  {
+    "id": 226,
+    "pipeline_id": 43,
+    "workgroup_id": 69,
+    "status": "running",
+    "started_at": "2026-02-13T22:02:38.567Z",
+    "error": null
+  },
+  {
+    "id": 225,
+    "pipeline_id": 41,
+    "workgroup_id": 69,
+    "status": "running",
+    "started_at": "2026-02-13T21:57:11.344Z",
+    "error": null
+  },
+  {
+    "id": 224,
+    "pipeline_id": 43,
+    "workgroup_id": 69,
+    "status": "running",
+    "started_at": "2026-02-13T21:57:06.730Z",
+    "error": null
+  },
+  {
+    "id": 223,
+    "pipeline_id": 43,
+    "workgroup_id": 68,
+    "status": "completed",
+    "started_at": "2026-02-13T20:25:02.146Z",
+    "error": null
+  },
+  {
+    "id": 222,
+    "pipeline_id": 43,
+    "workgroup_id": 67,
+    "status": "completed",
+    "started_at": "2026-02-13T17:48:44.496Z",
+    "error": null
+  },
+  {
+    "id": 221,
+    "pipeline_id": 43,
+    "workgroup_id": 45,
+    "status": "completed",
+    "started_at": "2026-02-13T17:47:52.553Z",
+    "error": null
+  },
+  {
+    "id": 218,
+    "pipeline_id": 43,
+    "workgroup_id": 63,
+    "status": "completed",
+    "started_at": "2026-02-13T04:20:36.923Z",
+    "error": null
+  },
+  {
+    "id": 217,
+    "pipeline_id": 43,
+    "workgroup_id": 63,
+    "status": "completed",
+    "started_at": "2026-02-13T04:19:50.449Z",
+    "error": null
+  },
+  {
+    "id": 216,
+    "pipeline_id": 43,
+    "workgroup_id": 63,
+    "status": "completed",
+    "started_at": "2026-02-13T04:16:17.499Z",
+    "error": null
+  },
+  {
+    "id": 215,
+    "pipeline_id": 42,
+    "workgroup_id": 63,
+    "status": "completed",
+    "started_at": "2026-02-13T04:14:56.139Z",
+    "error": null
+  }
+]
+
+--- Mission 120 Context ---
+[
+  {
+    "id": 120,
+    "organization_id": 1,
+    "workgroup_id": 69,
+    "name": "Mission: Final Verification Scan...",
+    "status": "active",
+    "current_pipeline_id": 43,
+    "pipeline_sequence": [
+      43
+    ],
+    "current_step_index": 0,
+    "mission_context": {
+      "lastUserGuidance": {
+        "content": "Can you give me a status reports?",
+        "timestamp": "2026-02-13T22:27:03.141Z"
+      }
+    },
+    "last_checkpoint_at": "2026-02-13T22:08:24.361Z",
+    "resume_condition": null,
+    "created_by": "56c39562-0219-4c5d-8446-3d8c188eab26",
+    "created_at": "2026-02-13T22:08:24.361Z",
+    "updated_at": "2026-02-13T22:27:03.158Z",
+    "pipeline_execution_id": null
+  }
+]

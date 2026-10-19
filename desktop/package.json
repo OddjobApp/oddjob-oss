@@ -1,0 +1,27 @@
+{
+  "name": "oddjob-desktop",
+  "productName": "Oddjob",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron shell that loads a hosted Oddjob instance",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist": "node scripts/dist.cjs"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "app.oddjob.desktop",
+    "productName": "Oddjob",
+    "files": ["src/**/*", "!**/node_modules/**/*"],
+    "npmRebuild": false,
+    "icon": "src/icon.png",
+    "protocols": [{ "name": "Oddjob", "schemes": ["oddjob"] }],
+    "win": { "target": "nsis" },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage" }
+  }
+}

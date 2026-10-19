@@ -1,0 +1,33 @@
+[
+    {
+        "id": "scenario_ontology_01",
+        "type": "entity_extraction",
+        "description": "Extracting entities from a raw system design doc.",
+        "input": "The AppCopilot service requires redis and the ai-client service to orchestrate tasks effectively. It writes to the app_deployments table.",
+        "expected_entities": [
+            {"label": "AppCopilot", "type": "Service"},
+            {"label": "redis", "type": "Infrastructure"},
+            {"label": "ai-client", "type": "Service"},
+            {"label": "app_deployments", "type": "Database Table"}
+        ],
+        "expected_relationships": [
+            {"source": "AppCopilot", "target": "redis", "type": "REQUIRES"},
+            {"source": "AppCopilot", "target": "ai-client", "type": "REQUIRES"},
+            {"source": "AppCopilot", "target": "app_deployments", "type": "WRITES_TO"}
+        ],
+        "difficulty": "medium",
+        "tags": ["ontology", "system-design", "training"]
+    },
+    {
+        "id": "scenario_dataset_01",
+        "type": "anomaly_detection",
+        "description": "Detecting invalid pipeline configurations.",
+        "input": "Pipeline 402 lacks an explicit execution target and defines a recursive trigger to itself.",
+        "expected_anomalies": [
+            "Missing execution target",
+            "Recursive trigger detected"
+        ],
+        "severity": "high",
+        "tags": ["validation", "pipeline", "training"]
+    }
+]

@@ -1,0 +1,14 @@
+<resources>
+    <!--
+      Android 12+ system splash: the hat icon on the site background, with the
+      "Oddjob AI" wordmark as the branding image at the bottom
+      (drawable-*/splash_branding.png, rendered from the bundled Space Grotesk).
+    -->
+    <style name="Theme.OddjobCrew" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/oddjob_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowSplashScreenBackground">@color/oddjob_background</item>
+        <item name="android:windowSplashScreenBrandingImage">@drawable/splash_branding</item>
+    </style>
+</resources>

@@ -1,0 +1,61 @@
+# cloudbuild.yaml - CI/CD for Oddjob on GCP
+steps:
+  # 1. Build the Node.js API Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-api:$COMMIT_SHA', '-f', 'Dockerfile.api', '.']
+
+  # 2. Build the Python AI Engine
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-python:$COMMIT_SHA', '-f', 'Dockerfile.python', '.']
+
+  # 3. Push images to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-api:$COMMIT_SHA']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-python:$COMMIT_SHA']
+
+  # 4. Deploy Node.js API to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'oddjob-api'
+      - '--image=$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-api:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-secrets=DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,SESSION_SECRET=SESSION_SECRET:latest,JWT_SECRET_KEY=JWT_SECRET_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest'
+      - '--vpc-connector=$_CONNECTOR_NAME'
+      - '--set-env-vars=ENVIRONMENT=production,LOG_LEVEL=INFO,SERVICE_ROLE=api,PYTHON_BACKEND_URL=http://oddjob-python-backend:8000,GCS_BUCKET_NAME=oddjob-483505-dataset-uploads'
+      - '--concurrency=80'
+      - '--min-instances=1'
+
+  # 5. Deploy Python Engine to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'oddjob-python-backend'
+      - '--image=$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-python:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--no-allow-unauthenticated' # Internal engine only
+      - '--set-secrets=DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET_KEY=JWT_SECRET_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest'
+      - '--vpc-connector=$_CONNECTOR_NAME'
+      - '--set-env-vars=ENVIRONMENT=production,LOG_LEVEL=INFO,GCS_BUCKET_NAME=oddjob-483505-dataset-uploads'
+      - '--concurrency=10'
+      - '--min-instances=1'
+
+images:
+  - '$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-api:$COMMIT_SHA'
+  - '$_REGION-docker.pkg.dev/$PROJECT_ID/oddjob-repo/oddjob-python:$COMMIT_SHA'
+
+substitutions:
+  _REGION: us-central1
+  _CONNECTOR_NAME: oddjob-vpc-connector
+
+options:
+  logging: CLOUD_LOGGING_ONLY

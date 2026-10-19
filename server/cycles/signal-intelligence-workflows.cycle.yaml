@@ -1,0 +1,291 @@
+name: "Signal Intelligence Workflows"
+version: "1.0"
+containers: {}
+description: "Manage and analyze completed signal intelligence workflows. Review workflow history, analyze patterns, generate insights from wizard execution data, and optimize signal response strategies."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Signal Intelligence Workflows"
+  icon: "🔮"
+  theme_color: "#8b5cf6"
+  display_priority: 1
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  analytics_standards:
+    required: true
+    path: "file://knowledge/guidelines/analytics_standards.md"
+
+integrations:
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: false
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: false
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "workflow_analysis_template"
+    path: "file://knowledge/document-templates/analytics_report_template.md"
+  - id: "workflow_optimization_template"
+    path: "file://knowledge/document-templates/dashboard_config_template.md"
+
+forms:
+  - id: "workflow_analysis_request"
+    name: "Workflow Analysis Request"
+    description: "Request analysis of signal intelligence workflow patterns."
+    fields:
+      - name: "analysis_type"
+        label: "Analysis Type"
+        type: "select"
+        required: true
+        options: ["Action Distribution", "Success Rates", "Signal Patterns", "Resource Utilization", "Custom"]
+      - name: "time_period"
+        label: "Time Period"
+        type: "select"
+        required: true
+        options: ["Last 7 Days", "Last 30 Days", "Last Quarter", "Year to Date", "Custom Range"]
+      - name: "action_filter"
+        label: "Action Type Filter"
+        type: "multiselect"
+        required: false
+        options: ["subscription", "cycle", "source", "monitor"]
+      - name: "include_recommendations"
+        label: "Include Recommendations"
+        type: "boolean"
+        required: false
+        default: true
+
+agents:
+  - id: "ai-workflow-analyst"
+    name: "Workflow Analyst"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Pattern Recognizer"
+      legend: "Analyzes workflow patterns and generates optimization insights."
+      traits: { compliance: 95, creativity: 20, persistence: 85 }
+    system_prompt: "file://knowledge/prompts/data-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read", "slack:write:channel"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-strategy-optimizer"
+    name: "Strategy Optimizer"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Strategic Thinker"
+      legend: "Optimizes signal response strategies based on workflow analysis."
+      traits: { compliance: 90, creativity: 30, persistence: 80 }
+    system_prompt: "file://knowledge/prompts/business-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query"]
+
+missions:
+  - id: "mission-collect-workflow-data"
+    name: "Collect Workflow Data"
+    objective: "Collect completed signal intelligence workflow data"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger:
+      type: "scheduled"
+      schedule: "0 0 * * *"
+    primary_agent: "ai-workflow-analyst"
+    inputs: []
+    outputs: ["workflow_data"]
+    sequence:
+      - step_code: "COLLECT-1"
+        action: "query_workflow_storage"
+        description: "Query workflow history from localStorage"
+        estimated_duration_minutes: 10
+        tool: "knowledge_graph_query"
+      - step_code: "COLLECT-2"
+        action: "normalize_workflow_data"
+        description: "Normalize and structure workflow data"
+        estimated_duration_minutes: 10
+      - step_code: "COLLECT-3"
+        action: "aggregate_by_action_type"
+        description: "Aggregate workflows by action type"
+        estimated_duration_minutes: 5
+      - step_code: "COLLECT-4"
+        action: "calculate_metrics"
+        description: "Calculate workflow metrics and statistics"
+        estimated_duration_minutes: 5
+
+  - id: "mission-analyze-workflow-patterns"
+    name: "Analyze Workflow Patterns"
+    objective: "Analyze patterns in signal intelligence workflows"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-collect-workflow-data)"
+    primary_agent: "ai-workflow-analyst"
+    inputs: ["workflow_data"]
+    outputs: ["pattern_analysis"]
+    sequence:
+      - step_code: "ANALYZE-1"
+        action: "analyze_action_distribution"
+        description: "Analyze distribution of action types"
+        estimated_duration_minutes: 15
+      - step_code: "ANALYZE-2"
+        action: "analyze_signal_patterns"
+        description: "Analyze signal selection patterns"
+        estimated_duration_minutes: 15
+      - step_code: "ANALYZE-3"
+        action: "analyze_completion_rates"
+        description: "Analyze workflow completion rates"
+        estimated_duration_minutes: 10
+      - step_code: "ANALYZE-4"
+        action: "identify_trends"
+        description: "Identify temporal trends in workflow usage"
+        estimated_duration_minutes: 10
+      - step_code: "ANALYZE-5"
+        action: "generate_pattern_report"
+        description: "Generate pattern analysis report"
+        estimated_duration_minutes: 10
+        template: "workflow_analysis_template"
+
+  - id: "mission-optimize-response-strategies"
+    name: "Optimize Response Strategies"
+    objective: "Optimize signal response strategies based on analysis"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1.5
+    trigger: "on_success(mission-analyze-workflow-patterns)"
+    primary_agent: "ai-strategy-optimizer"
+    inputs: ["pattern_analysis"]
+    outputs: ["strategy_recommendations"]
+    sequence:
+      - step_code: "OPTIMIZE-1"
+        action: "identify_inefficiencies"
+        description: "Identify workflow inefficiencies"
+        estimated_duration_minutes: 20
+      - step_code: "OPTIMIZE-2"
+        action: "recommend_action_improvements"
+        description: "Recommend improvements for each action type"
+        estimated_duration_minutes: 20
+      - step_code: "OPTIMIZE-3"
+        action: "suggest_workflow_optimizations"
+        description: "Suggest wizard workflow optimizations"
+        estimated_duration_minutes: 15
+      - step_code: "OPTIMIZE-4"
+        action: "generate_optimization_plan"
+        description: "Generate optimization implementation plan"
+        estimated_duration_minutes: 15
+        template: "workflow_optimization_template"
+      - step_code: "OPTIMIZE-5"
+        action: "create_jira_tasks"
+        description: "Create JIRA tasks for optimization implementation"
+        estimated_duration_minutes: 10
+        tool: "jira_jql_search"
+
+  - id: "mission-generate-custom-analysis"
+    name: "Generate Custom Analysis"
+    objective: "Generate custom workflow analysis based on request"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "ops_workbench"
+    primary_agent: "ai-workflow-analyst"
+    inputs: ["workflow_analysis_request"]
+    outputs: ["custom_analysis"]
+    sequence:
+      - step_code: "CUSTOM-1"
+        action: "validate_analysis_request"
+        description: "Validate custom analysis request"
+        estimated_duration_minutes: 5
+      - step_code: "CUSTOM-2"
+        action: "filter_workflow_data"
+        description: "Filter workflow data based on request parameters"
+        estimated_duration_minutes: 10
+      - step_code: "CUSTOM-3"
+        action: "perform_analysis"
+        description: "Perform requested analysis"
+        estimated_duration_minutes: 20
+      - step_code: "CUSTOM-4"
+        action: "generate_analysis_report"
+        description: "Generate custom analysis report"
+        estimated_duration_minutes: 15
+        template: "workflow_analysis_template"
+      - step_code: "CUSTOM-5"
+        action: "publish_results"
+        description: "Publish analysis results"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+
+  - id: "mission-distribute-insights"
+    name: "Distribute Workflow Insights"
+    objective: "Distribute workflow insights to stakeholders"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-optimize-response-strategies)"
+    primary_agent: "ai-workflow-analyst"
+    inputs: ["strategy_recommendations"]
+    outputs: ["distributed_insights"]
+    sequence:
+      - step_code: "DISTRIBUTE-1"
+        action: "prepare_executive_summary"
+        description: "Prepare executive summary of insights"
+        estimated_duration_minutes: 10
+      - step_code: "DISTRIBUTE-2"
+        action: "notify_team"
+        description: "Notify operations team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+      - step_code: "DISTRIBUTE-3"
+        action: "update_dashboard"
+        description: "Update workflow analytics dashboard"
+        estimated_duration_minutes: 10

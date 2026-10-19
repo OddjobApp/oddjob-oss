@@ -1,0 +1,12 @@
+{
+  "id": "cap_github_pr",
+  "name": "Capability: open a GitHub pull request",
+  "subject": { "kind": "capability", "ref": "github_create_pr" },
+  "prompt": "Open a pull request titled 'docs: fix typo' against the current repository's default branch.",
+  "repeats": 5,
+  "threshold": 0.75,
+  "_note": "Seed scaffold — high-risk (external side-effect); confirm tool name and use a sandbox repo.",
+  "criteria": [
+    { "type": "tool_used", "value": "github_create_pr", "weight": 4 }
+  ]
+}

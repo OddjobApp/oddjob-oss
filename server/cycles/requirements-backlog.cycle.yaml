@@ -1,0 +1,239 @@
+name: "Requirements to Backlog"
+version: "1.0"
+containers: {}
+description: "Convert business requirements into structured JIRA epics and stories with story point estimation. Leverages JQL injection to avoid duplicates and Confluence for PRD publishing."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Requirements to Backlog"
+  icon: "📋"
+  theme_color: "#8b5cf6"
+  display_priority: 1
+  category: "development"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 5
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "project"
+  capitalization_category: "CapEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "prd_template"
+    path: "file://knowledge/document-templates/product_requirements_template.md"
+  - id: "epic_template"
+    path: "file://knowledge/document-templates/epic_template.md"
+  - id: "story_template"
+    path: "file://knowledge/document-templates/story_template.md"
+
+forms:
+  - id: "requirements_intake"
+    name: "Business Requirements Intake"
+    description: "Provide business requirements for backlog generation."
+    fields:
+      - name: "business_objective"
+        label: "Business Objective"
+        type: "text"
+        required: true
+      - name: "target_features"
+        label: "Target Features"
+        type: "textarea"
+        required: true
+      - name: "target_audience"
+        label: "Target Audience"
+        type: "text"
+        required: false
+      - name: "success_criteria"
+        label: "Success Criteria"
+        type: "textarea"
+        required: true
+      - name: "priority_level"
+        label: "Priority Level"
+        type: "select"
+        required: true
+        options: ["P0 - Critical", "P1 - High", "P2 - Medium", "P3 - Low"]
+      - name: "target_sprint"
+        label: "Target Sprint"
+        type: "text"
+        required: false
+
+  - id: "backlog_review"
+    name: "Generated Backlog Review"
+    description: "Review and approve the generated JIRA backlog."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Create JIRA Items", "Request Revisions", "Reject"]
+      - name: "feedback"
+        label: "Feedback"
+        type: "textarea"
+        required: false
+      - name: "estimated_story_points"
+        label: "Total Story Points"
+        type: "number"
+        required: true
+
+agents:
+  - id: "ai-systems-analyst"
+    name: "Product Requirement Systems Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 5
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Precision Architect"
+      legend: "Converts business requirements into structured implementation plans."
+      traits: { compliance: 90, creativity: 30, speed: 50 }
+    system_prompt: "file://knowledge/prompts/systems-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["confluence:read", "confluence:write", "jira:read", "jira:write"]
+    tools: ["confluence_read", "confluence_publish", "jira_jql_search", "jira_create_epic_and_stories", "knowledge_graph_query"]
+
+missions:
+  - id: "mission-analyze-requirements"
+    name: "Analyze Business Requirements"
+    objective: "Parse business requirements and generate structured PRD"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger:
+      type: "manual"
+      source: "pm_workbench"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["requirements_intake"]
+    outputs: ["prd_document"]
+    config:
+      jiraJqlQuery: "project = ${ENV.JIRA_PROJECT_KEY} AND status = Backlog"
+    sequence:
+      - step_code: "REQ-1"
+        action: "parse_requirements"
+        description: "Parse business requirements into structured format"
+        estimated_duration_minutes: 15
+        template: "prd_template"
+      - step_code: "REQ-2"
+        action: "check_duplicates"
+        description: "Query JQL to check for duplicate backlog items"
+        estimated_duration_minutes: 5
+        tool: "jira_jql_search"
+      - step_code: "REQ-3"
+        action: "generate_prd"
+        description: "Generate comprehensive PRD document"
+        estimated_duration_minutes: 30
+        template: "prd_template"
+      - step_code: "REQ-4"
+        action: "publish_prd"
+        description: "Publish PRD to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+        requires_human: false
+
+  - id: "mission-generate-backlog"
+    name: "Generate JIRA Backlog"
+    objective: "Convert PRD into JIRA epics and stories with story points"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 3
+    trigger: "on_success(mission-analyze-requirements)"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["prd_document"]
+    outputs: ["jira_backlog"]
+    sequence:
+      - step_code: "BACKLOG-1"
+        action: "decompose_features"
+        description: "Decompose features into epics and stories"
+        estimated_duration_minutes: 45
+        template: "epic_template"
+      - step_code: "BACKLOG-2"
+        action: "estimate_story_points"
+        description: "Estimate story points using historical velocity"
+        estimated_duration_minutes: 30
+      - step_code: "BACKLOG-3"
+        action: "create_jira_items"
+        description: "Create epics and stories in JIRA"
+        estimated_duration_minutes: 45
+        tool: "jira_create_epic_and_stories"
+        requires_human: false
+      - step_code: "BACKLOG-4"
+        action: "generate_summary"
+        description: "Generate backlog summary for review"
+        estimated_duration_minutes: 15
+
+  - id: "mission-review-backlog"
+    name: "Review and Approve Backlog"
+    objective: "Human review and approval of generated backlog"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-backlog)"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["jira_backlog"]
+    outputs: ["approved_backlog"]
+    requires_human: true
+    form_ref: "backlog_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_backlog"
+        description: "Present generated backlog for human review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_feedback"
+        description: "Collect human feedback and approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_backlog"
+        description: "Finalize backlog based on feedback"
+        estimated_duration_minutes: 20

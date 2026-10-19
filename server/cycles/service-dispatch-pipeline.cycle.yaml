@@ -1,0 +1,507 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "Service Dispatch Pipeline"
+version: "1.1"
+
+description: "Operational field-service dispatch cycle that turns incident intake into assigned responders, live dispatcher tracking, SLA monitoring, closure metrics, and continuous provider scoring."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "Service Dispatch Pipeline"
+  icon: "Siren"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "operations"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 150000
+  token_budget_per_launch: 400000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    dispatch_channel: "${ENV.SLACK_DISPATCH_CHANNEL}"
+  mapping:
+    required: false
+    provider: "${ENV.MAPS_PROVIDER}"
+    api_key: "${ENV.MAPS_API_KEY}"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 30
+  tracing:
+    enabled: true
+    sample_rate: 1.0
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+knowledge_datasets:
+  - id: "active_rescues"
+    source: "manual"
+    primary_key: "id"
+    vectorize: false
+    schema:
+      id: "string"
+      target: "string"
+      priority: "string"
+      status: "string"
+      address: "string"
+      lat: "number"
+      lng: "number"
+      incident_type: "string"
+      details: "string"
+      requestor_name: "string"
+      requestor_contact: "string"
+      session_id: "string"
+      providerId: "string"
+      provider_name: "string"
+      provider_eta_minutes: "number"
+      pipeline_execution_ids: "array"
+      pipeline_failures: "array"
+      resolved_address: "string"
+      source: "string"
+      opened_at: "string"
+      accepted_at: "string"
+      closed_at: "string"
+      sla_due_at: "string"
+
+  - id: "rescue_squads"
+    source: "manual"
+    primary_key: "id"
+    vectorize: false
+    schema:
+      id: "string"
+      status: "string"
+      health: "number"
+      mission: "string"
+      agents: "number"
+      lastSeen: "string"
+
+  - id: "service_providers"
+    source: "dataset:Service Providers"
+    primary_key: "providerId"
+    vectorize: true
+    schema:
+      providerId: "string"
+      name: "string"
+      lat: "number"
+      lng: "number"
+      rating: "number"
+      specialties: "array"
+      availability: "string"
+      current_load: "number"
+      acceptance_rate: "number"
+
+  - id: "dispatch_events"
+    source: "manual"
+    primary_key: "event_id"
+    vectorize: false
+    schema:
+      event_id: "string"
+      rescue_id: "string"
+      event_type: "string"
+      actor: "string"
+      payload: "json"
+      created_at: "string"
+
+  - id: "dispatch_sla_metrics"
+    source: "manual"
+    primary_key: "metric_id"
+    vectorize: false
+    schema:
+      metric_id: "string"
+      rescue_id: "string"
+      providerId: "string"
+      priority: "string"
+      response_minutes: "number"
+      resolution_minutes: "number"
+      met_sla: "boolean"
+      user_rating: "number"
+      created_at: "string"
+
+forms:
+  - id: "incident_intake"
+    name: "Incident Intake"
+    description: "Collect location, urgency, and operational details needed to start a dispatch."
+    fields:
+      - name: "requestor_name"
+        label: "Requestor name"
+        type: "text"
+        required: true
+      - name: "requestor_contact"
+        label: "Phone or email"
+        type: "text"
+        required: true
+      - name: "target"
+        label: "Incident target"
+        type: "text"
+        required: true
+      - name: "address"
+        label: "Address or service location"
+        type: "text"
+        required: true
+      - name: "incident_type"
+        label: "Incident type"
+        type: "select"
+        required: true
+        options: ["Equipment issue", "Facility issue", "Safety issue", "Customer support", "Other"]
+      - name: "priority"
+        label: "Priority"
+        type: "select"
+        required: true
+        options: ["Critical", "High", "Medium", "Low"]
+      - name: "details"
+        label: "Details"
+        type: "textarea"
+        required: true
+
+  - id: "dispatch_override"
+    name: "Dispatch Override"
+    description: "Allow a supervisor to approve manual reassignment or escalation."
+    fields:
+      - name: "override_reason"
+        label: "Reason"
+        type: "textarea"
+        required: true
+      - name: "target_provider_id"
+        label: "Provider ID"
+        type: "text"
+        required: false
+
+  - id: "dispatch_closure"
+    name: "Dispatch Closure"
+    description: "Capture closure status, resolution details, and user-facing notes."
+    fields:
+      - name: "resolution_status"
+        label: "Resolution status"
+        type: "select"
+        required: true
+        options: ["Resolved", "Partially resolved", "Unable to resolve", "Duplicate"]
+      - name: "resolution_notes"
+        label: "Resolution notes"
+        type: "textarea"
+        required: true
+
+agents:
+  - id: "ai-rescue-dispatcher"
+    name: "Emergency Dispatch Coordinator"
+    role: "supervisor"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Strategic Coordinator"
+      legend: "Maintains clear oversight of active field agents, SLA timers, and responder availability."
+    system_prompt: "file://knowledge/prompts/rescue-dispatcher.md"
+    boundaries: ["active_rescues", "rescue_squads", "service_providers", "dispatch_events", "dispatch_sla_metrics"]
+    permissions: ["datasets:read", "datasets:write", "slack:write:channel"]
+    tools: ["slack_post_message", "dataset_query", "dataset_write", "geo_discovery", "app_provision", "sla_timer"]
+
+missions:
+  - id: "mission-incident-intake"
+    name: "Process Incident Intake"
+    objective: "Receive incident details, validate location, classify urgency, open the dispatch record, and start the SLA clock."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "webhook"
+      source: "form_agent"
+      condition: "event.type == 'form_submitted'"
+    primary_agent: "ai-rescue-dispatcher"
+    inputs: ["incident_form_data"]
+    outputs: ["active_rescue", "dispatch_priority", "sla_clock"]
+    sequence:
+      - step_code: "INTAKE-1"
+        tool: "rescue_dispatch_action"
+        action: "parse_incident"
+        description: "Parse address, target, severity, incident type, notes, and requested contact path from the submitted form."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+      - step_code: "INTAKE-2"
+        tool: "rescue_dispatch_action"
+        action: "validate_and_geocode_location"
+        description: "Normalize the address, geocode coordinates when possible, and flag ambiguous or unsafe locations for human review."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+      - step_code: "INTAKE-3"
+        tool: "rescue_dispatch_action"
+        action: "classify_dispatch_priority"
+        description: "Classify priority from severity, safety risk, time sensitivity, and customer impact; set SLA due time."
+        estimated_duration_minutes: 3
+        agent: "ai-rescue-dispatcher"
+      - step_code: "INTAKE-4"
+        tool: "rescue_dispatch_action"
+        action: "write_active_rescue"
+        description: "Insert the incident into active_rescues and append an intake event to dispatch_events."
+        estimated_duration_minutes: 2
+        agent: "ai-rescue-dispatcher"
+      - step_code: "INTAKE-5"
+        tool: "rescue_dispatch_action"
+        action: "notify_dispatch_channel"
+        description: "Post the new incident summary, priority, and SLA timer to the dispatch Slack channel."
+        estimated_duration_minutes: 2
+        agent: "ai-rescue-dispatcher"
+
+  - id: "mission-provider-assignment"
+    name: "Provider Assignment"
+    objective: "Select an available responder by specialty, proximity, load, rating, and acceptance history, then request acceptance with a deadline."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-incident-intake)"
+    primary_agent: "ai-rescue-dispatcher"
+    inputs: ["active_rescue", "service_providers"]
+    outputs: ["assignment_confirmation", "provider_acceptance_deadline"]
+    sequence:
+      - step_code: "ASSIGN-1"
+        tool: "rescue_dispatch_action"
+        action: "find_candidate_providers"
+        description: "Query nearby providers and rescue squads; filter by specialty, availability, status, and current load."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+      - step_code: "ASSIGN-2"
+        tool: "rescue_dispatch_action"
+        action: "rank_candidates"
+        description: "Score candidates by distance, rating, availability, acceptance rate, SLA history, and workload balance."
+        estimated_duration_minutes: 3
+        agent: "ai-rescue-dispatcher"
+      - step_code: "ASSIGN-3"
+        tool: "rescue_dispatch_action"
+        action: "request_provider_acceptance"
+        description: "Notify the selected responder and write the pending assignment plus acceptance deadline to dispatch_events."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+      - step_code: "ASSIGN-4"
+        tool: "rescue_dispatch_action"
+        action: "update_tracking_state"
+        description: "Update active_rescues with providerId, status, ETA, and tracking payload for the dispatcher app."
+        estimated_duration_minutes: 2
+        agent: "ai-rescue-dispatcher"
+
+  - id: "mission-dispatch-monitoring"
+    name: "Dispatch SLA Monitoring"
+    objective: "Monitor provider acceptance, travel, and resolution milestones; reassign or escalate before SLA breach."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-provider-assignment)"
+    primary_agent: "ai-rescue-dispatcher"
+    inputs: ["active_rescue", "assignment_confirmation", "provider_acceptance_deadline"]
+    outputs: ["monitoring_status", "reassignment_status", "sla_risk"]
+    sequence:
+      - step_code: "MONITOR-1"
+        tool: "rescue_dispatch_action"
+        action: "watch_acceptance_window"
+        description: "Check whether the selected responder accepted before the deadline; reassign if no response."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+      - step_code: "MONITOR-2"
+        tool: "rescue_dispatch_action"
+        action: "detect_sla_risk"
+        description: "Compare current status and elapsed time against priority-specific SLA thresholds."
+        estimated_duration_minutes: 3
+        agent: "ai-rescue-dispatcher"
+      - step_code: "MONITOR-3"
+        tool: "rescue_dispatch_action"
+        action: "escalate_or_reassign"
+        description: "Escalate critical risk to Slack and open the dispatch_override form when manual approval is required."
+        estimated_duration_minutes: 5
+        requires_human: true
+        form_ref: "dispatch_override"
+        agent: "ai-rescue-dispatcher"
+      - step_code: "MONITOR-4"
+        tool: "rescue_dispatch_action"
+        action: "append_monitoring_event"
+        description: "Append monitoring, reassignment, and SLA risk updates to dispatch_events for auditability."
+        estimated_duration_minutes: 2
+        agent: "ai-rescue-dispatcher"
+
+  - id: "mission-ui-handoff"
+    name: "Dispatch Tracker Handoff"
+    objective: "Provision and link the Service Dispatch app with active rescue, responder, SLA, and chat context."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-provider-assignment)"
+    primary_agent: "ai-rescue-dispatcher"
+    inputs: ["active_rescue", "assignment_confirmation"]
+    outputs: ["dispatcher_url"]
+    sequence:
+      - step_code: "UI-1"
+        tool: "rescue_dispatch_action"
+        action: "provision_app"
+        description: "Generate the dynamic URL for the Service Dispatch UI mapped to this cycle ID and active_rescues collection."
+        estimated_duration_minutes: 2
+        agent: "ai-rescue-dispatcher"
+        bindings: ["service-dispatch"]
+      - step_code: "UI-2"
+        tool: "rescue_dispatch_action"
+        action: "hydrate_dispatcher_context"
+        description: "Attach rescue, squad, provider, SLA, and chat collections so the app can poll live state."
+        estimated_duration_minutes: 2
+        agent: "ai-rescue-dispatcher"
+
+  - id: "mission-dispatch-closure"
+    name: "Dispatch Closure"
+    objective: "Close the dispatch only after outcome notes are captured, active state is updated, and SLA metrics are written."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "app_event"
+      source: "service-dispatch"
+      condition: "event.type == 'dispatch_completed'"
+    primary_agent: "ai-rescue-dispatcher"
+    inputs: ["active_rescue", "completion_event"]
+    outputs: ["closure_record", "dispatch_sla_metric"]
+    sequence:
+      - step_code: "CLOSE-1"
+        tool: "rescue_dispatch_action"
+        action: "collect_closure_details"
+        description: "Collect resolution status and notes from the responder or supervisor."
+        estimated_duration_minutes: 5
+        requires_human: true
+        form_ref: "dispatch_closure"
+        agent: "ai-rescue-dispatcher"
+      - step_code: "CLOSE-2"
+        tool: "rescue_dispatch_action"
+        action: "close_active_rescue"
+        description: "Update active_rescues status, closed_at, resolution notes, and final provider assignment."
+        estimated_duration_minutes: 3
+        agent: "ai-rescue-dispatcher"
+      - step_code: "CLOSE-3"
+        tool: "rescue_dispatch_action"
+        action: "record_sla_metrics"
+        description: "Compute response and resolution minutes, SLA outcome, and append the metric to dispatch_sla_metrics."
+        estimated_duration_minutes: 3
+        agent: "ai-rescue-dispatcher"
+
+  - id: "mission-performance-learning-loop"
+    name: "Dispatch Performance Learning Loop"
+    objective: "Continuously improve provider ranking, incident classification, and SLA prediction from every closed dispatch."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-dispatch-closure)"
+    primary_agent: "ai-rescue-dispatcher"
+    inputs: ["dispatch_events", "dispatch_sla_metrics", "service_providers", "active_rescues"]
+    outputs: ["provider_score_updates", "routing_rule_adjustments", "sla_prediction_notes"]
+    sequence:
+      - step_code: "LEARN-1"
+        tool: "rescue_dispatch_action"
+        action: "aggregate_dispatch_outcomes"
+        description: "Group outcomes by provider, incident type, priority, geography, acceptance lag, and SLA performance."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+      - step_code: "LEARN-2"
+        tool: "rescue_dispatch_action"
+        action: "update_provider_scores"
+        description: "Update provider ranking signals such as acceptance rate, SLA compliance, and issue-type success."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+      - step_code: "LEARN-3"
+        tool: "rescue_dispatch_action"
+        action: "recommend_routing_changes"
+        description: "Write routing-rule recommendations when a provider, priority, or geography shows repeated underperformance."
+        estimated_duration_minutes: 5
+        agent: "ai-rescue-dispatcher"
+
+schedules:
+  - id: "dispatch_stale_assignment_watch"
+    cron: "*/15 * * * *"
+    action: "run mission-dispatch-monitoring"
+    agent: "ai-rescue-dispatcher"
+  - id: "daily_dispatch_performance_review"
+    cron: "0 7 * * *"
+    action: "run mission-performance-learning-loop"
+    agent: "ai-rescue-dispatcher"
+
+escalations:
+  - mission_ref: "mission-dispatch-monitoring"
+    alert_channels: ["slack:alerts_channel", "slack:dispatch_channel"]
+    warning_threshold_minutes: 20
+    critical_threshold_minutes: 45
+
+deployment:
+  rollback:
+    enabled: true
+    automatic_on_failure: true
+    max_rollback_attempts: 2
+
+apps:
+  - id: "service-dispatch"
+    name: "Service Dispatch"
+    description: "Live dispatcher cockpit for active rescues, responder state, SLA risk, and dispatch chat."
+    path: "server/blueprints/apps/rescue-dispatch"
+    blueprint: "rescue-dispatch"
+    interaction_model: "standalone-app"
+    enabled: true
+    dependent_missions:
+      - "mission-provider-assignment"
+      - "mission-dispatch-monitoring"
+      - "mission-ui-handoff"
+      - "mission-dispatch-closure"
+    bindings:
+      - mission: "mission-ui-handoff"
+        role: "primary"
+        label: "Open Dispatch Tracker"
+        openMode: "modal"
+      - mission: "mission-dispatch-monitoring"
+        role: "reference"
+        label: "SLA Monitor"
+        openMode: "modal"
+    workbench_modules:
+      - id: "dispatch-board"
+        name: "Dispatch Board"
+        purpose: "View active rescues, squad health, responder assignment, and SLA risk in one live workspace."
+        route: "/"
+        datasets: ["active_rescues", "rescue_squads", "service_providers", "dispatch_events", "dispatch_sla_metrics"]
+        primary_actions:
+          - "deploy_squad"
+          - "reassign_provider"
+          - "close_dispatch"
+          - "open_dispatch_chat"

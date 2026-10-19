@@ -1,0 +1,18 @@
+{
+  "description": "HIL_REQUEST must create approval record, set resumeCondition, and transition to waiting_on_human",
+  "assertions": ["ACT-006", "ACT-007", "ACT-008"],
+  "input": {
+    "action": "HIL_REQUEST",
+    "action_details": { "question": "Should I proceed with the external API integration?" },
+    "missionRunId": 1,
+    "initialRunStatus": "active"
+  },
+  "expectedApprovalRequestCreated": true,
+  "expectedResumeCondition": {
+    "type": "human_approval"
+  },
+  "expectedTraceEvents": [
+    { "type": "system", "event": "hil_question_submitted" }
+  ],
+  "expectedRunStatus": "waiting_on_human"
+}

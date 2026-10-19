@@ -1,0 +1,43 @@
+// Pages
+export { default as OrganizationsPage } from './pages/Organizations.js';
+export { default as OrganizationDetailPage } from './pages/OrganizationDetail.js';
+export { default as SnapshotManager } from './pages/SnapshotManager.js';
+export { default as EventLog } from './pages/EventLog.js';
+export { default as ToolRegistry } from '@domain/tools/ui/modules/tools/pages/ToolRegistry';
+export { default as McpTokens } from './pages/McpTokens.js';
+export { default as CredentialNew } from './pages/CredentialNew.js';
+export { default as ErrorClusters } from './pages/ErrorClusters.js';
+export { default as ErrorAlerts } from './pages/ErrorAlerts.js';
+export { default as ErrorPatterns } from './pages/ErrorPatterns.js';
+export { default as ErrorDiagnoses } from './pages/ErrorDiagnoses.js';
+export { default as IntegrationsAdmin } from './pages/IntegrationsAdmin.js';
+export { default as DecisionInbox } from './pages/DecisionInbox.js';
+export { default as AuditLog } from './pages/AuditLog.js';
+export { default as ScoringStudio } from './pages/ScoringStudio.js';
+export { default as DocumentationManager } from './pages/DocumentationManager.js';
+export { default as SystemKnowledgeGraph } from './pages/SystemKnowledgeGraph.js';
+export { default as Licensing } from './pages/Licensing.js';
+export { default as DependencyTracker } from './pages/DependencyTracker.js';
+export { default as EvaluationStudio } from './pages/EvaluationStudio.js';
+export { default as AutoresearchDashboard } from './pages/AutoresearchDashboard.js';
+export { default as SkillRegistry } from './pages/SkillRegistry.js';
+export { default as UCIHub } from './pages/UCIHub.js';
+export { default as InfraHealth } from './pages/InfraHealth.js';
+export { default as EvolutionFlightDeck } from './pages/EvolutionFlightDeck.js';
+export { default as AgentIdentityControl } from './pages/AgentIdentityControl.js';
+
+// Components
+export { default as Credentials } from './components/Credentials.js';
+export { default as CredentialDetail } from './components/CredentialDetail.js';
+export { default as Settings } from './components/Settings.js';
+export { default as Users } from './components/Users.js';
+export { default as UserDetail } from './components/UserDetail.js';
+export { default as Profile } from './components/Profile.js';
+export { default as McpServersSettings } from './components/McpServersSettings.js';
+export { default as AlertConfigEditor } from './components/AlertConfigEditor.js';
+export { default as ClusterReviewPanel } from './components/ClusterReviewPanel.js';
+export { default as PatternManager } from './components/PatternManager.js';
+export { default as SystemAiDefaultsCard } from './components/SystemAiDefaultsCard.js';
+export { DiagnosisList } from './components/diagnoses/DiagnosisList.js';
+export { DiagnosisDetail } from './components/diagnoses/DiagnosisDetail.js';
+export { ProviderSetupGuide } from './components/ProviderSetupGuide.js';

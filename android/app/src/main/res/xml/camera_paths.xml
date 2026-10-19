@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared through the FileProvider: a camera capture for upload, and a room file being opened in another app. Both in the app's private cache. -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+    <cache-path name="downloads" path="downloads/" />
+</paths>

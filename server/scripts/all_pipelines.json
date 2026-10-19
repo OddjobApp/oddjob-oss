@@ -1,0 +1,59 @@
+﻿[dotenv@17.2.3] injecting env (20) from .env -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+[
+  {
+    "id": 1,
+    "name": "Customer Data ETL"
+  },
+  {
+    "id": 2,
+    "name": "E2E Verification Pipeline"
+  },
+  {
+    "id": 41,
+    "name": "SaaS Log Investigator"
+  },
+  {
+    "id": 42,
+    "name": "Service Health Check"
+  },
+  {
+    "id": 43,
+    "name": "System Triage Master"
+  },
+  {
+    "id": 52,
+    "name": "Durable Execution Test Pipeline"
+  },
+  {
+    "id": 54,
+    "name": "Durable Execution Test Pipeline 1770692278925"
+  },
+  {
+    "id": 55,
+    "name": "Durable Execution Test Pipeline 1770694276255"
+  },
+  {
+    "id": 56,
+    "name": "Durable Execution Test Pipeline 1770694295984"
+  },
+  {
+    "id": 57,
+    "name": "Durable Execution Test Pipeline 1770694367612"
+  },
+  {
+    "id": 58,
+    "name": "Durable Execution Test Pipeline 1770694403966"
+  },
+  {
+    "id": 59,
+    "name": "Durable Execution Test Pipeline 1770694456906"
+  },
+  {
+    "id": 60,
+    "name": "Durable Execution Test Pipeline 1770694518428"
+  },
+  {
+    "id": 62,
+    "name": "HIL Triage Verification Pipeline"
+  }
+]

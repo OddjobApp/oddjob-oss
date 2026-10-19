@@ -1,0 +1,303 @@
+{
+    "version": "2.0.0",
+    "app_context": "Oddjob-Orchestrator",
+    "global_config": {
+        "default_decay_rate": 0.05,
+        "intensity_multiplier": 1.2
+    },
+    "routes": {
+        "/dashboard": {
+            "vector": "O",
+            "label": "Command Center",
+            "weight": 1.0,
+            "description": "User is acting on outcomes and high-level status.",
+            "nlp_context": "viewing the main dashboard for an overview of system status"
+        },
+        "/jobs": {
+            "vector": "R",
+            "label": "Job Management",
+            "weight": 0.8,
+            "description": "User is managing resources (Jobs).",
+            "nlp_context": "browsing the list of automation jobs"
+        },
+        "/jobs/:id": {
+            "vector": "C",
+            "label": "Job Configuration",
+            "weight": 0.9,
+            "description": "User is defining the cause/logic of a job.",
+            "nlp_context": "configuring a specific job's settings and behavior"
+        },
+        "/pipelines": {
+            "vector": "R",
+            "label": "Pipeline Management",
+            "weight": 0.8,
+            "description": "User is managing resources (Pipelines).",
+            "nlp_context": "browsing the list of workflow pipelines"
+        },
+        "/pipelines/:id": {
+            "vector": "C",
+            "label": "Pipeline Logic",
+            "weight": 0.9,
+            "description": "User is defining the flow/logic of a pipeline.",
+            "nlp_context": "building or editing a workflow pipeline"
+        },
+        "/pipelines/:id/executions": {
+            "vector": "E",
+            "label": "Execution History",
+            "weight": 0.8,
+            "description": "User is analyzing the effects of past runs.",
+            "nlp_context": "reviewing historical execution results"
+        },
+        "/monitoring": {
+            "vector": "E",
+            "label": "System Health",
+            "weight": 1.0,
+            "description": "User is monitoring system effects and performance.",
+            "nlp_context": "monitoring overall system health and performance metrics"
+        },
+        "/alerts": {
+            "vector": "S",
+            "label": "Problem Detection",
+            "weight": 1.1,
+            "description": "User is investigating symptoms/problems.",
+            "nlp_context": "reviewing alerts and potential issues"
+        },
+        "/analytics": {
+            "vector": "E",
+            "label": "Value Analysis",
+            "weight": 0.9,
+            "description": "User is analyzing ROI and cost effects.",
+            "nlp_context": "analyzing cost and value metrics"
+        },
+        "/settings": {
+            "vector": "R",
+            "label": "System Configuration",
+            "weight": 0.7,
+            "description": "User is configuring underlying resources.",
+            "nlp_context": "adjusting system-wide settings"
+        },
+        "/knowledge/graph": {
+            "vector": "R",
+            "label": "Knowledge Base",
+            "weight": 0.8,
+            "description": "User is exploring knowledge resources.",
+            "nlp_context": "exploring the knowledge graph for entities and relationships"
+        },
+        "/credentials": {
+            "vector": "R",
+            "label": "Credentials Management",
+            "weight": 0.8,
+            "description": "User is managing authentication credentials.",
+            "nlp_context": "managing API keys and authentication credentials"
+        },
+        "/datasets": {
+            "vector": "R",
+            "label": "Dataset Management",
+            "weight": 0.8,
+            "description": "User is managing data collections.",
+            "nlp_context": "managing datasets for training or analysis"
+        }
+    },
+    "sections": {
+        "header": {
+            "vector": "O",
+            "weight": 0.5,
+            "nlp_context": "using the top navigation bar"
+        },
+        "aside": {
+            "vector": "R",
+            "weight": 0.5,
+            "nlp_context": "using the sidebar navigation"
+        },
+        "nav": {
+            "vector": "R",
+            "weight": 0.5,
+            "nlp_context": "navigating between sections"
+        },
+        "main": {
+            "vector": "C",
+            "weight": 1.0,
+            "nlp_context": "working in the main content area"
+        },
+        "dialog": {
+            "vector": "C",
+            "weight": 1.2,
+            "nlp_context": "focused on a modal dialog"
+        },
+        "drawer": {
+            "vector": "R",
+            "weight": 1.1,
+            "nlp_context": "viewing a detail panel or help drawer"
+        }
+    },
+    "cards": {
+        "job-card": {
+            "vector": "R",
+            "weight": 0.9,
+            "nlp_context": "a job summary card"
+        },
+        "pipeline-card": {
+            "vector": "C",
+            "weight": 0.9,
+            "nlp_context": "a pipeline overview card"
+        },
+        "alert-card": {
+            "vector": "S",
+            "weight": 1.1,
+            "nlp_context": "an alert notification card"
+        },
+        "stats-card": {
+            "vector": "E",
+            "weight": 0.8,
+            "nlp_context": "a statistics or metrics card"
+        },
+        "execution-card": {
+            "vector": "E",
+            "weight": 0.9,
+            "nlp_context": "an execution result card"
+        },
+        "config-card": {
+            "vector": "C",
+            "weight": 1.0,
+            "nlp_context": "a configuration panel"
+        },
+        "credential-card": {
+            "vector": "R",
+            "weight": 0.8,
+            "nlp_context": "a credential management card"
+        }
+    },
+    "button_intents": {
+        "destructive": {
+            "vector": "S",
+            "weight": 1.2,
+            "nlp_context": "a destructive/delete action",
+            "trigger_copilot": true
+        },
+        "primary-action": {
+            "vector": "O",
+            "weight": 1.0,
+            "nlp_context": "a primary action button"
+        },
+        "secondary-action": {
+            "vector": "R",
+            "weight": 0.7,
+            "nlp_context": "a secondary or auxiliary action"
+        }
+    },
+    "actions": {
+        "btn-run": {
+            "vector": "O",
+            "priority": "high",
+            "trigger_copilot": false,
+            "nlp_pattern": "Execution",
+            "nlp_context": "triggering a run/execution"
+        },
+        "btn-save": {
+            "vector": "O",
+            "priority": "high",
+            "trigger_copilot": false,
+            "nlp_pattern": "Commitment",
+            "nlp_context": "saving changes"
+        },
+        "btn-debug": {
+            "vector": "S",
+            "priority": "high",
+            "trigger_copilot": true,
+            "nlp_pattern": "Investigation",
+            "nlp_context": "debugging or troubleshooting"
+        },
+        "btn-view-logs": {
+            "vector": "S",
+            "priority": "medium",
+            "trigger_copilot": true,
+            "nlp_pattern": "Diagnosis",
+            "nlp_context": "viewing execution logs"
+        },
+        "btn-test": {
+            "vector": "E",
+            "priority": "high",
+            "trigger_copilot": false,
+            "nlp_pattern": "Validation",
+            "nlp_context": "testing or validating a configuration"
+        },
+        "btn-create": {
+            "vector": "O",
+            "priority": "high",
+            "trigger_copilot": false,
+            "nlp_pattern": "Creation",
+            "nlp_context": "creating a new resource"
+        },
+        "btn-edit": {
+            "vector": "C",
+            "priority": "medium",
+            "trigger_copilot": false,
+            "nlp_pattern": "Modification",
+            "nlp_context": "editing an existing resource"
+        },
+        "btn-delete": {
+            "vector": "S",
+            "priority": "high",
+            "trigger_copilot": true,
+            "nlp_pattern": "Removal",
+            "nlp_context": "deleting a resource"
+        },
+        "input-search": {
+            "vector": "R",
+            "priority": "low",
+            "trigger_copilot": false,
+            "nlp_pattern": "Discovery",
+            "nlp_context": "searching for something"
+        },
+        "link-docs": {
+            "vector": "R",
+            "priority": "low",
+            "trigger_copilot": true,
+            "nlp_pattern": "Learning",
+            "nlp_context": "accessing documentation"
+        },
+        "input_focus": {
+            "vector": "C",
+            "priority": "low",
+            "trigger_copilot": false,
+            "nlp_pattern": "Data Entry",
+            "nlp_context": "filling out a form field"
+        },
+        "user_idle_10s": {
+            "vector": "S",
+            "priority": "high",
+            "trigger_copilot": true,
+            "nlp_pattern": "Stalling / Confusion",
+            "nlp_context": "idle for 10 seconds (may be stuck or confused)"
+        },
+        "route_change": {
+            "vector": "O",
+            "priority": "low",
+            "trigger_copilot": false,
+            "nlp_pattern": "Navigation",
+            "nlp_context": "navigating to a different screen"
+        }
+    },
+    "input_types": {
+        "text": {
+            "vector": "C",
+            "nlp_context": "entering text data"
+        },
+        "number": {
+            "vector": "C",
+            "nlp_context": "entering numeric data"
+        },
+        "password": {
+            "vector": "R",
+            "nlp_context": "entering sensitive credentials"
+        },
+        "select": {
+            "vector": "C",
+            "nlp_context": "selecting from options"
+        },
+        "textarea": {
+            "vector": "C",
+            "nlp_context": "entering long-form content (script, query, description)"
+        }
+    }
+}

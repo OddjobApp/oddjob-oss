@@ -1,0 +1,20 @@
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+
+/**
+ * Dataset connection for {{appName}}.
+ *
+ * Fails fast rather than defaulting to a local connection string: a dataset that
+ * silently writes somewhere other than where it was configured to is worse than
+ * one that refuses to start.
+ */
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL is not set. {{appName}} persists its records to a dataset and cannot start without one — see .env.example.",
+  );
+}
+
+export const pool = new pg.Pool({ connectionString });
+export const db = drizzle(pool);

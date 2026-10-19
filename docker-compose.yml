@@ -1,0 +1,221 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.8.1
+    container_name: oddjob-qdrant
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    environment:
+      QDRANT__SERVICE__API_KEY: "${QDRANT_API_KEY:-}"
+      QDRANT__SERVICE__PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - oddjob-network
+
+  redis:
+    image: redis:alpine
+    container_name: oddjob-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - oddjob-network
+
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: oddjob-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://127.0.0.1:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    networks:
+      - oddjob-network
+
+  kafka-init:
+    image: apache/kafka:3.9.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      sh -c '
+      for topic in spatial.signal.observed.v1 spatial.assessment.completed.v1 spatial.action.requested.v1 spatial.outcome.recorded.v1 spatial.dead-letter.v1; do
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic $$topic --partitions 6 --replication-factor 1;
+      done'
+    networks:
+      - oddjob-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: oddjob-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: oddjob
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - oddjob-network
+
+  # First-run setup: applies pending migrations, then creates the first
+  # organization and super-admin if there is none. Behind a profile so a plain
+  # `docker compose up` never runs it; run it on purpose:
+  #
+  #   docker compose up -d db redis
+  #   docker compose run --rm setup              # prompts for the admin
+  #   docker compose run --rm setup --dry-run    # read-only report
+  #
+  # It never deletes or overwrites data, and does nothing once a super-admin
+  # exists — but it does apply pending migrations to whatever database
+  # DATABASE_URL names.
+  setup:
+    profiles: ["setup"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: ["node", "dist/setup.js"]
+    stdin_open: true
+    tty: true
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/oddjob
+      ODDJOB_ADMIN_EMAIL: ${ODDJOB_ADMIN_EMAIL:-}
+      ODDJOB_ADMIN_PASSWORD: ${ODDJOB_ADMIN_PASSWORD:-}
+      ODDJOB_ADMIN_USERNAME: ${ODDJOB_ADMIN_USERNAME:-}
+      ODDJOB_ORG_NAME: ${ODDJOB_ORG_NAME:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - oddjob-network
+
+  oddjob:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oddjob-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      HOST: 0.0.0.0
+      LOG_LEVEL: DEBUG
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/oddjob
+      REDIS_URL: redis://redis:6379
+      QDRANT_URL: http://qdrant:6333
+      KAFKA_ENABLED: ${KAFKA_ENABLED:-false}
+      KAFKA_BROKERS: kafka:29092
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      INTERNAL_RPC_KEY: ${INTERNAL_RPC_KEY:?INTERNAL_RPC_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      SMTP_SERVER: ${SMTP_SERVER:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      FROM_EMAIL: ${FROM_EMAIL:-}
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - oddjob-network
+
+  # Linux desktop VM for computer-use agents (TRYCUA_PROVIDER=cua, TRYCUA_PROVIDER_TYPE=local).
+  # Opt-in: docker compose --profile computer-use up -d
+  cua-desktop:
+    image: ${TRYCUA_IMAGE:-oddjob/cua-desktop:latest}
+    build: ./docker/cua-desktop
+    container_name: oddjob-cua-desktop
+    profiles: ["computer-use"]
+    restart: unless-stopped
+    shm_size: 512m
+    ports:
+      - "127.0.0.1:${TRYCUA_LOCAL_PORT:-8010}:8000"
+      - "127.0.0.1:${TRYCUA_VIEWER_PORT:-6901}:6901"
+    environment:
+      VNC_RESOLUTION: "${TRYCUA_RESOLUTION:-1280x800}"
+    command:
+      - sh
+      - -c
+      - >-
+        f=/usr/local/bin/start-computer-server.sh;
+        sed -i 's|-m computer_server --port|-m computer_server --host 0.0.0.0 --port|' "$$f"
+        && grep -q -- '--host 0.0.0.0' "$$f"
+        || { echo "cannot bind computer-server to 0.0.0.0: $$f changed" >&2; exit 1; };
+        if [ -x /usr/local/bin/oddjob-desktop-init ]; then /usr/local/bin/oddjob-desktop-init; fi;
+        exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+    networks:
+      - oddjob-network
+
+networks:
+  oddjob-network:
+    driver: bridge
+
+volumes:
+  qdrant_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local

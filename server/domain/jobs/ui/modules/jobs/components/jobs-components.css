@@ -1,0 +1,57 @@
+/* Custom Scrollbar for Premium UI */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Staggered Animations */
+.stagger-list > *:nth-child(1) { animation-delay: 100ms; }
+.stagger-list > *:nth-child(2) { animation-delay: 200ms; }
+.stagger-list > *:nth-child(3) { animation-delay: 300ms; }
+.stagger-list > *:nth-child(4) { animation-delay: 400ms; }
+.stagger-list > *:nth-child(5) { animation-delay: 500ms; }
+.stagger-list > *:nth-child(6) { animation-delay: 600ms; }
+.stagger-list > *:nth-child(7) { animation-delay: 700ms; }
+.stagger-list > *:nth-child(8) { animation-delay: 800ms; }
+.stagger-list > *:nth-child(9) { animation-delay: 900ms; }
+.stagger-list > *:nth-child(10) { animation-delay: 1000ms; }
+
+.staggered-item {
+    /* Fallback or base */
+}
+
+/* Spin Animation from SupervisorJobConfig */
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+}
+
+/* Brand Primary Variable Container */
+.brand-container {
+    --brand-primary: #6366f1; /* Default */
+}
+
+.brand-primary-fg {
+    color: var(--brand-primary);
+}
+
+.brand-primary-bg {
+    background-color: var(--brand-primary);
+}
+
+.brand-primary-border {
+    border-color: var(--brand-primary);
+}

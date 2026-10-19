@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ThothBlueprint</title>
+    <link rel="icon" type="image/svg+xml" href="/ThothBlueprint-icon.svg" />
+    <meta name="description" content="Visual database schema designer." />
+    <meta name="theme-color" content="#141414" />
+    <script>
+      const showStartupError = (error) => {
+        window.setTimeout(() => {
+          const root = document.getElementById("root");
+          if (root && !root.hasChildNodes()) {
+            root.textContent = `Database Designer failed to start: ${error?.message || error || "Unknown error"}`;
+          }
+        });
+      };
+      window.addEventListener("error", (event) => showStartupError(event.error || event.message));
+      window.addEventListener("unhandledrejection", (event) => showStartupError(event.reason));
+    </script>
+    <script type="module" crossorigin src="/database-designer-embed/assets/index-D20pYvsO.js"></script>
+    <link rel="stylesheet" crossorigin href="/database-designer-embed/assets/index-BTql6wTj.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

@@ -1,0 +1,247 @@
+# Production Docker Compose Configuration for Oddjob
+#
+# This Compose file runs the Node/TypeScript runtime (API + worker) with its
+# production dependencies. AI provider keys are intentionally omitted: Oddjob
+# enforces BYOK in production and refuses to boot with platform-level keys.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Required secrets in your environment or .env file:
+#   - DB_USER, DB_PASSWORD
+#   - SESSION_SECRET (>= 32 chars)
+#   - ENCRYPTION_KEY (32-byte hex/base64)
+#   - INTERNAL_RPC_KEY (pod registry / internal RPC auth)
+#   - JWT_SECRET (token signing; must differ from the dev default)
+# Optional but common:
+#   - SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, FROM_EMAIL
+#   - REDIS_URL, DATABASE_URL, QDRANT_URL (defaults point at the in-stack services)
+
+services:
+  migrate:
+    image: ghcr.io/${GITHUB_REPOSITORY:-oddjobapp/oddjob}:${IMAGE_TAG:-latest}
+    container_name: oddjob-migrate
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/oddjob_prod
+    command: ["node", "dist/migrate.js"]
+    # The migration runner is server/migrate.ts; esbuild compiles it to dist/migrate.js
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - oddjob-network
+
+  oddjob:
+    image: ghcr.io/${GITHUB_REPOSITORY:-oddjobapp/oddjob}:${IMAGE_TAG:-latest}
+    container_name: oddjob-production
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      HOST: 0.0.0.0
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/oddjob_prod
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      INTERNAL_RPC_KEY: ${INTERNAL_RPC_KEY:?INTERNAL_RPC_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      # Node SMTP configuration lives in System Settings, not SMTP_* variables.
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+    volumes:
+      - oddjob_logs:/app/logs
+      - oddjob_uploads:/app/uploads
+      - oddjob_storage:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - oddjob-network
+
+  worker:
+    image: ghcr.io/${GITHUB_REPOSITORY:-oddjobapp/oddjob}:${IMAGE_TAG:-latest}
+    container_name: oddjob-worker-production
+    restart: unless-stopped
+    command: ["node", "dist/worker-entrypoint.js"]
+    # The image's HTTP health check is for the API role only.
+    healthcheck:
+      disable: true
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/oddjob_prod
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      INTERNAL_RPC_KEY: ${INTERNAL_RPC_KEY:?INTERNAL_RPC_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+    volumes:
+      - oddjob_logs:/app/logs
+      - oddjob_uploads:/app/uploads
+      - oddjob_storage:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    networks:
+      - oddjob-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: oddjob-redis-prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - oddjob-network
+
+  qdrant:
+    image: qdrant/qdrant:v1.8.1
+    container_name: oddjob-qdrant-prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${QDRANT_HTTP_PORT:-6333}:6333"
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - oddjob-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: oddjob-db-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: oddjob_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d oddjob_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - oddjob-network
+
+  # NGINX Reverse Proxy and Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: oddjob-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      oddjob:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - oddjob-network
+
+  # Monitoring: Prometheus
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: oddjob-prometheus-prod
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - oddjob-network
+
+  # Monitoring: Grafana
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: oddjob-grafana-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - oddjob-network
+
+networks:
+  oddjob-network:
+    driver: bridge
+
+volumes:
+  oddjob_storage:
+    driver: local
+  oddjob_logs:
+    driver: local
+  oddjob_uploads:
+    driver: local
+  redis_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

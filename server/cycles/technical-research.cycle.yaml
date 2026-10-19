@@ -1,0 +1,549 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "Technical Research & RFC Synthesis"
+version: "1.0"
+containers: {}
+description: "3-stage automated technical research, codebase feasibility audit, RFC wiki synthesis, and backlog provisioning chain."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "Technical Research & RFC Synthesis"
+  icon: "📚"
+  theme_color: "#3b82f6"
+  display_priority: 3
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 1.0
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+forms:
+  - id: "technology_triage"
+    name: "Technology Triage & Selection"
+    description: "Review extracted architectural patterns and choose the design path."
+    fields:
+      - name: "selected_design_pattern"
+        label: "Selected Design Pattern"
+        type: "select"
+        required: true
+        options: ["Option A - High Performance", "Option B - Low Complexity / Reusable", "Option C - Hybrid Approach"]
+      - name: "additional_constraints"
+        label: "Additional Constraints"
+        type: "text"
+        required: true
+
+  - id: "poc_signoff"
+    name: "Proof of Concept & Feasibility Sign-off"
+    description: "Approve the draft integration snippet and dependency audit."
+    fields:
+      - name: "approve_poc"
+        label: "Approve PoC Integration?"
+        type: "select"
+        required: true
+        options: ["Approve & Generate RFC", "Reject / Request Architectural Rework"]
+      - name: "review_comments"
+        label: "Review Comments"
+        type: "text"
+        required: true
+
+agents:
+  - id: "ai-technical-researcher"
+    name: "Research Assistant & Tech Analyst"
+    job_id: 872                          # org 291 — created during cycle registration
+    role: "worker"
+    model: "gemini-2.0-flash"
+    credential_id: 419                   # Gemini Production (org 291)
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Deep Researcher"
+      legend: "Queries academic literature database, summarizes specifications, compares patterns."
+    system_prompt: "file://knowledge/prompts/technical-researcher.md"
+    boundaries: ["*"]
+    permissions: ["slack:write:channel"]
+    tools: ["slack_post_message"]
+
+  - id: "ai-technical-writer"
+    name: "Technical Documentation Writer"
+    job_id: 874                          # org 291 — created during cycle registration
+    role: "worker"
+    model: "gemini-2.0-flash"
+    credential_id: 419
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Document Architect"
+      legend: "Formulates RFC system designs, publishes to wiki memory graph, creates Jira backlogs."
+    system_prompt: "file://knowledge/prompts/technical-writer.md"
+    boundaries: ["*"]
+    permissions: ["jira:write", "slack:write:channel"]
+    tools: ["slack_post_message"]
+
+pipelines:
+  # Six dedicated pipelines provisioned for org 291 during cycle registration.
+  # Each pipeline maps 1:1 to a mission stage and uses the agent job above.
+  - id: 763
+    name: "Technical Research Cycle — Academic & Paper Discovery"
+    agent: "ai-technical-researcher"
+    steps: 2
+    mission_ref: "mission-research-1"
+  - id: 764
+    name: "Technical Research Cycle — Technology Triage Sign-off"
+    agent: "ai-technical-researcher"
+    steps: 1
+    mission_ref: "mission-research-2"
+  - id: 765
+    name: "Technical Research Cycle — Codebase Feasibility Audit"
+    agent: "ai-technical-writer"
+    steps: 2
+    mission_ref: "mission-feasibility-1"
+  - id: 766
+    name: "Technical Research Cycle — Proof of Concept Sign-off"
+    agent: "ai-technical-writer"
+    steps: 1
+    mission_ref: "mission-feasibility-2"
+  - id: 767
+    name: "Technical Research Cycle — Compile & Publish RFC"
+    agent: "ai-technical-writer"
+    steps: 2
+    mission_ref: "mission-synthesis-1"
+  - id: 768
+    name: "Technical Research Cycle — Hydrate Engineering Backlog"
+    agent: "ai-technical-writer"
+    steps: 1
+    mission_ref: "mission-synthesis-2"
+
+missions:
+  - id: "mission-research-1"
+    name: "Academic & Paper Discovery"
+    objective: "Search academic archives and engineering blogs for research papers on the target topic."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "manual"
+    primary_agent: "ai-technical-researcher"
+    inputs: ["research_topic"]
+    outputs: ["literature_summary_report"]
+    sequence:
+      - step_code: "CRAWL-1"
+        action: "literature_search_arxiv"
+        description: "Search arXiv for papers matching the research topic."
+        estimated_duration_minutes: 30
+        agent: "ai-technical-researcher"
+      - step_code: "CRAWL-2"
+        action: "summarize_architectures"
+        description: "Compile trade-off comparisons and pros/cons design matrices."
+        estimated_duration_minutes: 30
+        agent: "ai-technical-researcher"
+
+  - id: "mission-research-2"
+    name: "Technology Triage Sign-off"
+    objective: "Review extracted architectural tradeoffs and select the design direction."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-research-1)"
+    primary_agent: "ai-technical-researcher"
+    inputs: ["literature_summary_report"]
+    outputs: ["selected_architecture_path"]
+    sequence:
+      - step_code: "TRIAGE-1"
+        action: "request_architect_decision"
+        description: "Route the design options form to approvals channel."
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "Technology Triage & Selection"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-feasibility-1"
+    name: "Codebase Feasibility Audit"
+    objective: "Scan the codebase files and packages to check for compatibility and draft integration PoCs."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    # Linear A2A handoff: the feasibility audit must wait for the Technology Triage
+    # Sign-off (it consumes selected_architecture_path), not start in parallel.
+    trigger: "on_success(mission-research-2)"
+    primary_agent: "ai-technical-writer"
+    inputs: ["selected_architecture_path"]
+    outputs: ["poc_integration_snippet"]
+    sequence:
+      - step_code: "AUDIT-1"
+        action: "inspect_repository_files"
+        description: "Read project package configuration and import lines."
+        estimated_duration_minutes: 30
+        agent: "ai-technical-writer"
+      - step_code: "AUDIT-2"
+        action: "write_poc_snippet"
+        description: "Draft a mock code integration snippet based on selected design parameters."
+        estimated_duration_minutes: 60
+        agent: "ai-technical-writer"
+
+  - id: "mission-feasibility-2"
+    name: "Proof of Concept Sign-off"
+    objective: "Approve the draft integration snippet and dependency audit."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-feasibility-1)"
+    primary_agent: "ai-technical-writer"
+    inputs: ["poc_integration_snippet"]
+    outputs: ["poc_signoff_decision"]
+    sequence:
+      - step_code: "POC_SIGNOFF-1"
+        action: "request_developer_signoff"
+        description: "Route the PoC review form to approvals channel."
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "Proof of Concept & Feasibility Sign-off"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-synthesis-1"
+    name: "Compile & Publish RFC"
+    objective: "Compile research and PoC into a formal RFC and publish to Wiki."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    # Linear A2A handoff: RFC synthesis must wait for the Proof of Concept Sign-off
+    # (it consumes poc_signoff_decision), not start in parallel.
+    trigger: "on_success(mission-feasibility-2)"
+    primary_agent: "ai-technical-writer"
+    inputs: ["poc_signoff_decision"]
+    outputs: ["published_rfc_status"]
+    sequence:
+      - step_code: "RFC-1"
+        action: "draft_rfc_document"
+        description: "Draft comprehensive system design Request for Comments document."
+        estimated_duration_minutes: 90
+        agent: "ai-technical-writer"
+      - step_code: "RFC-2"
+        action: "publish_wiki_article"
+        description: "Publish finalized RFC document directly into the Organizational Memory Wiki."
+        estimated_duration_minutes: 15
+        agent: "ai-technical-writer"
+
+  - id: "mission-synthesis-2"
+    name: "Hydrate Engineering Backlog"
+    objective: "Create implementation tickets in Jira based on RFC specifications."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-synthesis-1)"
+    primary_agent: "ai-technical-writer"
+    inputs: ["published_rfc_status"]
+    outputs: ["backlog_creation_report"]
+    sequence:
+      - step_code: "BACKLOG-1"
+        action: "file_jira_tasks"
+        description: "Decompose specifications into task structures and create issues in Jira."
+        estimated_duration_minutes: 45
+        agent: "ai-technical-writer"
+
+apps:
+  - id: "research-workbench"
+    name: "Research & RFC Synthesis Portal"
+    description: "Five domain-agnostic workflow portals for research ingestion, decision gates, draft review, knowledge management, and backlog provisioning."
+    path: "file://research-workbench"
+    blueprint: "research-workbench"
+    interaction_model: "shared-server"
+    app_contract:
+      framework: "nextjs-app-router"
+      start_command: "npm run start"
+      health_endpoint: "/api/health"
+      landing_route: "/"
+      navigation_routes:
+        - "/ingestion-hub"
+        - "/decision-panel"
+        - "/draft-sandbox"
+        - "/memory-library"
+        - "/knowledge-graph"
+        - "/backlog-provisioner"
+      responsive:
+        mobile: true
+        tablet: true
+        desktop: true
+      degraded_modes:
+        missing_integrations: "Keep local drafting and review available; clearly disable external sync actions."
+        unavailable_agents: "Preserve drafts and sources, show retry guidance, and prevent false completion states."
+      readiness_checks:
+        - "GET /api/health returns 200"
+        - "Every navigation route renders without a server error"
+        - "Research, approval, RFC review, memory, and backlog handoffs remain visible"
+    enabled: true
+    dependent_missions:
+      - "mission-research-1"
+      - "mission-research-2"
+      - "mission-feasibility-1"
+      - "mission-feasibility-2"
+      - "mission-synthesis-1"
+      - "mission-synthesis-2"
+    required_roles: ["Technical Lead", "Research Lead", "Architect", "Product Owner"]
+    workbench_modules:
+
+      - id: "ingestion-hub"
+        name: "Ingestion & Synthesis Hub"
+        purpose: "Aggregate raw research sources (papers, specs, reports, docs) and visualize comparison matrices. Triggers research agent missions."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/ingestion-hub"
+        dependent_missions: ["mission-research-1"]
+        datasets:
+          - "research_sources"
+          - "research_claims"
+          - "synthesis_matrix"
+        primary_actions:
+          - "add_research_source"
+          - "build_synthesis_matrix"
+          - "export_matrix_csv"
+          - "trigger_research_mission"
+        mission_handoffs:
+          - target_mission: "mission-research-1"
+            trigger_name: "Academic & Paper Discovery"
+            when: "sources_added"
+        cycle_manager:
+          launch_contexts: ["mission-research-1"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "decision-panel"
+        name: "Decision Control Panel"
+        purpose: "Universal HIL inbox — dynamically renders any form schema defined in the cycle YAML. Handles technology triage, PoC sign-off, and any human decision gate."
+        interaction_model: "hil-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/decision-panel"
+        dependent_missions:
+          - "mission-research-2"
+          - "mission-feasibility-2"
+        datasets:
+          - "decision_history"
+        primary_actions:
+          - "render_hil_form"
+          - "submit_decision"
+          - "view_decision_history"
+        hil_forms:
+          - "technology_triage"
+          - "poc_signoff"
+        mission_handoffs:
+          - target_mission: "mission-feasibility-1"
+            trigger_name: "Codebase Feasibility Audit"
+            when: "technology_triage_approved"
+          - target_mission: "mission-synthesis-1"
+            trigger_name: "Compile & Publish RFC"
+            when: "poc_signoff_approved"
+        cycle_manager:
+          launch_contexts: ["mission-research-2", "mission-feasibility-2"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "draft-sandbox"
+        name: "Draft & Review Sandbox"
+        purpose: "Prototyping studio for reviewing AI-generated drafts — code snippets, RFC documents, integration PoCs, press releases, or contract clauses."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/draft-sandbox"
+        dependent_missions:
+          - "mission-feasibility-1"
+          - "mission-synthesis-1"
+        datasets:
+          - "draft_artifacts"
+          - "artifact_feedback"
+        primary_actions:
+          - "view_artifact"
+          - "approve_artifact"
+          - "request_rework"
+          - "trigger_draft_refinement"
+        mission_handoffs:
+          - target_mission: "mission-feasibility-1"
+            trigger_name: "Codebase Feasibility Audit"
+            when: "rework_requested"
+          - target_mission: "mission-synthesis-1"
+            trigger_name: "Compile & Publish RFC"
+            when: "rework_requested"
+        cycle_manager:
+          launch_contexts: ["mission-feasibility-1", "mission-synthesis-1"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "memory-library"
+        name: "Shared Memory Library"
+        purpose: "Centralized searchable repository for finished RFCs, PRDs, and research documents. Semantic search over the knowledge graph with interactive entity map."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/memory-library"
+        dependent_missions:
+          - "mission-synthesis-1"
+          - "mission-synthesis-2"
+        datasets:
+          - "knowledge_documents"
+        primary_actions:
+          - "semantic_search"
+          - "read_document"
+          - "add_document"
+          - "export_to_confluence"
+          - "view_knowledge_graph"
+        mission_handoffs:
+          - target_mission: "mission-synthesis-2"
+            trigger_name: "Hydrate Engineering Backlog"
+            when: "rfc_published"
+        cycle_manager:
+          launch_contexts: ["mission-synthesis-1", "mission-synthesis-2"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "backlog-provisioner"
+        name: "Action & Backlog Provisioner"
+        purpose: "Decomposes RFC or specification text into actionable tasks and bulk-syncs them to Jira, Linear, Asana, Trello, GitHub Issues, or Notion."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/backlog-provisioner"
+        dependent_missions: ["mission-synthesis-2"]
+        datasets:
+          - "task_backlog"
+          - "sync_log"
+          - "cycle_integrations"
+        primary_actions:
+          - "decompose_specification"
+          - "edit_task"
+          - "sync_to_jira"
+          - "sync_to_linear"
+          - "sync_to_asana"
+          - "bulk_sync_tasks"
+        integration_actions:
+          - id: "sync_to_jira"
+            providers: ["jira"]
+            fallback_provider: "oddjob"
+            source_dataset: "task_backlog"
+            writes_back:
+              - "externalIssueKey"
+              - "externalIssueUrl"
+              - "status"
+        mission_handoffs:
+          - target_mission: "mission-synthesis-2"
+            trigger_name: "Hydrate Engineering Backlog"
+            when: "tasks_ready_for_sync"
+        cycle_manager:
+          launch_contexts: ["mission-synthesis-2"]
+          surface: "modal"
+          app_builder_editable: true
+
+# Chaining metadata: when Phase 1 (Technical Research) completes, launch Phase 2
+follow_up_cycle:
+  name: "Codebase Feasibility & Dependency Audit"
+  description: "Phase 2 of the Technical Research & RFC Synthesis: Focuses on codebase dependency audits and drafting integration Proof of Concepts."
+  objective: "Analyze project dependencies, write an integration code snippet, and verify feasibility via developer sign-off."
+  priority: 4
+  budgetLimitUsd: "150.00"
+  requiresApproval: false
+  blueprints:
+    - name: "Codebase Feasibility Audit"
+      objective: "Scan the repository configuration and draft a code implementation snippet."
+      type: "mission"
+      estimatedDays: 1
+      inputs: ["selected_architecture_path"]
+      outputs: ["poc_integration_snippet"]
+    - name: "Proof of Concept Sign-off"
+      objective: "Approve the draft integration snippet and dependency audit."
+      type: "mission"
+      estimatedDays: 1
+      dependsOn: ["Codebase Feasibility Audit"]
+      inputs: ["poc_integration_snippet"]
+      outputs: ["poc_signoff_decision"]
+  metadata:
+    # Chaining metadata nested within Phase 2: when Phase 2 completes, launch Phase 3
+    follow_up_cycle:
+      name: "RFC Synthesis & Backlog Provisioning"
+      description: "Phase 3 of the Technical Research & RFC Synthesis: Focuses on drafting system design documents, publishing them to the Wiki, and creating Jira tasks."
+      objective: "Format a technical design RFC, register it in the wiki knowledge base, and seed the task backlog."
+      priority: 5
+      budgetLimitUsd: "50.00"
+      requiresApproval: false
+      blueprints:
+        - name: "Compile & Publish RFC"
+          objective: "Synthesize design tradeoffs and publish the RFC document to the Organizational Memory Wiki."
+          type: "mission"
+          estimatedDays: 1
+          inputs: ["poc_signoff_decision"]
+          outputs: ["published_rfc_status"]
+        - name: "Hydrate Engineering Backlog"
+          objective: "Translate RFC specifications into engineering backlog tasks in Jira."
+          type: "mission"
+          estimatedDays: 1
+          dependsOn: ["Compile & Publish RFC"]
+          inputs: ["published_rfc_status"]
+          outputs: ["backlog_creation_report"]
+
+# Multi-Agent Ceremony & Deliberation Rooms
+ceremonies:
+  - stage_id: "research-synthesis-review"
+    title: "Technical Research & PoC Sign-Off Review"
+    topic: "Evaluate feasibility benchmarks, algorithmic tradeoff models, and PoC deliverables"
+    mode: "decide"
+    is_standing_room: false
+    roster_agents:
+      - "ai-researcher"
+      - "ai-technical-writer"
+      - "ai-systems-analyst"
+    required_decisions:
+      - "Approve Research Feasibility Findings"
+      - "Authorize Engineering Backlog Hydration"
+    auto_convene: true

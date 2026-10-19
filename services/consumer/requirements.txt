@@ -1,0 +1,13 @@
+pika
+redis
+numpy
+psycopg2-binary
+requests
+python-dotenv
+fastapi
+uvicorn
+python-multipart
+beautifulsoup4
+PyPDF2
+langdetect
+deep-translator

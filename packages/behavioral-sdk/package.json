@@ -1,0 +1,20 @@
+{
+  "name": "@oddjob/behavioral-sdk",
+  "version": "1.0.0",
+  "description": "Lightweight JavaScript SDK for Oddjob Behavioral Intelligence Engine. Emit behavioral events, track user interactions, and read scores in real-time.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --minify",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+  },
+  "keywords": ["behavioral", "scoring", "analytics", "sdk", "oddjob"],
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  },
+  "sideEffects": false
+}

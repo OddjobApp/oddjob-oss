@@ -1,0 +1,275 @@
+name: "API Documentation Generation"
+version: "1.0"
+containers: {}
+description: "Generate and maintain API documentation from code. Syncs with GitHub for code changes and publishes to Confluence. Keeps documentation in sync with implementation."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "API Documentation Generation"
+  icon: "📚"
+  theme_color: "#3b82f6"
+  display_priority: 3
+  category: "development"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "api_spec_template"
+    path: "file://knowledge/document-templates/api_spec_template.md"
+  - id: "endpoint_template"
+    path: "file://knowledge/document-templates/endpoint_template.md"
+
+forms:
+  - id: "doc_scope"
+    name: "Documentation Scope"
+    description: "Define the scope of API documentation generation."
+    fields:
+      - name: "target_api"
+        label: "Target API"
+        type: "text"
+        required: true
+      - name: "target_branch"
+        label: "Target Branch"
+        type: "text"
+        required: true
+      - name: "doc_type"
+        label: "Documentation Type"
+        type: "select"
+        required: true
+        options: ["Full API Documentation", "New Endpoints Only", "Updated Endpoints Only", "Specific Module"]
+      - name: "target_module"
+        label: "Target Module (if applicable)"
+        type: "text"
+        required: false
+      - name: "include_examples"
+        label: "Include Code Examples"
+        type: "select"
+        required: true
+        options: ["Yes - Include Examples", "No - Reference Only"]
+
+  - id: "doc_review"
+    name: "Documentation Review"
+    description: "Review and approve the generated API documentation."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Publish", "Request Revisions", "Reject"]
+      - name: "accuracy_check"
+        label: "Documentation Accurate"
+        type: "select"
+        required: true
+        options: ["Yes - Accurate", "No - Corrections Needed"]
+      - name: "completeness_check"
+        label: "Documentation Complete"
+        type: "select"
+        required: true
+        options: ["Yes - Complete", "No - Missing Sections"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-systems-analyst"
+    name: "Product Requirement Systems Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Precision Architect"
+      legend: "Generates comprehensive API documentation from code."
+      traits: { compliance: 90, creativity: 30, speed: 50 }
+    system_prompt: "file://knowledge/prompts/systems-analyst.md"
+    boundaries: ["server/", "client/", "knowledge/"]
+    permissions: ["confluence:read", "confluence:write", "github:read"]
+    tools: ["workspace_read_file", "workspace_search", "knowledge_graph_query", "confluence_read", "confluence_publish", "git_diff"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Reviews code for API patterns and endpoint details."
+      traits: { compliance: 85, speed: 70, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/"]
+    permissions: ["github:read"]
+    tools: ["workspace_read_file", "workspace_search", "git_diff"]
+
+missions:
+  - id: "mission-analyze-code"
+    name: "Analyze API Code"
+    objective: "Analyze code to identify API endpoints and patterns"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "devops_workbench"
+    primary_agent: "ai-backend-dev"
+    inputs: ["doc_scope"]
+    outputs: ["api_analysis"]
+    sequence:
+      - step_code: "CODE-1"
+        action: "scan_endpoints"
+        description: "Scan code for API endpoints"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+      - step_code: "CODE-2"
+        action: "analyze_routes"
+        description: "Analyze route definitions and handlers"
+        estimated_duration_minutes: 20
+      - step_code: "CODE-3"
+        action: "extract_schemas"
+        description: "Extract request/response schemas"
+        estimated_duration_minutes: 20
+      - step_code: "CODE-4"
+        action: "identify_auth"
+        description: "Identify authentication requirements"
+        estimated_duration_minutes: 10
+
+  - id: "mission-generate-docs"
+    name: "Generate API Documentation"
+    objective: "Generate comprehensive API documentation"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-analyze-code)"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["api_analysis"]
+    outputs: ["api_documentation"]
+    sequence:
+      - step_code: "DOC-1"
+        action: "generate_overview"
+        description: "Generate API overview and introduction"
+        estimated_duration_minutes: 20
+        template: "api_spec_template"
+      - step_code: "DOC-2"
+        action: "document_endpoints"
+        description: "Document each endpoint with details"
+        estimated_duration_minutes: 45
+        template: "endpoint_template"
+      - step_code: "DOC-3"
+        action: "generate_examples"
+        description: "Generate code examples for endpoints"
+        estimated_duration_minutes: 30
+      - step_code: "DOC-4"
+        action: "document_auth"
+        description: "Document authentication and authorization"
+        estimated_duration_minutes: 15
+      - step_code: "DOC-5"
+        action: "document_errors"
+        description: "Document error responses and codes"
+        estimated_duration_minutes: 10
+
+  - id: "mission-review-docs"
+    name: "Review Documentation"
+    objective: "Human review and approval of documentation"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-docs)"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["api_documentation"]
+    outputs: ["approved_documentation"]
+    requires_human: true
+    form_ref: "doc_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_documentation"
+        description: "Present documentation for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_feedback"
+        description: "Collect team feedback and approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_documentation"
+        description: "Finalize documentation based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-publish-docs"
+    name: "Publish Documentation"
+    objective: "Publish documentation to Confluence"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-review-docs)"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["approved_documentation"]
+    outputs: ["published_documentation"]
+    sequence:
+      - step_code: "PUB-1"
+        action: "publish_to_confluence"
+        description: "Publish documentation to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "PUB-2"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

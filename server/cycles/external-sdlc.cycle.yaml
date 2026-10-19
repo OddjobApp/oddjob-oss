@@ -1,0 +1,429 @@
+name: "Oddjob External Systems AI SDLC"
+version: "1.1"
+containers: {}
+description: "A highly-structured SDLC utilizing Specialized AI Agents, Orchestrated Missions, and GitHub/Cloud integrations to manage, build, test, and release features for external systems."
+author: "Oddjob Marketplace"
+
+# UI Metadata for Cycle Management Interface
+ui_metadata:
+  display_name: "External Systems AI SDLC"
+  icon: "🌐"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "development"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 500000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "project"
+  capitalization_category: "CapEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+vsm_telemetry:
+  enabled: true
+  metrics: ["lead_time", "cycle_time", "mttr", "deployment_frequency"]
+  jira_status_mapping:
+    backlog: "Backlog"
+    in_progress: "In Progress"
+    in_review: "Code Review"
+    qa: "In QA"
+    uat: "UAT"
+    done: "Done"
+
+mcp_servers:
+  github:
+    enabled: true
+    endpoint: "${ENV.GITHUB_MCP_URL}"
+    tools: ["get_file", "update_file", "create_pr"]
+    timeout_ms: 30000
+
+directories:
+  knowledge_base: "knowledge/"
+  document_templates: "knowledge/document-templates/"
+  system_prompts: "knowledge/prompts/"
+
+templates:
+  - id: "prd_template"
+    path: "file://knowledge/document-templates/product_requirements_template.md"
+  - id: "code_review_checklist"
+    path: "file://knowledge/document-templates/code_review_checklist.md"
+  - id: "qa_defect_report"
+    path: "file://knowledge/document-templates/qa_defect_report_template.md"
+  - id: "release_notes_template"
+    path: "file://knowledge/document-templates/release_notes_template.md"
+
+forms:
+  - id: "prd_ux_design_signoff"
+    name: "PRD & UX Design Sign-off"
+    description: "Requirements sign-off before commencing engineering sprint."
+    fields:
+      - name: "prd_status"
+        label: "PRD Status"
+        type: "select"
+        required: true
+        options: ["Approved", "Changes Requested"]
+      - name: "reviewed_story_points"
+        label: "Reviewed Story Points"
+        type: "number"
+        required: true
+
+  - id: "uat_feedback_report"
+    name: "User Acceptance Testing (UAT) Sign-off"
+    description: "Declare UAT results for the staging build."
+    fields:
+      - name: "uat_status"
+        label: "UAT Sign-off Decision"
+        type: "select"
+        required: true
+        options: ["Approve", "Conditional Approval", "Reject"]
+      - name: "testing_comments"
+        label: "General Testing Comments"
+        type: "text"
+        required: false
+
+  - id: "itil_change_approval"
+    name: "Production Deployment Change Control"
+    description: "CAB validation for scheduled deployment."
+    fields:
+      - name: "cab_approval"
+        label: "CAB Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve", "Reject"]
+
+agents:
+  - id: "ai-scrum-master"
+    name: "Agile Backlog Organizer & Coordinator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Pragmatic Coach"
+      legend: "Focused on unblocking the team and tracking the ticket pipeline."
+    system_prompt: "file://knowledge/prompts/scrum-master.md"
+    boundaries: ["*"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel"]
+    allowed_delegations: ["ai-systems-analyst", "ai-release-manager"]
+    tools: ["jira_jql_search", "slack_post_message"]
+
+  - id: "ai-systems-analyst"
+    name: "Product Requirement Systems Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Precision Architect"
+      legend: "Obsessed with creating airtight PRDs."
+    system_prompt: "file://knowledge/prompts/systems-analyst.md"
+    boundaries: ["*"]
+    permissions: ["jira:read"]
+    allowed_delegations: ["ai-backend-dev", "ai-frontend-dev"]
+    tools: ["confluence_read", "confluence_publish"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Interacts purely with external APIs and Git repos to implement logic."
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["*"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["github_list_prs", "github_create_pr", "github_get_pr_reviews", "mcp:github/get_file", "mcp:github/update_file"]
+
+  - id: "ai-frontend-dev"
+    name: "Frontend UI & Component Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Interface Weaver"
+      legend: "Builds responsive external web elements."
+    system_prompt: "file://knowledge/prompts/frontend-dev.md"
+    boundaries: ["*"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["github_list_prs", "github_create_pr", "mcp:github/get_file", "mcp:github/update_file"]
+
+  - id: "ai-qa-engineer"
+    name: "End-to-End Test Suite Auditor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Relentless Auditor"
+      legend: "Quality gatekeeper using remote webhooks and test services."
+    system_prompt: "file://knowledge/prompts/qa-engineer.md"
+    boundaries: ["*"]
+    permissions: ["github:read", "jira:write:bug", "slack:write:channel"]
+    tools: ["webhook_trigger", "webhook_get", "jira_create_bug"]
+
+  - id: "ai-release-manager"
+    name: "Deployment Controller & CAB Validator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Deployment Commander"
+      legend: "Deploys candidates by executing remote cloud API webhooks."
+    system_prompt: "file://knowledge/prompts/release-manager.md"
+    boundaries: ["*"]
+    permissions: ["slack:write:channel", "jira:write"]
+    allowed_delegations: ["ai-qa-engineer"]
+    tools: ["webhook_trigger", "cloud_invoke_function"]
+
+missions:
+  - id: "mission-0-sprint-zero"
+    name: "Project Initialization & Sprint Zero"
+    objective: "Initialize project requirements and generate backlog stories"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 8
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["business_requirements_document"]
+    outputs: ["system_architecture", "initial_backlog", "jira_epics"]
+    ui_metadata:
+      icon: "🚀"
+      color: "#8b5cf6"
+      display_order: 1
+      category: "planning"
+      description: "Initialize requirement structures"
+    sequence:
+      - step_code: "SPRINT_ZERO-1"
+        action: "analyze_business_case"
+        description: "Analyze business requirements"
+        estimated_duration_minutes: 30
+      - step_code: "SPRINT_ZERO-2"
+        action: "generate_initial_backlog"
+        description: "Generate initial JIRA stories"
+        estimated_duration_minutes: 90
+      - step_code: "SPRINT_ZERO-3"
+        action: "trigger_hil_approval"
+        description: "Request human approval of the PRD"
+        estimated_duration_minutes: 120
+        requires_human: true
+        form_ref: "prd_ux_design_signoff"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-3-core-dev"
+    name: "Core Application Development"
+    objective: "Develop frontend and backend code on the external repository using MCP tools"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 24
+    trigger:
+      type: "webhook"
+      source: "jira"
+      condition: "transition.to == 'In Progress'"
+    primary_agent: "ai-backend-dev"
+    inputs: ["prd_document"]
+    outputs: ["pull_request"]
+    ui_metadata:
+      icon: "💻"
+      color: "#10b981"
+      display_order: 2
+      category: "development"
+      description: "External Git development using GitHub MCP integration"
+    sequence:
+      - step_code: "APP_DEVELOPMENT-1"
+        action: "write_frontend_code"
+        description: "Implement frontend changes via GitHub MCP"
+        estimated_duration_minutes: 240
+        agent: "ai-frontend-dev"
+      - step_code: "APP_DEVELOPMENT-2"
+        action: "write_backend_code"
+        description: "Implement backend changes via GitHub MCP"
+        estimated_duration_minutes: 300
+        agent: "ai-backend-dev"
+      - step_code: "APP_DEVELOPMENT-3"
+        action: "create_pull_request"
+        description: "Create pull request on the external GitHub repo"
+        estimated_duration_minutes: 30
+        agent: "ai-backend-dev"
+
+  - id: "mission-4-qa"
+    name: "QA & Remote Testing"
+    objective: "Trigger external CI testing suite and parse responses"
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 8
+    trigger:
+      type: "webhook"
+      source: "github"
+      condition: "pull_request.merged == true AND target_branch == 'staging'"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["pull_request"]
+    outputs: ["api_test_results", "defect_report"]
+    ui_metadata:
+      icon: "🧪"
+      color: "#ef4444"
+      display_order: 3
+      category: "testing"
+      description: "Trigger and monitor remote testing pipelines"
+    sequence:
+      - step_code: "QUALITY_ASSURANCE-1"
+        action: "trigger_remote_tests"
+        description: "Trigger GitHub Actions test workflow via webhook"
+        estimated_duration_minutes: 30
+        tool: "webhook_trigger"
+      - step_code: "QUALITY_ASSURANCE-2"
+        action: "poll_test_status"
+        description: "Poll test workflow results"
+        estimated_duration_minutes: 60
+        tool: "webhook_get"
+
+  - id: "mission-5-uat"
+    name: "Release Candidate & UAT"
+    objective: "Gate and secure manual UAT approval for staging deploy"
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 4
+    trigger: "on_success(mission-4-qa)"
+    primary_agent: "ai-release-manager"
+    inputs: ["api_test_results"]
+    outputs: ["approval_status"]
+    ui_metadata:
+      icon: "🚀"
+      color: "#8b5cf6"
+      display_order: 4
+      category: "release"
+      description: "Secure UAT approval"
+    sequence:
+      - step_code: "VALIDATION-1"
+        action: "trigger_hil_approval_uat"
+        description: "Request UAT approval"
+        estimated_duration_minutes: 180
+        requires_human: true
+        form_ref: "uat_feedback_report"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-6-deployment"
+    name: "Production Deployment"
+    objective: "Deploy release candidate to production environment using cloud triggers"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 6
+    trigger: "on_success(mission-5-uat)"
+    primary_agent: "ai-release-manager"
+    inputs: ["uat_approval"]
+    outputs: ["deployment_report"]
+    ui_metadata:
+      icon: "🚀"
+      color: "#f59e0b"
+      display_order: 5
+      category: "deployment"
+      description: "Trigger external CD pipeline or invoke serverless deployment function"
+    sequence:
+      - step_code: "DEPLOYMENT-1"
+        action: "trigger_hil_approval_cab"
+        description: "Request CAB approval for production deployment"
+        estimated_duration_minutes: 120
+        requires_human: true
+        form_ref: "itil_change_approval"
+        routing_channel: "approvals_channel"
+      - step_code: "DEPLOYMENT-2"
+        action: "trigger_production_deploy"
+        description: "Deploy to production via cloud function invocation"
+        estimated_duration_minutes: 90
+        tool: "cloud_invoke_function"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 0.1
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+quality_gates:
+  test_coverage:
+    minimum: 80
+    threshold: "warning"
+
+deployment:
+  environments:
+    staging:
+      region: "us-east-1"
+    production:
+      region: "us-east-1"
+  rollback:
+    enabled: true
+    automatic_on_failure: true
+    max_rollback_attempts: 3
+
+notifications:
+  slack:
+    default_channel: "${ENV.SLACK_DEFAULT_CHANNEL}"
+    thread_responses: true
+
+human_roles:
+  team: "Alpha Squad"
+  members:
+    - user_id: "${ENV.PRODUCT_OWNER_USER_ID}"
+      role: "Product Owner"
+      permissions: ["approve_prd", "approve_design", "approve_release"]
+    - user_id: "${ENV.TECH_LEAD_USER_ID}"
+      role: "Technical Lead"
+      permissions: ["approve_architecture", "approve_security", "code_review"]
+
+schedules:
+  - id: "daily_standup"
+    cron: "0 9 * * 1-5"
+    action: "mission-trigger"
+    agent: "ai-scrum-master"

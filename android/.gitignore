@@ -1,0 +1,13 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+captures/
+app/google-services.json
+
+# The root .gitignore drops every *.png as a screenshot artifact; the app's own
+# image resources are source and must ship (a fresh clone could not build without
+# drawable-nodpi/oddjob_hat.png).
+!app/src/main/res/**/*.png

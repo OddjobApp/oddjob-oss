@@ -1,0 +1,111 @@
+id: self-harness-orchestrator
+name: self-harness-orchestrator
+title: Self-Harness Orchestrator
+description: Manages the iterative self-improvement loop for a given harness.
+ui_metadata:
+  icon: "dna"
+  category: "operations"
+  title: "Self-Improvement Harness"
+  summary: "An autonomous cycle that observes, analyzes, and evolves other blueprints to improve their performance and reliability over time."
+primary_agent: self-harness-manager-ai
+
+agents:
+  - id: self-harness-manager-ai
+    name: "Self-Harness Manager AI"
+    role: "supervisor"
+    model: "gpt-4o-mini"
+    temperature: 0.1
+    system_prompt: "Coordinate harness evaluation, autoresearch, proposal validation, approval routing, and accepted blueprint updates."
+    boundaries: ["server/cycles", "server/blueprints", "server/domain/self-improvement"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write"]
+    tools: ["collect_evaluation_results", "autoresearch_weaknesses", "propose_harness_changes", "validate_harness_proposals", "apply_accepted_proposals"]
+
+missions:
+  - id: run-self-harness-loop
+    objective: Execute one iteration of the self-harness improvement loop.
+    steps:
+      - step_code: SH-1
+        action: collect_evaluation_results
+        description: Collect recent evaluation results, alerts, and pulse metrics for the target harness.
+        estimated_duration_minutes: 5
+        inputs:
+          harnessId: ${harnessId}
+          harnessVersion: ${harnessVersion}
+
+      - step_code: SH-2.5
+        action: autoresearch_weaknesses
+        description: Proactively research external knowledge and internal patterns for novel improvements based on mined weaknesses.
+        estimated_duration_minutes: 10
+        inputs:
+          harnessId: ${harnessId}
+          harnessVersion: ${harnessVersion}
+          failurePatterns: ${failurePatterns}
+
+      - step_code: SH-3
+        action: propose_harness_changes
+        description: Generate candidate harness modifications based on identified weaknesses, autoresearch insights, and documentation queries.
+        estimated_duration_minutes: 20
+        inputs:
+          harnessId: ${harnessId}
+          harnessVersion: ${harnessVersion}
+          failurePatterns: ${failurePatterns}
+          autoresearchInsights: ${autoresearchInsights}
+
+      - step_code: SH-4
+        action: validate_harness_proposals
+        description: Validate proposed changes through simulated runs, acceptance criteria, Playwright E2E tests, X-Ray tracing, and system graph impact analysis.
+        estimated_duration_minutes: 30
+        inputs:
+          harnessId: ${harnessId}
+          harnessVersion: ${harnessVersion}
+          harnessProposals: ${harnessProposals}
+
+      - step_code: SH-5
+        action: apply_accepted_proposals
+        description: Apply harness modifications that passed validation AND were explicitly human-approved via the self-modification admin UI. Unapproved proposals are skipped.
+        estimated_duration_minutes: 10
+        inputs:
+          harnessId: ${harnessId}
+          acceptedProposals: ${acceptedProposals}
+
+      - step_code: SH-5.5
+        action: evolve_harness
+        description: Run A/B tests on applied changes and adapt future proposals based on evolutionary learning.
+        estimated_duration_minutes: 15
+        inputs:
+          harnessId: ${harnessId}
+          newHarnessVersion: ${newHarnessVersion}
+          acceptedProposals: ${acceptedProposals}
+
+      - step_code: SH-6
+        action: update_harness_registry
+        description: Register the new harness version in the Harness Registry, including evolution history.
+        estimated_duration_minutes: 5
+        inputs:
+          harnessId: ${harnessId}
+          newHarnessVersion: ${newHarnessVersion}
+
+forms:
+  - id: self-harness-config
+    label: Configure Self-Harness Loop
+    description: Set up parameters for the self-improvement loop.
+    fields:
+      - id: harnessId
+        label: Target Harness ID
+        type: text
+        required: true
+      - id: harnessVersion
+        label: Current Harness Version
+        type: text
+        required: true
+      - id: runFrequency
+        label: Run Frequency (e.g., daily, weekly, on-demand)
+        type: select
+        options:
+          - value: on-demand
+            label: On-Demand
+          - value: daily
+            label: Daily
+          - value: weekly
+            label: Weekly
+        required: true

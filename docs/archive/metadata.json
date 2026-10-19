@@ -1,0 +1,5 @@
+{
+  "requestFramePermissions": [],
+  "name": "Oddjob",
+  "description": "This is an orchestration app that can make CURL, AI and API calls. It is organized around jobs, schedules and pipelines."
+}

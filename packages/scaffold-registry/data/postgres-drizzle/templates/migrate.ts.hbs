@@ -1,0 +1,28 @@
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { db, pool } from "./client.js";
+
+/**
+ * Applies pending dataset migrations to {{appName}}.
+ *
+ * This is the path automation should take. `drizzle-kit push` compares the
+ * schema against a live database and asks the operator what to do when a change
+ * is ambiguous or destructive — there is no flag to suppress that in the pinned
+ * version, so it hangs forever anywhere without a terminal. Migrations are
+ * decided when they are generated, so applying them needs no input at all.
+ *
+ * Run `npm run dataset:generate` first; it writes the SQL, offline, from
+ * src/dataset/schema.ts.
+ */
+async function main(): Promise<void> {
+    await migrate(db, { migrationsFolder: "drizzle" });
+    console.log("[{{appName}}] Dataset migrations applied.");
+}
+
+main()
+    .catch((err) => {
+        console.error(`[{{appName}}] Dataset migration failed:`, err instanceof Error ? err.message : err);
+        process.exitCode = 1;
+    })
+    // Always released: a pooled connection left open keeps the process alive and
+    // a migration step that never exits stalls whatever ran it.
+    .finally(() => pool.end());

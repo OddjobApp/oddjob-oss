@@ -1,0 +1,8 @@
+# Oddjob Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oddjob
+  labels:
+    app.kubernetes.io/name: oddjob
+    app.kubernetes.io/part-of: oddjob

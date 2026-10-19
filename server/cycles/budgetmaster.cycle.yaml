@@ -1,0 +1,1343 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "BudgetMaster — Sovereign Algorithmic Wealth Matrix"
+version: "1.0"
+containers: {}
+description: "Personal-finance operating system: hot-folder statement ingestion (OFX/QIF/CSV), AI categorization, an envelope/CapEx/Schedule-E ledger, and four autonomous treasury engines — Dead Man's Switch, Cash Drag / Yield Arbitrage, Subscription Decay, and the Capital Purchase Sandbox — all gated by human approval."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "BudgetMaster"
+  icon: "💰"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "finance"
+  show_in_gallery: true
+  featured: true
+
+# ── Guardrails + AI budget caps ─────────────────────────────────────────────
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 120000
+  # Money never moves automatically — every sweep/lock/cancel is advisory + HIL.
+  advisory_only_money_movement: true
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+# ── Notification + escalation channels ──────────────────────────────────────
+integrations:
+  # BudgetMaster is a finance cycle and does not use source control, an external
+  # database, or Jira. The platform blueprint validator requires these four keys
+  # whenever an integrations block is declared, so they are present as optional
+  # (required: false) stubs and are never provisioned.
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+  slack:
+    required: false
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+  email:
+    required: false
+    from_address: "${ENV.BUDGETMASTER_FROM_EMAIL}"
+  calendar:
+    required: false
+    provider: "${ENV.CALENDAR_PROVIDER}"
+
+notifications:
+  slack:
+    default_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    thread_responses: true
+  email:
+    enabled: true
+    from_address: "${ENV.BUDGETMASTER_FROM_EMAIL}"
+
+# ── Semantic knowledge graph (RAG + NL ledger search + payee clustering) ─────
+knowledge_graph:
+  vector_db:
+    provider: "${ENV.VECTOR_DB_PROVIDER}"
+    url: "${ENV.VECTOR_DB_URL}"
+    api_key: "${ENV.VECTOR_DB_API_KEY}"
+    collection_prefix: "budgetmaster"
+  embedding:
+    model: "text-embedding-004"
+    dimension: 768
+    batch_size: 64
+  similarity_threshold: 0.72
+  max_results: 25
+
+# ── Datasets ('tables' = appRecords collections, provisioned at install) ─────
+knowledge_datasets:
+  - id: "budget_contexts"
+    source: "manual"
+    primary_key: "context_id"
+    vectorize: false
+    schema:
+      context_id: "string"
+      name: "string"
+      archetype_mode: "string"     # ENVELOPE | CAPEX_PROJECT | TAX_SCHEDULE_E
+      base_currency: "string"
+      description: "string"
+
+  - id: "budget_categories"
+    source: "manual"
+    primary_key: "category_id"
+    vectorize: false
+    schema:
+      category_id: "string"
+      context_id: "string"
+      name: "string"
+      allocation_cap: "number"
+      rollover: "boolean"
+
+  - id: "finance_accounts"
+    source: "manual"
+    primary_key: "account_id"
+    vectorize: false
+    schema:
+      account_id: "string"
+      name: "string"
+      account_type: "string"       # CHECKING | SAVINGS | CREDIT_CARD | INVESTMENT | LOAN_LIABILITY | ASSET
+      base_currency: "string"
+      current_balance: "number"
+      institution: "string"
+
+  - id: "transactions"
+    source: "manual"
+    primary_key: "fitid"           # fitid == recordId → unique-index dedupe by design
+    vectorize: true                # embedded for NL search + payee clustering
+    schema:
+      fitid: "string"
+      account_id: "string"
+      context_id: "string"
+      category_id: "string"
+      timestamp: "string"
+      payee_raw: "string"
+      payee_clean: "string"
+      amount: "number"
+      current_status: "string"     # UNRECONCILED | CLEARED | RECONCILED
+      is_split: "boolean"
+      parent_tx_id: "string"
+      categorization_confidence: "number"
+
+  - id: "dead_mans_switches"
+    source: "manual"
+    primary_key: "switch_id"
+    vectorize: false
+    schema:
+      switch_id: "string"
+      label: "string"
+      account_id: "string"
+      expected_direction: "string"   # INFLOW | OUTFLOW
+      amount_floor: "number"
+      payee_token: "string"
+      cron_expected_interval: "string"
+      grace_period_hours: "number"
+      status: "string"               # ARMED | SATISFIED | FAULT
+      expiration_deadline: "string"
+      last_satisfied_at: "string"
+
+  - id: "installment_tokens"
+    source: "manual"
+    primary_key: "token_id"
+    vectorize: false
+    schema:
+      token_id: "string"
+      source_tx_fitid: "string"
+      provider: "string"
+      gross_amount: "number"
+      remaining_amount: "number"
+      installments_total: "number"
+      installments_paid: "number"
+      next_due_date: "string"
+
+  - id: "subscriptions"
+    source: "manual"
+    primary_key: "subscription_id"
+    vectorize: false
+    schema:
+      subscription_id: "string"
+      payee_token: "string"
+      monthly_cost: "number"
+      cadence: "string"
+      usage_hours_logged: "number"
+      quarantine_flag: "boolean"
+      last_seen_at: "string"
+
+  - id: "purchase_sandboxes"
+    source: "manual"
+    primary_key: "sandbox_id"
+    vectorize: false
+    schema:
+      sandbox_id: "string"
+      label: "string"
+      principal: "number"
+      down_payment: "number"
+      annual_rate: "number"
+      term_months: "number"
+      opportunity_rate: "number"
+      result: "json"
+
+  - id: "balance_snapshots"
+    source: "manual"
+    primary_key: "snapshot_id"
+    vectorize: false
+    schema:
+      snapshot_id: "string"
+      period: "string"              # YYYY-MM
+      net_worth: "number"
+      total_assets: "number"
+      total_liabilities: "number"
+      breakdown: "json"
+
+  - id: "finance_recommendations"
+    source: "manual"
+    primary_key: "rec_id"
+    vectorize: true
+    schema:
+      rec_id: "string"
+      # sweep | quarantine | dms_fault | capex_overrun | cashflow_shortfall |
+      # receivable_overdue | estimated_tax_due | sales_tax_due | info_return_due
+      kind: "string"
+      title: "string"
+      body: "string"
+      payload: "json"
+      status: "string"             # open | approved | dismissed
+      created_at: "string"
+
+  # ── Cadence additions: cash-flow, receivables, and tax datasets ────────────
+  - id: "cash_flow_forecasts"
+    source: "manual"
+    primary_key: "forecast_id"
+    vectorize: false
+    schema:
+      forecast_id: "string"
+      kind: "string"                # rolling_13week | scenario | annual
+      scenario_label: "string"      # populated for ad-hoc what-if runs
+      generated_at: "string"
+      horizon_weeks: "number"
+      opening_balance: "number"
+      projected_min_balance: "number"
+      min_balance_period: "string"  # the week/month the trough lands in
+      shortfall_flag: "boolean"     # true when min balance breaches the safety floor
+      weekly_series: "json"         # [{ period, inflow, outflow, net, running_balance }]
+      assumptions: "json"           # scenario deltas applied (new hire, contract, purchase)
+
+  - id: "receivables"
+    source: "manual"
+    primary_key: "invoice_id"
+    vectorize: false
+    schema:
+      invoice_id: "string"
+      context_id: "string"          # the business / Schedule-E context that owns it
+      customer_token: "string"
+      issued_date: "string"
+      due_date: "string"
+      amount: "number"
+      amount_paid: "number"
+      status: "string"              # DRAFT | SENT | PARTIAL | PAID | OVERDUE | WRITTEN_OFF
+      last_reminder_at: "string"
+
+  - id: "tax_estimates"
+    source: "manual"
+    primary_key: "estimate_id"
+    vectorize: false
+    schema:
+      estimate_id: "string"
+      tax_year: "string"
+      period_label: "string"        # Q1 | Q2 | Q3 | Q4 (IRS periods, not calendar quarters)
+      due_date: "string"            # Apr 15 | Jun 15 | Sep 15 | Jan 15 (following year)
+      estimated_income: "number"
+      estimated_se_tax: "number"    # Social Security + Medicare
+      estimated_income_tax: "number"
+      safe_harbor_amount: "number"  # prior-year safe-harbor floor to avoid penalty
+      total_due: "number"
+      status: "string"              # PROJECTED | APPROVED | PAID | SKIPPED
+      paid_at: "string"
+
+  - id: "tax_documents"
+    source: "manual"
+    primary_key: "doc_id"
+    vectorize: false
+    schema:
+      doc_id: "string"
+      tax_year: "string"
+      recipient_name: "string"
+      recipient_type: "string"      # CONTRACTOR_1099 | EMPLOYEE_W2
+      form_type: "string"           # 1099-NEC | W-2
+      total_paid: "number"
+      w9_on_file: "boolean"
+      tin_verified: "boolean"
+      filing_status: "string"       # PENDING | READY | FILED
+      filed_at: "string"
+
+  # Prediction-Intelligence calibration loop: a pending prediction is written at
+  # forecast time, then reconciled against the actual outcome and scored.
+  - id: "forecast_predictions"
+    source: "manual"
+    primary_key: "prediction_id"
+    vectorize: false
+    schema:
+      prediction_id: "string"
+      context_id: "string"          # finance-org-<id> calibration context
+      kind: "string"                # cashflow | estimated_tax
+      predicted_label: "string"     # e.g. shortfall | no_shortfall | accurate
+      predicate: "string"
+      probability: "number"
+      confidence: "number"          # >= 0.5; derived by the confidence model
+      entropy: "number"             # bits; high = uncertain
+      mature_at: "string"           # ISO date the outcome becomes knowable
+      target_period: "string"
+      snapshot: "json"              # figures we predicted, for reconciliation
+      created_at: "string"
+      status: "string"              # PENDING | CALIBRATED
+      event_id: "string"            # canonical event id (if emitted)
+
+  - id: "forecast_calibrations"
+    source: "manual"
+    primary_key: "prediction_id"
+    vectorize: false
+    schema:
+      prediction_id: "string"
+      kind: "string"
+      predicted_label: "string"
+      observed_label: "string"
+      confidence_at_prediction: "number"
+      top_prediction_correct: "boolean"
+      prediction_error: "number"
+      calibration_error: "number"
+      brier_score: "number"
+      overconfident: "boolean"
+      underconfident: "boolean"
+      calibrated_at: "string"
+
+# ── Reusable templates ──────────────────────────────────────────────────────
+templates:
+  - id: "monthly_financial_report"
+    path: "file://knowledge/templates/monthly-financial-report.md"
+
+# ── HIL forms (advisory money movement gates) ───────────────────────────────
+forms:
+  - id: "cash_sweep_authorization"
+    name: "Cash Sweep Authorization"
+    description: "Approve moving idle cash above your floor into a higher-yield account. Advisory only — BudgetMaster never moves money itself."
+    fields:
+      - name: "decision"
+        label: "Authorize Sweep?"
+        type: "select"
+        required: true
+        options: ["Approve Sweep", "Reduce Amount", "Decline"]
+      - name: "sweep_amount"
+        label: "Amount to Sweep"
+        type: "number"
+        required: true
+      - name: "notes"
+        label: "Notes"
+        type: "text"
+        required: false
+
+  - id: "subscription_cancellation"
+    name: "Subscription Cancellation Approval"
+    description: "A recurring charge shows decayed utility (cost-per-use too high or zero usage). Approve quarantine / cancellation."
+    fields:
+      - name: "decision"
+        label: "Action"
+        type: "select"
+        required: true
+        options: ["Quarantine & Cancel", "Keep — Still Useful", "Snooze 30 Days"]
+      - name: "review_comments"
+        label: "Review Comments"
+        type: "text"
+        required: false
+
+  - id: "dms_fault_response"
+    name: "Dead Man's Switch Fault Response"
+    description: "An expected recurring cashflow did NOT arrive within its grace window. Review the shielded safe-to-spend figure and confirm next action."
+    fields:
+      - name: "decision"
+        label: "Response"
+        type: "select"
+        required: true
+        options: ["Acknowledge & Shield Spending", "False Alarm — Re-arm", "Escalate"]
+      - name: "notes"
+        label: "Notes"
+        type: "text"
+        required: false
+
+  - id: "capital_purchase_decision"
+    name: "Capital Purchase Decision"
+    description: "Review the amortization schedule and opportunity-cost projection for a proposed capital purchase before committing."
+    fields:
+      - name: "decision"
+        label: "Decision"
+        type: "select"
+        required: true
+        options: ["Proceed — Finance", "Proceed — Pay Cash", "Defer", "Reject"]
+      - name: "review_comments"
+        label: "Review Comments"
+        type: "text"
+        required: false
+
+  - id: "estimated_tax_authorization"
+    name: "Quarterly Estimated Tax Authorization"
+    description: "Review the projected self-employment + income tax for this IRS period and confirm the payment. Advisory only — BudgetMaster computes the figure and reminds you; it never remits to the IRS itself."
+    fields:
+      - name: "decision"
+        label: "Authorize Estimated Payment?"
+        type: "select"
+        required: true
+        options: ["Approve — Pay Projected", "Pay Safe-Harbor Amount", "Adjust Amount", "Skip This Period"]
+      - name: "payment_amount"
+        label: "Amount to Pay"
+        type: "number"
+        required: true
+      - name: "notes"
+        label: "Notes"
+        type: "text"
+        required: false
+
+  - id: "information_return_filing"
+    name: "1099 / W-2 Filing Authorization"
+    description: "Confirm the contractor (1099-NEC) and employee (W-2) information returns are complete and W-9s/TINs are verified before the January 31 filing deadline."
+    fields:
+      - name: "decision"
+        label: "Filing Decision"
+        type: "select"
+        required: true
+        options: ["Approve & File All", "File Verified Only", "Hold — Missing W-9s"]
+      - name: "review_comments"
+        label: "Review Comments"
+        type: "text"
+        required: false
+
+# ── Agents (Gemini-backed) ──────────────────────────────────────────────────
+agents:
+  - id: "ai-finance-categorizer"
+    name: "Transaction Categorizer & Reconciler"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Meticulous Bookkeeper"
+      legend: "Normalizes payees, clusters near-duplicate merchants, and assigns each transaction to the right envelope, CapEx project, or Schedule-E line with a confidence score."
+    system_prompt: |
+      You are the BudgetMaster categorization engine. For each transaction you receive the
+      full row (payee_raw, amount, account, context). Return a normalized payee_clean, the
+      best category_id for the row's budget context, and a categorization_confidence in [0,1].
+      Use the merchant cluster hints when provided. Never invent categories that do not exist
+      in the supplied category list. Be deterministic and concise.
+    boundaries: ["*"]
+    permissions: []
+    tools: []
+
+  - id: "ai-financial-advisor"
+    name: "Personal Financial Advisor"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.3
+    soul_profile:
+      archetype: "The Prudent Strategist"
+      legend: "Answers natural-language questions about spending, net worth, and runway — always grounded in the user's actual ledger, never fabricating figures."
+    system_prompt: |
+      You are the BudgetMaster financial advisor. Answer the user's questions about their
+      finances using ONLY the dataset rows retrieved for you (transactions, accounts,
+      balance_snapshots, recommendations). CONTENT GUARDRAIL: never fabricate a number, total,
+      or balance — if the data needed to answer is not present, say so and suggest what to
+      ingest. Cite the rows/periods you used. You give analysis and recommendations; you never
+      move money. End actionable advice by pointing the user to the relevant HIL approval.
+    boundaries: ["*"]
+    permissions: []
+    tools: []
+    # Live grounding: the chat endpoint injects these collections (read from the
+    # workbench app's org namespace) into the advisor's context before each turn,
+    # so answers are grounded in the user's real ledger — never fabricated.
+    grounding:
+      app_slug: "budgetmaster-workbench"
+      collections:
+        - "finance_accounts"
+        - "transactions"
+        - "finance_recommendations"
+        - "dead_mans_switches"
+        - "balance_snapshots"
+        - "subscriptions"
+      max_rows_per_collection: 40
+      # Server-computed, authoritative totals injected as a DERIVED AGGREGATES
+      # section. Keeps arithmetic out of the LLM (it slips summing long lists);
+      # ops: sum | sum_positive | sum_negative | avg | count.
+      aggregates:
+        - label: "Total net worth (sum of all account balances)"
+          collection: "finance_accounts"
+          op: "sum"
+          field: "current_balance"
+        - label: "Number of accounts"
+          collection: "finance_accounts"
+          op: "count"
+        - label: "Total inflows across all transactions"
+          collection: "transactions"
+          op: "sum_positive"
+          field: "amount"
+        - label: "Total outflows across all transactions"
+          collection: "transactions"
+          op: "sum_negative"
+          field: "amount"
+        - label: "Open recommendations"
+          collection: "finance_recommendations"
+          op: "count"
+
+  - id: "ai-treasury-supervisor"
+    name: "Treasury Supervisor"
+    role: "supervisor"
+    model: "gemini-2.0-flash"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Treasury Sentinel"
+      legend: "Orchestrates the monthly close, triages engine anomalies, and decides which findings require human approval versus auto-acknowledge."
+    system_prompt: |
+      You are the BudgetMaster treasury supervisor. You orchestrate the monthly balance-sheet
+      lock and review the outputs of the Dead Man's Switch, Cash Drag, and Subscription Decay
+      engines. For each finding, decide: auto-acknowledge (low impact) or escalate to a human
+      via the matching HIL form. You never authorize money movement yourself.
+    boundaries: ["*"]
+    permissions: []
+    allowed_delegations: ["ai-finance-categorizer", "ai-financial-advisor", "ai-tax-strategist"]
+    tools: []
+
+  - id: "ai-tax-strategist"
+    name: "Self-Employment Tax Strategist"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Quarterly Sentinel"
+      legend: "Projects self-employment + income tax owed each IRS period, applies the prior-year safe-harbor floor, and assembles 1099/W-2 information returns — always advisory, never remitting."
+    system_prompt: |
+      You are the BudgetMaster tax strategist for a sole proprietor / small-business owner.
+      Using ONLY the supplied ledger rows (transactions, balance_snapshots, tax_estimates,
+      tax_documents, finance_accounts), project the estimated tax due for the current IRS
+      period: self-employment tax (Social Security + Medicare) PLUS income tax on net profit.
+      Always surface the prior-year safe-harbor amount as the penalty-avoidance floor. For
+      information returns, list every contractor paid >= $600 (1099-NEC) and flag any missing
+      W-9 / unverified TIN. CONTENT GUARDRAIL: never fabricate a figure — if data is missing,
+      say what to ingest. You compute and advise only; you never remit a payment or file a
+      return. End every projection by pointing the user to the matching HIL approval.
+    boundaries: ["*"]
+    permissions: []
+    tools: []
+
+# ── Missions ────────────────────────────────────────────────────────────────
+missions:
+  - id: "mission-ingest"
+    name: "Statement Ingestion & Reconciliation"
+    objective: "Watch the hot-folders, parse OFX/QIF/CSV statements, dedupe by FITID, AI-categorize, and post transactions to the ledger."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-finance-categorizer"
+    inputs: ["statement_file"]
+    outputs: ["ingested_transactions"]
+    ui_metadata:
+      icon: "📥"
+      category: "ingestion"
+    sequence:
+      - step_code: "IMPORT-1"
+        action: "watch_and_read_statements"
+        description: "List + read new files from the personal/business/projects hot-folders."
+        estimated_duration_minutes: 5
+        tool: "folder_import"
+      - step_code: "INGEST-1"
+        action: "parse_dedupe_post"
+        description: "Parse statements, route to context by subfolder, dedupe by FITID, post transactions."
+        estimated_duration_minutes: 10
+        tool: "statement_ingest"
+      - step_code: "CATEGORIZE-1"
+        action: "ai_categorize"
+        description: "Normalize payees, cluster merchants, assign categories with confidence."
+        estimated_duration_minutes: 10
+        agent: "ai-finance-categorizer"
+
+  - id: "mission-dms-watch"
+    name: "Dead Man's Switch Watch"
+    objective: "Verify that every armed recurring cashflow arrived within its grace window; raise a FAULT and shield safe-to-spend if not."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["dms_findings"]
+    ui_metadata:
+      icon: "🛡️"
+      category: "automation"
+    sequence:
+      - step_code: "DMS-1"
+        action: "evaluate_switches"
+        description: "Evaluate armed switches against their deadlines; create dms_fault recommendations."
+        estimated_duration_minutes: 5
+        tool: "dms_evaluate"
+      - step_code: "DMS-2"
+        action: "fault_response"
+        description: "If a fault was raised, route the Fault Response form to the user."
+        estimated_duration_minutes: 15
+        requires_human: true
+        form_ref: "Dead Man's Switch Fault Response"
+        routing_channel: "alerts_channel"
+
+  - id: "mission-cash-sweep"
+    name: "Treasury Arbitrage / Cash Sweep"
+    objective: "Detect idle cash earning drag and recommend a yield-capturing sweep for human approval."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["sweep_recommendation"]
+    ui_metadata:
+      icon: "🏦"
+      category: "automation"
+    sequence:
+      - step_code: "DRAG-1"
+        action: "scan_idle_cash"
+        description: "Compute idle-cash drag; create a sweep recommendation when the floor is breached."
+        estimated_duration_minutes: 5
+        tool: "cash_drag_scan"
+      - step_code: "DRAG-2"
+        action: "authorize_sweep"
+        description: "Route the Cash Sweep Authorization form for approval."
+        estimated_duration_minutes: 15
+        requires_human: true
+        form_ref: "Cash Sweep Authorization"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-subscription-decay"
+    name: "Subscription Decay Sweep"
+    objective: "Score recurring charges by cost-per-use and quarantine decayed subscriptions for cancellation approval."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["quarantine_recommendation"]
+    ui_metadata:
+      icon: "🧹"
+      category: "automation"
+    sequence:
+      - step_code: "SUB-1"
+        action: "scan_subscriptions"
+        description: "Compute utility per subscription; flag zero/low-usage charges."
+        estimated_duration_minutes: 5
+        tool: "subscription_scan"
+      - step_code: "SUB-2"
+        action: "approve_cancellation"
+        description: "Route the Subscription Cancellation Approval form."
+        estimated_duration_minutes: 15
+        requires_human: true
+        form_ref: "Subscription Cancellation Approval"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-capital-sandbox"
+    name: "Capital Purchase Sandbox"
+    objective: "Simulate a financed capital purchase — amortization schedule plus opportunity-cost of the down payment — for a go/no-go decision."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-financial-advisor"
+    inputs: ["sandbox_scenario"]
+    outputs: ["amortization_projection"]
+    ui_metadata:
+      icon: "🧮"
+      category: "planning"
+    sequence:
+      - step_code: "SANDBOX-1"
+        action: "simulate_amortization"
+        description: "Run the amortization + opportunity-cost projection and persist the sandbox result."
+        estimated_duration_minutes: 5
+        tool: "amortize_sim"
+      - step_code: "SANDBOX-2"
+        action: "purchase_decision"
+        description: "Route the Capital Purchase Decision form."
+        estimated_duration_minutes: 20
+        requires_human: true
+        form_ref: "Capital Purchase Decision"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-monthly-lock"
+    name: "Monthly Historical Balance Sheet Lock"
+    objective: "Apply depreciation + loan amortization, snapshot net worth immutably, and render the monthly financial report."
+    type: "report"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["balance_snapshot", "monthly_report"]
+    ui_metadata:
+      icon: "🔒"
+      category: "reporting"
+    sequence:
+      - step_code: "LOCK-1"
+        action: "lock_balance_sheet"
+        description: "Compute depreciation/loan deltas and write an immutable balance_snapshot."
+        estimated_duration_minutes: 10
+        tool: "balance_lock"
+      - step_code: "LOCK-2"
+        action: "render_report"
+        description: "Render the monthly net-worth / cashflow / Schedule-E report from template."
+        estimated_duration_minutes: 10
+        agent: "ai-treasury-supervisor"
+
+  - id: "mission-capex-burn"
+    name: "Weekly CapEx Burn Matrix"
+    objective: "Track spend velocity against allocation caps for CapEx-project contexts and flag overruns."
+    type: "report"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["capex_burn_report"]
+    ui_metadata:
+      icon: "📊"
+      category: "reporting"
+    sequence:
+      - step_code: "BURN-1"
+        action: "compute_burn_velocity"
+        description: "Compute weekly burn velocity vs allocation_cap; create capex_overrun recommendations."
+        estimated_duration_minutes: 10
+        tool: "balance_lock"
+
+  # ── Cadence additions ──────────────────────────────────────────────────────
+  - id: "mission-cashflow-forecast"
+    name: "13-Week Rolling Cash-Flow Forecast"
+    objective: "Project weekly inflows/outflows over a rolling 13-week horizon from recurring bills, receivables, and installment tokens; flag any week the running balance breaches the safety floor."
+    type: "report"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["cash_flow_forecast"]
+    ui_metadata:
+      icon: "📈"
+      category: "reporting"
+    sequence:
+      - step_code: "FCST-1"
+        action: "project_rolling_cashflow"
+        description: "Roll the 13-week direct-method forecast from recurring bills, open receivables, and installment schedules; persist a rolling_13week cash_flow_forecast."
+        estimated_duration_minutes: 10
+        tool: "cashflow_forecast"
+      - step_code: "FCST-2"
+        action: "flag_shortfalls"
+        description: "If any week's running balance breaches the floor, create a cashflow_shortfall recommendation for the alert center."
+        estimated_duration_minutes: 5
+        agent: "ai-treasury-supervisor"
+
+  - id: "mission-forecast-calibration"
+    name: "Forecast Calibration Reconciliation"
+    objective: "Reconcile matured cash-flow and estimated-tax predictions against what actually happened, score them through the Prediction Intelligence calibration pod, and flag when forecasts run systematically optimistic or conservative."
+    type: "report"
+    environment: "production"
+    estimated_duration_hours: 1
+    # Chains off the weekly forecast: each new baseline is the cue to settle the
+    # predictions whose horizon has now elapsed.
+    trigger: "on_success(mission-cashflow-forecast)"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["forecast_calibration"]
+    ui_metadata:
+      icon: "🎯"
+      category: "reporting"
+    sequence:
+      - step_code: "CAL-1"
+        action: "reconcile_forecast_outcomes"
+        description: "Load matured forecast_predictions, observe the actual outcome (min balance vs floor; settled tax estimate), and run recordOutcome → matchOutcome → calibratePrediction; persist a forecast_calibrations record per prediction."
+        estimated_duration_minutes: 10
+        tool: "forecast_calibration"
+      - step_code: "CAL-2"
+        action: "flag_miscalibration"
+        description: "When the pod detects systematic over/under-confidence, surface a forecast_miscalibrated recommendation so the advisor can caveat future forecasts."
+        estimated_duration_minutes: 5
+        agent: "ai-treasury-supervisor"
+
+  - id: "mission-receivables-sweep"
+    name: "Receivables / Invoicing Sweep"
+    objective: "Find open and overdue invoices, draft follow-up reminders, and surface aged receivables that threaten cash flow."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: []
+    outputs: ["receivable_reminders"]
+    ui_metadata:
+      icon: "🧾"
+      category: "automation"
+    sequence:
+      - step_code: "AR-1"
+        action: "scan_receivables"
+        description: "Score open invoices by age vs due_date; mark overdue and create receivable_overdue recommendations for anything past grace."
+        estimated_duration_minutes: 5
+        tool: "receivables_scan"
+      - step_code: "AR-2"
+        action: "draft_reminders"
+        description: "Draft dunning reminders for SENT/OVERDUE invoices and stamp last_reminder_at. Advisory — the user sends them."
+        estimated_duration_minutes: 10
+        agent: "ai-financial-advisor"
+
+  - id: "mission-monthly-statements"
+    name: "Monthly Financial Statements"
+    objective: "After the balance-sheet lock, render the full P&L, cash-flow statement, and budget-vs-actual variance for the closed month."
+    type: "report"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-monthly-lock)"
+    primary_agent: "ai-treasury-supervisor"
+    inputs: ["balance_snapshot"]
+    outputs: ["financial_statements"]
+    ui_metadata:
+      icon: "📑"
+      category: "reporting"
+    sequence:
+      - step_code: "STMT-1"
+        action: "compute_statements"
+        description: "Compute P&L (income/expense by category), the direct-method cash-flow statement, and budget-vs-actual variance vs allocation caps."
+        estimated_duration_minutes: 10
+        tool: "generate_statements"
+      - step_code: "STMT-2"
+        action: "render_statement_pack"
+        description: "Render the three-statement pack from the monthly report template."
+        estimated_duration_minutes: 10
+        agent: "ai-treasury-supervisor"
+
+  - id: "mission-estimated-tax"
+    name: "Quarterly Estimated Tax"
+    objective: "Project self-employment + income tax for the current IRS period, compare against the safe-harbor floor, and route the payment for authorization."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-tax-strategist"
+    inputs: []
+    outputs: ["tax_estimate"]
+    ui_metadata:
+      icon: "🏛️"
+      category: "tax"
+    sequence:
+      - step_code: "ETAX-1"
+        action: "project_estimated_tax"
+        description: "Project SE tax + income tax on YTD net profit, apply the prior-year safe-harbor floor, and persist a PROJECTED tax_estimate for the period."
+        estimated_duration_minutes: 10
+        tool: "estimated_tax_calc"
+      - step_code: "ETAX-2"
+        action: "authorize_payment"
+        description: "Route the Quarterly Estimated Tax Authorization form ahead of the IRS due date."
+        estimated_duration_minutes: 15
+        requires_human: true
+        form_ref: "Quarterly Estimated Tax Authorization"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-sales-tax"
+    name: "Quarterly Sales-Tax Prep"
+    objective: "Compile taxable sales by jurisdiction for the quarter and prepare a filing-ready summary (only relevant for businesses that collect sales tax)."
+    type: "report"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-tax-strategist"
+    inputs: []
+    outputs: ["sales_tax_summary"]
+    ui_metadata:
+      icon: "🧮"
+      category: "tax"
+    sequence:
+      - step_code: "STAX-1"
+        action: "compile_sales_tax"
+        description: "Aggregate taxable-sales transactions by jurisdiction and rate; create a sales_tax_due recommendation with the filing-ready total."
+        estimated_duration_minutes: 15
+        tool: "sales_tax_compile"
+
+  - id: "mission-ledger-cleanup"
+    name: "Quarterly Ledger Cleanup & Catch-Up"
+    objective: "Re-run categorization over low-confidence and uncategorized transactions, surface stale UNRECONCILED rows, and clean up before the tax period closes."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-finance-categorizer"
+    inputs: []
+    outputs: ["cleanup_report"]
+    ui_metadata:
+      icon: "🧽"
+      category: "automation"
+    sequence:
+      - step_code: "CLEAN-1"
+        action: "recategorize_low_confidence"
+        description: "Re-categorize rows with categorization_confidence below threshold or status UNRECONCILED; flag the residue for human review."
+        estimated_duration_minutes: 15
+        agent: "ai-finance-categorizer"
+
+  - id: "mission-information-returns"
+    name: "Annual 1099 / W-2 Information Returns"
+    objective: "Identify every contractor paid >= $600 and each employee, verify W-9s/TINs, and route the filing batch for authorization before the January 31 deadline."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-tax-strategist"
+    inputs: []
+    outputs: ["information_returns"]
+    ui_metadata:
+      icon: "📨"
+      category: "tax"
+    sequence:
+      - step_code: "INFO-1"
+        action: "assemble_returns"
+        description: "Cluster payee totals per recipient for the tax year, build 1099-NEC / W-2 tax_documents, and flag any missing W-9 or unverified TIN (info_return_due recommendations)."
+        estimated_duration_minutes: 15
+        tool: "information_return_assemble"
+      - step_code: "INFO-2"
+        action: "authorize_filing"
+        description: "Route the 1099 / W-2 Filing Authorization form ahead of the Jan 31 deadline."
+        estimated_duration_minutes: 15
+        requires_human: true
+        form_ref: "1099 / W-2 Filing Authorization"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-annual-review"
+    name: "Annual Net-Worth Review & Budget Reset"
+    objective: "Compare net worth year-over-year from the locked snapshots and seed next year's budget contexts and allocation caps."
+    type: "report"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-financial-advisor"
+    inputs: []
+    outputs: ["annual_review", "next_year_budget"]
+    ui_metadata:
+      icon: "🎯"
+      category: "reporting"
+    sequence:
+      - step_code: "YEAR-1"
+        action: "compute_yoy_networth"
+        description: "Compute year-over-year net-worth delta and category trends from the 12 monthly balance_snapshots."
+        estimated_duration_minutes: 10
+        tool: "balance_lock"
+      - step_code: "YEAR-2"
+        action: "propose_next_year_budget"
+        description: "Propose next-year allocation caps per budget context from trailing actuals; advisory for the user to confirm."
+        estimated_duration_minutes: 15
+        agent: "ai-financial-advisor"
+
+  - id: "mission-cashflow-scenario"
+    name: "Cash-Flow Scenario / Runway What-If"
+    objective: "On-demand: overlay a hypothetical change (new hire, new contract, large purchase) on the rolling forecast and report the impact on the 13-week and 12-month runway."
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-financial-advisor"
+    inputs: ["scenario_assumptions"]
+    outputs: ["cash_flow_forecast"]
+    ui_metadata:
+      icon: "🔮"
+      category: "planning"
+    sequence:
+      - step_code: "SCEN-1"
+        action: "simulate_scenario"
+        description: "Apply the scenario deltas to the baseline rolling forecast and persist a scenario cash_flow_forecast with the new trough and runway."
+        estimated_duration_minutes: 10
+        tool: "cashflow_forecast"
+      - step_code: "SCEN-2"
+        action: "explain_impact"
+        description: "Summarize the runway impact vs baseline and the earliest shortfall week, grounded in the persisted series."
+        estimated_duration_minutes: 10
+        agent: "ai-financial-advisor"
+
+# ── Schedules (cron, PRD §6) ────────────────────────────────────────────────
+schedules:
+  - id: "sched-ingest"
+    cron: "*/15 * * * *"        # frequent hot-folder sweep
+    action: "trigger_mission:mission-ingest"
+  - id: "sched-dms"
+    cron: "0 * * * *"           # hourly Dead Man's Switch watch
+    action: "trigger_mission:mission-dms-watch"
+    agent: "ai-treasury-supervisor"
+  - id: "sched-cash-drag"
+    cron: "0 0 * * *"           # daily treasury arbitrage core
+    action: "trigger_mission:mission-cash-sweep"
+    agent: "ai-treasury-supervisor"
+  - id: "sched-capex-burn"
+    cron: "0 12 * * 0"          # weekly project spend matrix
+    action: "trigger_mission:mission-capex-burn"
+    agent: "ai-treasury-supervisor"
+  - id: "sched-monthly-lock"
+    cron: "0 0 1 * *"          # monthly historical balance sheet lock
+    action: "trigger_mission:mission-monthly-lock"
+    agent: "ai-treasury-supervisor"
+  - id: "sched-subscription-decay"
+    cron: "0 6 1 * *"          # monthly subscription decay sweep
+    action: "trigger_mission:mission-subscription-decay"
+    agent: "ai-treasury-supervisor"
+
+  # ── Cadence additions ──────────────────────────────────────────────────────
+  - id: "sched-cashflow-forecast"
+    cron: "0 7 * * 1"          # weekly 13-week rolling forecast (Mon 07:00)
+    action: "trigger_mission:mission-cashflow-forecast"
+    agent: "ai-treasury-supervisor"
+  - id: "sched-receivables"
+    cron: "0 8 * * 1"          # weekly receivables / invoicing sweep (Mon 08:00)
+    action: "trigger_mission:mission-receivables-sweep"
+    agent: "ai-treasury-supervisor"
+  # mission-monthly-statements has no cron — it chains off the balance lock via
+  # `trigger: on_success(mission-monthly-lock)`, so it always runs after the
+  # snapshot exists rather than racing a fixed clock.
+  # Estimated-tax dates are NOT even quarters — four explicit triggers, each ~10
+  # days ahead of the IRS due date (Apr 15 / Jun 15 / Sep 15 / Jan 15).
+  - id: "sched-estimated-tax-q1"
+    cron: "0 9 5 4 *"          # ~Apr 5, ahead of the Apr 15 due date
+    action: "trigger_mission:mission-estimated-tax"
+    agent: "ai-tax-strategist"
+  - id: "sched-estimated-tax-q2"
+    cron: "0 9 5 6 *"          # ~Jun 5, ahead of the Jun 15 due date
+    action: "trigger_mission:mission-estimated-tax"
+    agent: "ai-tax-strategist"
+  - id: "sched-estimated-tax-q3"
+    cron: "0 9 5 9 *"          # ~Sep 5, ahead of the Sep 15 due date
+    action: "trigger_mission:mission-estimated-tax"
+    agent: "ai-tax-strategist"
+  - id: "sched-estimated-tax-q4"
+    cron: "0 9 5 1 *"          # ~Jan 5, ahead of the Jan 15 due date
+    action: "trigger_mission:mission-estimated-tax"
+    agent: "ai-tax-strategist"
+  - id: "sched-sales-tax"
+    cron: "0 9 20 1,4,7,10 *"  # quarterly sales-tax prep (20th of Jan/Apr/Jul/Oct)
+    action: "trigger_mission:mission-sales-tax"
+    agent: "ai-tax-strategist"
+  - id: "sched-ledger-cleanup"
+    cron: "0 3 1 1,4,7,10 *"   # quarterly ledger cleanup / catch-up
+    action: "trigger_mission:mission-ledger-cleanup"
+    agent: "ai-finance-categorizer"
+  - id: "sched-information-returns"
+    cron: "0 9 8 1 *"          # ~Jan 8, ahead of the Jan 31 1099/W-2 deadline
+    action: "trigger_mission:mission-information-returns"
+    agent: "ai-tax-strategist"
+  - id: "sched-annual-review"
+    cron: "0 4 1 1 *"          # annual net-worth review + budget reset (Jan 1)
+    action: "trigger_mission:mission-annual-review"
+    agent: "ai-financial-advisor"
+
+# ── Escalations ─────────────────────────────────────────────────────────────
+escalations:
+  - mission_ref: "mission-dms-watch"
+    alert_channels: ["slack:alerts_channel", "email"]
+    warning_threshold_minutes: 60
+    critical_threshold_minutes: 240
+  - mission_ref: "mission-cash-sweep"
+    alert_channels: ["slack:approvals_channel"]
+    warning_threshold_minutes: 1440
+
+# ── Dependent apps ──────────────────────────────────────────────────────────
+apps:
+  - id: "budgetmaster-workbench"
+    name: "BudgetMaster Workbench"
+    description: "Split-pane personal-finance cockpit: account tree, ledger register, dashboards, net-worth forecast, capital-purchase sandbox, and the Dead Man's Switch / subscription alert center."
+    path: "file://budgetmaster-workbench"
+    blueprint: "budgetmaster-workbench"
+    interaction_model: "shared-server"
+    enabled: true
+    runtime_contract:
+      platform_api_base: "/api/platform/app"
+      required_endpoints:
+        - { method: "GET", path: "/datasets", purpose: "Read the sovereign finance ledger, accounts, forecasts, recommendations, tax artifacts, and audit records." }
+        - { method: "POST", path: "/missions/trigger", purpose: "Start governed finance analysis and simulation missions." }
+        - { method: "GET", path: "/hil", purpose: "Load advisory decisions that require explicit human authorization." }
+        - { method: "GET", path: "/events/stream", purpose: "Refresh mission, recommendation, and approval state without polling the ledger aggressively." }
+      stale_after_seconds: 300
+    degraded_modes:
+      platform_unavailable:
+        behavior: "Keep cached and locally rendered financial records readable, disable writes and mission triggers, show the last successful refresh, and expose Retry."
+      statement_import_unavailable:
+        behavior: "Keep manual ledger entry and existing reports available; disable automated ingestion with recovery guidance."
+      advisor_unavailable:
+        behavior: "Keep deterministic dashboards, forecasts, and HIL decisions available; never replace missing grounded advice with fabricated figures."
+      stale_financial_data:
+        behavior: "Show an explicit stale-data banner and suppress claims that recommendations or balances are current."
+    responsive_contract:
+      minimum_viewport_width_px: 360
+      prohibit_document_horizontal_scroll: true
+      navigation_tabs_scroll_horizontally: true
+      stack_kpis_below_px: 640
+      collapse_split_panes_below_px: 900
+    readiness_checks:
+      - { id: "platform_api", label: "Platform API reachable", required: true }
+      - { id: "finance_datasets", label: "Finance datasets readable and writable", required: true }
+      - { id: "human_approval", label: "Human approval queue reachable", required: true }
+      - { id: "statement_ingestion", label: "Statement ingestion available", required: false, fallback: "manual_ledger_entry" }
+      - { id: "grounded_advisor", label: "Grounded advisor available", required: false, fallback: "deterministic_finance_views" }
+    dependent_missions:
+      - "mission-ingest"
+      - "mission-dms-watch"
+      - "mission-cash-sweep"
+      - "mission-subscription-decay"
+      - "mission-capital-sandbox"
+      - "mission-monthly-lock"
+      - "mission-capex-burn"
+      - "mission-cashflow-forecast"
+      - "mission-forecast-calibration"
+      - "mission-receivables-sweep"
+      - "mission-monthly-statements"
+      - "mission-estimated-tax"
+      - "mission-sales-tax"
+      - "mission-ledger-cleanup"
+      - "mission-information-returns"
+      - "mission-annual-review"
+      - "mission-cashflow-scenario"
+    required_roles: ["Owner", "Household CFO", "Bookkeeper"]
+    step_app_bindings:
+      - { step_code: "LEDGER-1", mission_ref: "mission-ingest", route: "/ledger", surface: "operator_input", purpose: "Ingest, categorize, reconcile, and audit source transactions.", completion_event: "budgetmaster.ledger_reconciled" }
+      - { step_code: "FORECAST-1", mission_ref: "mission-cashflow-forecast", route: "/forecast", surface: "analysis", purpose: "Review runway, forecast assumptions, scenarios, and calibration.", completion_event: "budgetmaster.forecast_reviewed" }
+      - { step_code: "TAX-1", mission_ref: "mission-estimated-tax", route: "/taxes", surface: "approval_gate", purpose: "Review advisory tax estimates and authorize the next human-controlled step.", completion_event: "budgetmaster.tax_estimate_reviewed" }
+      - { step_code: "ALERT-1", mission_ref: "mission-dms-watch", route: "/alerts", surface: "approval_gate", purpose: "Resolve treasury, subscription, and Dead Man's Switch recommendations.", completion_event: "budgetmaster.recommendation_resolved" }
+    workbench_modules:
+      - id: "ledger"
+        name: "Ledger Register"
+        purpose: "Dual-row transaction register with reconciliation status and right-click actions (convert to recurring bill, attach DMS guard, tokenize as installment). Natural-language semantic search over the ledger."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/ledger"
+        dependent_missions: ["mission-ingest"]
+        datasets: ["transactions", "finance_accounts", "budget_categories", "installment_tokens"]
+        primary_actions:
+          - "semantic_search"
+          - "split_transaction"
+          - "convert_to_recurring_bill"
+          - "attach_dms_guard"
+          - "tokenize_installment"
+          - "trigger_ingestion_mission"
+        mission_handoffs:
+          - target_mission: "mission-ingest"
+            trigger_name: "Statement Ingestion & Reconciliation"
+            when: "statements_dropped"
+        cycle_manager:
+          launch_contexts: ["mission-ingest"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "dashboard"
+        name: "Financial Dashboard"
+        purpose: "KPI grid and multi-variable charts: cashflow, spend-by-category, allocation cap burn, and account balances."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/dashboard"
+        dependent_missions: ["mission-monthly-lock"]
+        datasets: ["transactions", "finance_accounts", "balance_snapshots", "budget_categories"]
+        primary_actions: ["view_dashboard", "filter_period", "compare_budget_vs_actual"]
+        cycle_manager:
+          launch_contexts: ["mission-monthly-lock"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "forecast"
+        name: "Net Worth & Cash-Flow Forecast"
+        purpose: "40-year nominal vs inflation-adjusted net-worth trajectory plus the 13-week rolling cash-flow forecast, on-demand runway what-if scenarios, and forecast-accuracy calibration (how optimistic/conservative past forecasts proved)."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/forecast"
+        dependent_missions: ["mission-monthly-lock", "mission-cashflow-forecast", "mission-cashflow-scenario", "mission-forecast-calibration"]
+        datasets: ["balance_snapshots", "finance_accounts", "cash_flow_forecasts", "receivables", "forecast_predictions", "forecast_calibrations"]
+        primary_actions: ["run_forecast", "adjust_assumptions", "run_cashflow_forecast", "run_scenario", "view_forecast_accuracy"]
+        mission_handoffs:
+          - target_mission: "mission-cashflow-scenario"
+            trigger_name: "Cash-Flow Scenario / Runway What-If"
+            when: "scenario_submitted"
+        cycle_manager:
+          launch_contexts: ["mission-monthly-lock", "mission-cashflow-forecast", "mission-cashflow-scenario", "mission-forecast-calibration"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "taxes"
+        name: "Tax Center"
+        purpose: "Quarterly estimated-tax projections (SE + income tax with safe-harbor floor), sales-tax prep, and year-end 1099/W-2 information returns. Advisory only — BudgetMaster never remits or files."
+        interaction_model: "hil-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/taxes"
+        dependent_missions: ["mission-estimated-tax", "mission-sales-tax", "mission-information-returns"]
+        datasets: ["tax_estimates", "tax_documents", "transactions", "balance_snapshots"]
+        primary_actions: ["project_estimated_tax", "review_estimate", "prep_sales_tax", "assemble_information_returns", "render_hil_form"]
+        hil_forms: ["estimated_tax_authorization", "information_return_filing"]
+        mission_handoffs:
+          - target_mission: "mission-estimated-tax"
+            trigger_name: "Quarterly Estimated Tax"
+            when: "estimate_requested"
+          - target_mission: "mission-information-returns"
+            trigger_name: "Annual 1099 / W-2 Information Returns"
+            when: "filing_requested"
+        cycle_manager:
+          launch_contexts: ["mission-estimated-tax", "mission-sales-tax", "mission-information-returns"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "sandboxes"
+        name: "Capital Purchase Sandbox"
+        purpose: "Model a financed purchase: amortization schedule plus opportunity-cost of the down payment. Triggers the amortization mission."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/sandboxes"
+        dependent_missions: ["mission-capital-sandbox"]
+        datasets: ["purchase_sandboxes"]
+        primary_actions: ["create_scenario", "run_simulation", "request_purchase_decision"]
+        hil_forms: ["capital_purchase_decision"]
+        mission_handoffs:
+          - target_mission: "mission-capital-sandbox"
+            trigger_name: "Capital Purchase Sandbox"
+            when: "scenario_submitted"
+        cycle_manager:
+          launch_contexts: ["mission-capital-sandbox"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "alerts"
+        name: "Alert & Recommendation Center"
+        purpose: "Unified inbox for Dead Man's Switch faults, subscription quarantine, and cash-sweep recommendations. Approve or dismiss; firing the matching HIL form."
+        interaction_model: "hil-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/alerts"
+        dependent_missions: ["mission-dms-watch", "mission-cash-sweep", "mission-subscription-decay"]
+        datasets: ["finance_recommendations", "dead_mans_switches", "subscriptions"]
+        primary_actions: ["review_recommendation", "approve_recommendation", "dismiss_recommendation", "render_hil_form"]
+        hil_forms: ["dms_fault_response", "cash_sweep_authorization", "subscription_cancellation"]
+        mission_handoffs:
+          - target_mission: "mission-cash-sweep"
+            trigger_name: "Treasury Arbitrage / Cash Sweep"
+            when: "sweep_approved"
+          - target_mission: "mission-subscription-decay"
+            trigger_name: "Subscription Decay Sweep"
+            when: "quarantine_approved"
+        cycle_manager:
+          launch_contexts: ["mission-dms-watch", "mission-cash-sweep", "mission-subscription-decay"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "accounts"
+        name: "Accounts & Contexts"
+        purpose: "Manage the account tree (checking, savings, credit, investment, loans) and budget contexts (envelope, CapEx project, Schedule-E)."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/accounts"
+        dependent_missions: []
+        datasets: ["finance_accounts", "budget_contexts", "budget_categories"]
+        primary_actions: ["add_account", "edit_account", "add_context", "add_category"]
+        cycle_manager:
+          launch_contexts: []
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "waste-remediation"
+        name: "Cloud Waste Remediation"
+        purpose: "Review advisory infrastructure-cost findings, predicted spend anomalies, and proposed teardown changes before any governed execution."
+        interaction_model: "approval-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/waste-remediation"
+        dependent_missions: ["mission-capex-burn"]
+        datasets: ["finance_recommendations", "budget_contexts", "balance_snapshots"]
+        primary_actions: ["review_waste_findings", "inspect_cost_prediction", "approve_remediation_proposal", "dismiss_remediation_proposal"]
+        cycle_manager:
+          launch_contexts: ["mission-capex-burn"]
+          surface: "modal"
+          app_builder_editable: true
+
+  - id: "budgetmaster-advisor"
+    name: "BudgetMaster Financial Advisor"
+    description: "Conversational financial advisor grounded in your ledger — ask about spending, runway, net worth, and what to do next."
+    path: "file://budgetmaster-advisor"
+    blueprint: "budgetmaster-advisor"
+    interaction_model: "shared-server"
+    enabled: true
+    runtime_contract:
+      platform_api_base: "/api/platform/app"
+      required_endpoints:
+        - { method: "GET", path: "/datasets", purpose: "Ground advice in BudgetMaster-owned finance collections." }
+        - { method: "POST", path: "/agents/{agentId}/chat", purpose: "Stream grounded advisor responses." }
+      degraded_behavior: "If grounded finance data or the advisor is unavailable, state that clearly, keep prior conversation visible, and never fabricate balances, forecasts, or recommendations."
+    responsive_contract:
+      minimum_viewport_width_px: 360
+      prohibit_document_horizontal_scroll: true
+      stack_chat_chrome_below_px: 640
+    readiness_checks:
+      - { id: "finance_grounding", label: "BudgetMaster finance collections available", required: true }
+      - { id: "advisor_agent", label: "Financial advisor agent available", required: false, fallback: "read_only_finance_workbench" }
+    dependent_missions: ["mission-monthly-lock"]
+    required_roles: ["Owner", "Household CFO"]
+    workbench_modules:
+      - id: "advisor-chat"
+        name: "Advisor Chat"
+        purpose: "Natural-language Q&A over the full finance dataset via the ai-financial-advisor agent. Grounded RAG, never fabricates figures."
+        interaction_model: "agent-chat"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/"
+        dependent_missions: ["mission-monthly-lock"]
+        datasets: ["transactions", "finance_accounts", "balance_snapshots", "finance_recommendations"]
+        primary_actions: ["ask_advisor", "semantic_search"]
+        cycle_manager:
+          launch_contexts: []
+          surface: "modal"
+          app_builder_editable: true
+
+# ── Chaining: year-end tax cycle follows BudgetMaster ───────────────────────
+follow_up_cycle:
+  name: "Year-End Tax Preparation"
+  description: "Roll up Schedule-E business-context transactions and capital depreciation into a year-end tax preparation packet."
+  objective: "Aggregate Schedule-E income/expense and depreciation schedules into a CPA-ready summary."
+  priority: 4
+  budgetLimitUsd: "50.00"
+  requiresApproval: true
+  blueprints:
+    - name: "Schedule-E Rollup"
+      objective: "Aggregate all TAX_SCHEDULE_E context transactions by category for the tax year."
+      type: "mission"
+      estimatedDays: 1
+      inputs: ["balance_snapshot"]
+      outputs: ["schedule_e_summary"]
+    - name: "Depreciation Schedule Export"
+      objective: "Export the asset depreciation schedule for the tax year."
+      type: "mission"
+      estimatedDays: 1
+      dependsOn: ["Schedule-E Rollup"]
+      inputs: ["schedule_e_summary"]
+      outputs: ["tax_packet"]

@@ -1,0 +1,45 @@
+---
+id: hil-modal-schema-template
+title: Standard Human-in-the-Loop Approval Modal Schema
+audience: [AGENT_PRIMARY, HUMAN_PRIMARY]
+badge: AGENT_PRIMARY
+category: 07-reference-and-templates
+autonomy_level: L2-L3
+version: 1.0.0
+tags: [template, json-schema, hil, modal, form, governance]
+summary: Ready-to-use JSON Schema template for generating interactive Human-in-the-Loop review and approval modals.
+---
+
+# Human-in-the-Loop Modal Schema Template `[🤖 AGENT]`
+
+> **Audience:** `🤖 Agent / Autonomous` &nbsp;|&nbsp; **Format:** JSON Schema
+
+---
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GenericApprovalModal",
+  "type": "object",
+  "required": ["decision", "reviewerNotes"],
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["APPROVE", "REJECT", "REQUEST_CHANGES"],
+      "title": "Review Decision",
+      "description": "Select the appropriate authorization outcome."
+    },
+    "reviewerNotes": {
+      "type": "string",
+      "minLength": 5,
+      "title": "Reviewer Notes & Rationale",
+      "description": "Provide context for this decision for the audit log."
+    },
+    "adjustments": {
+      "type": "object",
+      "title": "Manual Parameter Overrides (Optional)",
+      "additionalProperties": true
+    }
+  }
+}
+```

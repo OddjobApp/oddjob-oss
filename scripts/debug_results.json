@@ -1,0 +1,17 @@
+[
+  {
+    "name": "POST Validate None",
+    "status": 400,
+    "body": "{\"errorMessages\":[\"Invalid request payload. Refer to the REST API documentation and try again.\"]}"
+  },
+  {
+    "name": "GET JQL - jql param",
+    "status": 200,
+    "body": "{\"issues\":[{\"id\":\"6348041\"},{\"id\":\"6348040\"},{\"id\":\"6348039\"},{\"id\":\"6348038\"},{\"id\":\"6348037\"},{\"id\":\"6347975\"},{\"id\":\"6347974\"},{\"id\":\"6347973\"},{\"id\":\"6347972\"},{\"id\":\"6347867\"},{\"id\":\"6347820\"},{\"id\":\"6347819\"},{\"id\":\"6347818\"},{\"id\":\"6347816\"},{\"id\":\"6347815\"},{\"id\":\"6347814\"},{\"id\":\"6347813\"},{\"id\":\"6347735\"},{\"id\":\"6347733\"},{\"id\":\"6347446\"},{\"id\":\"6347439\"},{\"id\":\"6347438\"},{\"id\":\"6347437\"},{\"id\":\"6347435\"},{\"id\":\"6347434\"},{\"id\":\"6347433\"},{\"id\":\"6347394\"},{\"id\":\"6347392\"},{\"id\":\"634736"
+  },
+  {
+    "name": "GET JQL - query param",
+    "status": 400,
+    "body": "{\"errorMessages\":[\"Unbounded JQL queries are not allowed here. Please add a search restriction to your query.\"],\"errors\":{}}"
+  }
+]

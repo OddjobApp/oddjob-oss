@@ -1,0 +1,38 @@
+
+/* AgencyMaturityDashboard.css */
+.custom-tooltip {
+    background-color: hsl(var(--popover));
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: var(--shadow-md);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.tooltip-title {
+    color: hsl(var(--muted-foreground));
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+}
+
+.tooltip-value {
+     color: hsl(var(--primary));
+     font-size: 16px;
+     font-weight: 800;
+     font-variant-numeric: tabular-nums;
+}
+
+.utility-dot {
+    background-color: var(--dot-color, hsl(var(--muted)));
+}
+
+.dynamic-delay-0 { animation-delay: 0ms; }
+.dynamic-delay-1 { animation-delay: 100ms; }
+.dynamic-delay-2 { animation-delay: 200ms; }
+.dynamic-delay-3 { animation-delay: 300ms; }
+.dynamic-delay-4 { animation-delay: 400ms; }
+.dynamic-delay-5 { animation-delay: 500ms; }

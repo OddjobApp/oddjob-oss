@@ -1,0 +1,58 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blueprint background -->
+  <rect width="200" height="200" fill="#0d2c4e" rx="5" ry="5"/>
+  
+  <!-- Grid pattern for blueprint feel -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e4c7a" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+  <rect width="200" height="200" fill="url(#grid)" opacity="0.5"/>
+  
+  <!-- Database tables -->
+  <g transform="translate(100, 100)">
+    <!-- Left table -->
+    <rect x="-80" y="-30" width="70" height="60" rx="2" ry="2" fill="#1e4c7a" stroke="#4a9eff" stroke-width="1.5"/>
+    <line x1="-80" y1="-10" x2="-10" y2="-10" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="-80" y1="10" x2="-10" y2="10" stroke="#4a9eff" stroke-width="1"/>
+    
+    <!-- Right table -->
+    <rect x="10" y="-30" width="70" height="60" rx="2" ry="2" fill="#1e4c7a" stroke="#4a9eff" stroke-width="1.5"/>
+    <line x1="10" y1="-10" x2="80" y2="-10" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="10" y1="10" x2="80" y2="10" stroke="#4a9eff" stroke-width="1"/>
+    
+    <!-- Connection line between tables with gap -->
+    <path d="M-10,0 L10,0" stroke="#4a9eff" stroke-width="3" fill="none"/>
+    
+    <!-- Connection nodes -->
+    <circle cx="-10" cy="0" r="5" fill="#ffffff" stroke="#4a9eff" stroke-width="1.5"/>
+    <circle cx="10" cy="0" r="5" fill="#ffffff" stroke="#4a9eff" stroke-width="1.5"/>
+    
+    <!-- Blueprint measurement marks -->
+    <g stroke="#4a9eff" stroke-width="0.8" fill="none">
+      <path d="M-90,-35 L-90,-25 M-85,-35 L-85,-25"/>
+      <path d="M80,-35 L80,-25 M75,-35 L75,-25"/>
+      <path d="M-90,35 L-90,45 M-85,35 L-85,45"/>
+      <path d="M80,35 L80,45 M75,35 L75,45"/>
+    </g>
+    
+    <!-- Table annotations -->
+    <text x="-45" y="5" font-family="monospace" font-size="12" fill="#4a9eff" text-anchor="middle">T1</text>
+    <text x="45" y="5" font-family="monospace" font-size="12" fill="#4a9eff" text-anchor="middle">T2</text>
+    
+    <!-- Connection label -->
+    <text x="0" y="-15" font-family="monospace" font-size="10" fill="#4a9eff" text-anchor="middle" fill-opacity="0.8">1:N</text>
+    
+    <!-- ThothBlueprint text at top middle -->
+    <text x="0" y="-70" font-family="monospace" font-size="12" font-weight="bold" fill="#4a9eff" text-anchor="middle">ThothBlueprint</text>
+  </g>
+  
+  <!-- Blueprint corner marks -->
+  <g stroke="#4a9eff" stroke-width="1" fill="none">
+    <path d="M10,10 L10,20 M10,10 L20,10"/>
+    <path d="M190,10 L190,20 M190,10 L180,10"/>
+    <path d="M10,190 L10,180 M10,190 L20,190"/>
+    <path d="M190,190 L190,180 M190,190 L180,190"/>
+  </g>
+</svg>

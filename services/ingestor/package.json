@@ -1,0 +1,23 @@
+{
+    "name": "oddjob-ingestor",
+    "version": "1.0.0",
+    "description": "Ephemeral Semantic Context Ingestor (Slice 1)",
+    "main": "server.js",
+    "scripts": {
+        "start": "tsx server.js",
+        "dev": "tsx watch server.js"
+    },
+    "dependencies": {
+        "@fastify/cors": "^9.0.1",
+        "@oddjob/shared-redis": "*",
+        "amqplib": "^0.10.9",
+        "drizzle-orm": "0.45.2",
+        "fastify": "^5.8.5",
+        "ioredis": "^5.9.1",
+        "pg": "^8.16.3"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.3",
+        "tsx": "^4.7.1"
+    }
+}

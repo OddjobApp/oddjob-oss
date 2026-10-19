@@ -1,0 +1,55 @@
+---
+id: mission-manifest-template
+title: Standard Autonomous Mission Manifest Template
+audience: [AGENT_PRIMARY, HUMAN_PRIMARY]
+badge: AGENT_PRIMARY
+category: 07-reference-and-templates
+autonomy_level: L3-L4
+version: 1.0.0
+tags: [template, mission, yaml, manifest, orchestration]
+summary: Copy-pasteable starter YAML manifest for declaring new autonomous missions on the Oddjob platform.
+---
+
+# Autonomous Mission Manifest Template `[🤖 AGENT]`
+
+> **Audience:** `🤖 Agent / Autonomous` &nbsp;|&nbsp; **Format:** YAML Specification
+
+---
+
+```yaml
+# Oddjob Mission Manifest v1
+apiVersion: oddjob.ai/v1alpha1
+kind: Mission
+metadata:
+  name: automated-invoice-reconciliation
+  version: "1.0.0"
+  organizationId: 470
+  tags: ["finance", "reconciliation", "erp"]
+
+spec:
+  objective: "Ingest daily vendor invoices, extract line items, reconcile against ERP purchase orders, and flag discrepancies."
+  autonomyLevel: L3
+  
+  # Maximum resource allocation per execution cycle
+  quotas:
+    maxDurationSeconds: 1800
+    maxTokenBudget: 500000
+    maxSubagents: 4
+
+  # Whitelisted MCP tools available to this mission
+  tools:
+    - name: "extract_document_tables"
+      required: true
+    - name: "query_knowledge_graph"
+      required: true
+    - name: "trigger_hil_form"
+      required: true
+    - name: "create_erp_invoice"
+      requiresIdempotencyKey: true
+
+  # Governance & Escalation Bounds
+  governance:
+    confidenceThreshold: 0.92
+    hilFormSchema: "schemas/invoice_hil_modal.json"
+    onTimeout: "ABORT_AND_ALERT"
+```

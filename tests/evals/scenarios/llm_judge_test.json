@@ -1,0 +1,12 @@
+{
+  "id": "llm_judge_test",
+  "name": "LLM Judge Verification",
+  "prompt": "Say exactly: 'Oddjob is a platform for SDLC automation.'",
+  "repeats": 5,
+  "expected_criteria": [
+    {
+      "type": "llm_judge",
+      "value": "Does the response explicitly state that Oddjob is a platform for SDLC automation?"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "basic_market_research",
+  "name": "Basic Market Research",
+  "prompt": "Research the top 3 competitors in the AI agent space and summarize their key features.",
+  "repeats": 5,
+  "expected_criteria": [
+    {
+      "type": "tool_used",
+      "value": "google_search"
+    },
+    {
+      "type": "tool_used",
+      "value": "browse_web"
+    },
+    {
+      "type": "final_output_contains",
+      "value": "Competitor"
+    }
+  ]
+}

@@ -1,0 +1,345 @@
+name: "Security Audit & Vulnerability Scanning"
+version: "1.0"
+containers: {}
+description: "Automated security vulnerability scanning, threat modeling, and remediation planning. Integrates with dependency audits, security analysis tools, and JIRA for security ticket creation."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Security Audit & Vulnerability Scanning"
+  icon: "🛡️"
+  theme_color: "#ef4444"
+  display_priority: 2
+  category: "development"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  security_standards:
+    required: true
+    path: "file://knowledge/guidelines/security_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+
+templates:
+  - id: "security_audit_report"
+    path: "file://knowledge/document-templates/security_audit_report.md"
+  - id: "threat_model_template"
+    path: "file://knowledge/document-templates/threat_model_template.md"
+  - id: "remediation_plan_template"
+    path: "file://knowledge/document-templates/remediation_plan_template.md"
+
+forms:
+  - id: "audit_scope"
+    name: "Security Audit Scope"
+    description: "Define the scope of the security audit."
+    fields:
+      - name: "audit_type"
+        label: "Audit Type"
+        type: "select"
+        required: true
+        options: ["Full Application Audit", "Dependency Scan Only", "Code Review Only", "Infrastructure Scan"]
+      - name: "target_branch"
+        label: "Target Branch"
+        type: "text"
+        required: true
+      - name: "compliance_frameworks"
+        label: "Compliance Frameworks"
+        type: "multiselect"
+        required: true
+        options: ["SOC2", "GDPR", "HIPAA", "OWASP", "PCI-DSS"]
+      - name: "scan_depth"
+        label: "Scan Depth"
+        type: "select"
+        required: true
+        options: ["Quick Scan (Critical Only)", "Standard Scan", "Deep Scan (All Vulnerabilities)"]
+
+  - id: "audit_review"
+    name: "Security Audit Review"
+    description: "Review and approve the security audit findings."
+    fields:
+      - name: "audit_approved"
+        label: "Audit Approval"
+        type: "select"
+        required: true
+        options: ["Approve & Create Remediation Tickets", "Request Additional Scans", "Reject"]
+      - name: "critical_issues_approved"
+        label: "Critical Issues Addressed"
+        type: "select"
+        required: true
+        options: ["Yes - All Critical Issues Addressed", "No - Critical Issues Require Immediate Action"]
+      - name: "remediation_priority"
+        label: "Remediation Priority"
+        type: "select"
+        required: true
+        options: ["Immediate (P0)", "High Priority (P1)", "Standard Priority (P2)", "Low Priority (P3)"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-security-specialist"
+    name: "Security Vulnerability & Compliance Auditor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Security Guardian"
+      legend: "Identifies vulnerabilities and generates remediation plans."
+      traits: { compliance: 100, creativity: 10, persistence: 95 }
+    system_prompt: "file://knowledge/prompts/security-specialist.md"
+    boundaries: ["server/", "client/", "shared/schema/"]
+    permissions: ["github:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["run_dependency_audit", "workspace_read_file", "workspace_search", "knowledge_graph_query", "jira_create_bug", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Reviews code for security patterns and best practices."
+      traits: { compliance: 85, speed: 70, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/"]
+    permissions: ["github:read", "slack:read"]
+    tools: ["workspace_read_file", "workspace_search", "git_diff"]
+
+missions:
+  - id: "mission-scan-dependencies"
+    name: "Scan Dependencies"
+    objective: "Run dependency audit to identify vulnerable packages"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "ops_workbench"
+    primary_agent: "ai-security-specialist"
+    inputs: ["audit_scope"]
+    outputs: ["dependency_scan_results"]
+    sequence:
+      - step_code: "DEP-1"
+        action: "run_dependency_audit"
+        description: "Run dependency vulnerability scan"
+        estimated_duration_minutes: 30
+        tool: "run_dependency_audit"
+      - step_code: "DEP-2"
+        action: "analyze_vulnerabilities"
+        description: "Analyze vulnerability severity and impact"
+        estimated_duration_minutes: 20
+      - step_code: "DEP-3"
+        action: "check_compliance"
+        description: "Check compliance with selected frameworks"
+        estimated_duration_minutes: 10
+
+  - id: "mission-scan-code"
+    name: "Scan Code for Security Issues"
+    objective: "Analyze code for security vulnerabilities and patterns"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-scan-dependencies)"
+    primary_agent: "ai-security-specialist"
+    inputs: ["audit_scope"]
+    outputs: ["code_scan_results"]
+    sequence:
+      - step_code: "CODE-1"
+        action: "scan_for_secrets"
+        description: "Scan for exposed secrets and credentials"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+      - step_code: "CODE-2"
+        action: "check_input_validation"
+        description: "Check input validation and sanitization"
+        estimated_duration_minutes: 30
+      - step_code: "CODE-3"
+        action: "check_authentication"
+        description: "Review authentication and authorization patterns"
+        estimated_duration_minutes: 30
+      - step_code: "CODE-4"
+        action: "check_encryption"
+        description: "Verify encryption and data protection"
+        estimated_duration_minutes: 20
+      - step_code: "CODE-5"
+        action: "check_api_security"
+        description: "Review API security patterns"
+        estimated_duration_minutes: 20
+
+  - id: "mission-generate-threat-model"
+    name: "Generate Threat Model"
+    objective: "Create threat model for application components"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-scan-code)"
+    primary_agent: "ai-security-specialist"
+    inputs: ["code_scan_results"]
+    outputs: ["threat_model"]
+    sequence:
+      - step_code: "THREAT-1"
+        action: "identify_assets"
+        description: "Identify critical assets and data flows"
+        estimated_duration_minutes: 30
+      - step_code: "THREAT-2"
+        action: "identify_threats"
+        description: "Identify potential threats and attack vectors"
+        estimated_duration_minutes: 45
+      - step_code: "THREAT-3"
+        action: "assess_risk"
+        description: "Assess risk levels for each threat"
+        estimated_duration_minutes: 30
+      - step_code: "THREAT-4"
+        action: "generate_mitigation"
+        description: "Generate mitigation strategies"
+        estimated_duration_minutes: 15
+      - step_code: "THREAT-5"
+        action: "compile_threat_model"
+        description: "Compile comprehensive threat model"
+        estimated_duration_minutes: 20
+        template: "threat_model_template"
+
+  - id: "mission-generate-audit-report"
+    name: "Generate Security Audit Report"
+    objective: "Compile comprehensive security audit report with findings"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-threat-model)"
+    primary_agent: "ai-security-specialist"
+    inputs: ["dependency_scan_results", "code_scan_results", "threat_model"]
+    outputs: ["security_audit_report"]
+    sequence:
+      - step_code: "REPORT-1"
+        action: "compile_findings"
+        description: "Compile all security findings"
+        estimated_duration_minutes: 20
+      - step_code: "REPORT-2"
+        action: "prioritize_vulnerabilities"
+        description: "Prioritize vulnerabilities by severity"
+        estimated_duration_minutes: 15
+      - step_code: "REPORT-3"
+        action: "generate_remediation_plan"
+        description: "Generate remediation plan"
+        estimated_duration_minutes: 20
+        template: "remediation_plan_template"
+      - step_code: "REPORT-4"
+        action: "compile_audit_report"
+        description: "Compile comprehensive audit report"
+        estimated_duration_minutes: 5
+        template: "security_audit_report"
+
+  - id: "mission-review-audit"
+    name: "Review Security Audit"
+    objective: "Human review and approval of security audit"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-audit-report)"
+    primary_agent: "ai-security-specialist"
+    inputs: ["security_audit_report"]
+    outputs: ["approved_audit"]
+    requires_human: true
+    form_ref: "audit_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_audit"
+        description: "Present security audit for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect security team approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_audit"
+        description: "Finalize audit based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-create-remediation-tickets"
+    name: "Create Remediation Tickets"
+    objective: "Create JIRA tickets for security vulnerabilities"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-audit)"
+    primary_agent: "ai-security-specialist"
+    inputs: ["approved_audit"]
+    outputs: ["remediation_tickets"]
+    sequence:
+      - step_code: "REM-1"
+        action: "create_critical_tickets"
+        description: "Create P0/P1 tickets for critical vulnerabilities"
+        estimated_duration_minutes: 20
+        tool: "jira_create_bug"
+      - step_code: "REM-2"
+        action: "create_standard_tickets"
+        description: "Create P2/P3 tickets for standard vulnerabilities"
+        estimated_duration_minutes: 15
+        tool: "jira_create_bug"
+      - step_code: "REM-3"
+        action: "publish_audit_report"
+        description: "Publish audit report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "REM-4"
+        action: "notify_security_team"
+        description: "Notify security team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

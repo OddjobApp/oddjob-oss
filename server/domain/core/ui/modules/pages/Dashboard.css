@@ -1,0 +1,57 @@
+/* Dashboard Styles */
+
+.dashboard-container {
+  background-color: transparent;
+  min-height: 100vh;
+}
+
+.stat-value {
+  font-family: inherit;
+  letter-spacing: -0.05em;
+  color: hsl(var(--foreground));
+}
+
+/* Operational Ledger / Timeline */
+.operational-ledger {
+  position: relative;
+}
+
+.operational-ledger::before {
+  content: '';
+  position: absolute;
+  left: 1.5rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: hsl(var(--border));
+  opacity: 0.5;
+}
+
+.ledger-entry {
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.ledger-entry::after {
+  content: '';
+  position: absolute;
+  left: 1.35rem;
+  top: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+}
+
+.ledger-entry.failed::after {
+  background: hsl(var(--destructive));
+}
+
+.glass-morphism {
+  background: hsl(var(--card) / 0.5);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.1);
+}

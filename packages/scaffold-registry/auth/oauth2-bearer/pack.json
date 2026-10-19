@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "auth-oauth2-bearer",
+  "name": "OAuth2 / OIDC Bearer Authentication Pack",
+  "version": "1.0.0",
+  "category": "auth",
+  "extends": "core-node-express",
+  "requires": [],
+  "conflicts": ["auth-session"],
+  "recommends": ["observability-otel"],
+  "provides": ["auth-provider", "oauth2-provider"],
+  "inject": [
+    {
+      "target": "src/app.ts",
+      "action": "AST_ADD_MIDDLEWARE",
+      "import": "import { authMiddleware } from './middleware/auth.js';",
+      "use": "app.use('/api', authMiddleware);"
+    },
+    {
+      "target": "package.json",
+      "action": "MERGE_JSON",
+      "path": "dependencies",
+      "content": {
+        "jose": "^5.2.4",
+        "openid-client": "^5.6.5"
+      }
+    }
+  ],
+  "templates": [
+    {
+      "source": "auth.ts.hbs",
+      "destination": "src/middleware/auth.ts"
+    }
+  ]
+}

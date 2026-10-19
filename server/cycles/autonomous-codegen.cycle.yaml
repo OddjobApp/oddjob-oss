@@ -1,0 +1,383 @@
+name: "Autonomous Code Generation Pipeline"
+version: "1.0"
+description: "An autonomous multi-phase code generation pipeline that analyzes repositories, plans multi-file changes, applies incremental verification with self-healing test loops, enforces quality gates, and generates pull requests — all without manual intervention."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Autonomous Codegen Pipeline"
+  icon: "🤖"
+  theme_color: "#8b5cf6"
+  display_priority: 2
+  category: "development"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 5
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 1000000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-sonnet-4-20250514"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 8192
+  timeout_ms: 180000
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+forms:
+  - id: "codegen_session_request"
+    name: "Code Generation Request"
+    description: "Capture the repository, branch, and implementation objective for an autonomous code generation run."
+    fields:
+      - name: "repository_url"
+        label: "Repository URL"
+        type: "text"
+        required: true
+      - name: "target_branch"
+        label: "Target Branch"
+        type: "text"
+        required: true
+      - name: "objective"
+        label: "Implementation Objective"
+        type: "textarea"
+        required: true
+      - name: "verification_command"
+        label: "Verification Command"
+        type: "text"
+        required: false
+
+agents:
+  - id: "codegen-orchestrator"
+    name: "Code Generation Orchestrator"
+    role: "supervisor"
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.2
+    system_prompt: "You are the autonomous code generation pipeline orchestrator. You coordinate multi-phase code generation sessions: analyzing repositories, planning changes, applying edits with incremental verification, running self-healing test loops, evaluating quality gates, and generating pull requests. You delegate to specialized phase handlers and track session metrics throughout."
+    permissions:
+      - "read_repository"
+      - "write_code"
+      - "run_tests"
+      - "create_branches"
+      - "open_pull_requests"
+    tools:
+      - "mcp_git_create_branch"
+      - "mcp_git_commit"
+      - "mcp_git_push"
+      - "mcp_git_create_pr"
+      - "run_tests"
+      - "run_linter"
+      - "run_type_check"
+
+  - id: "context-analyzer"
+    name: "Repository Context Analyzer"
+    role: "worker"
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.1
+    system_prompt: "You analyze target repositories to produce structured context: file trees, dependency graphs, detected conventions (naming, formatting, architecture, testing), and language/framework metadata. You identify and load files relevant to the session objective with relevance scoring, respecting token budgets for large repositories."
+    permissions:
+      - "read_repository"
+    tools:
+      - "read_file"
+      - "list_directory"
+      - "search_files"
+
+  - id: "change-planner"
+    name: "Multi-File Change Planner"
+    role: "worker"
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.4
+    system_prompt: "You produce ordered multi-file edit plans from session objectives and repository context. You determine file operations (create, modify, delete) with dependency annotations, compute topological execution order, annotate rationale referencing detected conventions, and enforce human review thresholds for large change sets."
+    permissions:
+      - "read_repository"
+    tools:
+      - "read_file"
+      - "search_files"
+
+  - id: "verification-agent"
+    name: "Incremental Verification Agent"
+    role: "worker"
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.1
+    system_prompt: "You run verification checks (linting, type checking, unit tests) after each file operation based on the configured verification level. You use change impact analysis to determine which specific tests to run, aggregate results into verification reports, and delegate to the test loop controller when failures occur."
+    permissions:
+      - "read_repository"
+      - "run_tests"
+    tools:
+      - "run_linter"
+      - "run_type_check"
+      - "run_tests"
+
+  - id: "test-loop-agent"
+    name: "Self-Healing Test Loop Agent"
+    role: "worker"
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.5
+    system_prompt: "You orchestrate the self-healing test loop: run tests, diagnose failures from stack traces and assertion messages, generate targeted code fixes, apply them, and re-run tests. You detect regressions (new failures introduced by fixes) and revert them, enforce maximum fix attempt bounds, and escalate to rescue strategies when exhausted."
+    permissions:
+      - "read_repository"
+      - "write_code"
+      - "run_tests"
+    tools:
+      - "run_tests"
+      - "read_file"
+      - "write_file"
+
+  - id: "pr-generator"
+    name: "Pull Request Generator"
+    role: "worker"
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.2
+    system_prompt: "You create branches, commit file changes with structured messages, and open pull requests with descriptions containing the objective, changes summary, test results, and verification report references. You conform to detected PR templates and branch naming conventions."
+    permissions:
+      - "create_branches"
+      - "write_code"
+      - "open_pull_requests"
+    tools:
+      - "mcp_git_create_branch"
+      - "mcp_git_commit"
+      - "mcp_git_push"
+      - "mcp_git_create_pr"
+
+missions:
+  - id: "context-load"
+    name: "Repository Context Loading"
+    objective: "Analyze target repository structure, dependencies, conventions, and relevant files"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 0.25
+    trigger: "session_start"
+    primary_agent: "context-analyzer"
+    inputs:
+      - "repository_url_or_path"
+      - "session_objective"
+      - "autonomous_config"
+    outputs:
+      - "repository_context"
+    ui_metadata:
+      icon: "🔍"
+      color: "#3b82f6"
+      display_order: 1
+      category: "analysis"
+      description: "Scans and analyzes the target repository"
+
+  - id: "change-plan"
+    name: "Multi-File Change Planning"
+    objective: "Produce an ordered edit plan from the objective and repository context"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 0.5
+    trigger:
+      type: "on_success"
+      mission_ref: "context-load"
+    primary_agent: "change-planner"
+    inputs:
+      - "repository_context"
+      - "session_objective"
+    outputs:
+      - "edit_plan"
+    ui_metadata:
+      icon: "📝"
+      color: "#8b5cf6"
+      display_order: 2
+      category: "planning"
+      description: "Plans multi-file changes with dependency ordering"
+
+  - id: "apply-edits"
+    name: "Apply Edits with Incremental Verification"
+    objective: "Apply each file operation and verify incrementally based on verification level"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 1.0
+    trigger:
+      type: "on_success"
+      mission_ref: "change-plan"
+    primary_agent: "verification-agent"
+    inputs:
+      - "edit_plan"
+      - "verification_level"
+    outputs:
+      - "verification_report"
+    ui_metadata:
+      icon: "✏️"
+      color: "#f59e0b"
+      display_order: 3
+      category: "execution"
+      description: "Applies changes with per-step verification"
+
+  - id: "test-loop"
+    name: "Self-Healing Test Loop"
+    objective: "Run affected test suite and automatically fix failures up to max attempts"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 1.5
+    trigger:
+      type: "on_success"
+      mission_ref: "apply-edits"
+    primary_agent: "test-loop-agent"
+    inputs:
+      - "edit_plan"
+      - "verification_report"
+      - "max_fix_attempts"
+    outputs:
+      - "test_loop_result"
+    ui_metadata:
+      icon: "🔄"
+      color: "#10b981"
+      display_order: 4
+      category: "testing"
+      description: "Self-healing loop: diagnose → fix → verify"
+
+  - id: "quality-gate"
+    name: "Quality Gate Evaluation"
+    objective: "Evaluate whether all verifications pass before allowing PR creation"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 0.1
+    trigger:
+      type: "on_success"
+      mission_ref: "test-loop"
+    primary_agent: "codegen-orchestrator"
+    inputs:
+      - "verification_report"
+      - "test_loop_result"
+    outputs:
+      - "gate_result"
+    ui_metadata:
+      icon: "🚦"
+      color: "#ef4444"
+      display_order: 5
+      category: "quality"
+      description: "Pass/fail gate before PR generation"
+
+  - id: "pr-generation"
+    name: "Pull Request Generation"
+    objective: "Create branch, commit changes, and open PR with full context"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 0.25
+    trigger:
+      type: "on_success"
+      mission_ref: "quality-gate"
+    primary_agent: "pr-generator"
+    inputs:
+      - "edit_plan"
+      - "verification_report"
+      - "detected_conventions"
+    outputs:
+      - "pr_result"
+    ui_metadata:
+      icon: "🚀"
+      color: "#6366f1"
+      display_order: 6
+      category: "delivery"
+      description: "Opens a PR with all changes and test evidence"
+
+quality_gates:
+  test_coverage:
+    minimum: 0
+    threshold: "warning"
+
+observability:
+  logging:
+    level: "info"
+    structured: true
+  metrics:
+    enabled: true
+    interval_seconds: 30
+
+escalations:
+  - mission_ref: "test-loop"
+    alert_channels: ["slack", "inbox"]
+    warning_threshold_minutes: 15
+    critical_threshold_minutes: 30
+  - mission_ref: "quality-gate"
+    alert_channels: ["inbox"]
+    warning_threshold_minutes: 5
+    critical_threshold_minutes: 10
+
+apps:
+  - id: "codegen-pipeline-workbench"
+    name: "Autonomous Codegen Portal"
+    description: "Pipeline Session Dashboard, detail views, and quality metrics."
+    path: "file://codegen-pipeline-workbench"
+    blueprint: "codegen-pipeline-workbench"
+    interaction_model: "shared-server"
+    enabled: true
+    dependent_missions:
+      - "context-load"
+      - "change-plan"
+      - "apply-edits"
+      - "test-loop"
+      - "quality-gate"
+      - "pr-generation"
+    required_roles: ["Developer", "QA Engineer", "Technical Lead"]
+    step_app_bindings:
+      - step_code: "CTX-1"
+        mission_ref: "context-load"
+        route: "/pipeline"
+        surface: "operator_input"
+        purpose: "Capture objective, branch, scope, and repository context before code generation begins."
+        completion_event: "codegen.context_loaded"
+        assistant_routing: "findings_and_blockers"
+      - step_code: "PLAN-1"
+        mission_ref: "change-plan"
+        route: "/pipeline"
+        surface: "evidence_review"
+        purpose: "Review proposed change plan and affected files before edits are applied."
+        completion_event: "codegen.plan_accepted"
+        assistant_routing: "approval_required"
+      - step_code: "QG-1"
+        mission_ref: "quality-gate"
+        route: "/metrics"
+        surface: "quality_gate"
+        purpose: "Inspect test, type, lint, and risk evidence before PR generation."
+        completion_event: "codegen.quality_gate_resolved"
+        assistant_routing: "approval_required"
+      - step_code: "PR-1"
+        mission_ref: "pr-generation"
+        route: "/pipeline"
+        surface: "evidence_review"
+        purpose: "Expose PR result, diff summary, and verification lineage."
+        completion_event: "codegen.pr_created"
+        assistant_routing: "summary_only"
+    workbench_modules:
+      - id: "pipeline-dashboard"
+        name: "Pipeline Session Dashboard"
+        purpose: "Session overview, live status monitoring, and run creation."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        dependent_missions: ["context-load", "change-plan", "apply-edits"]
+      - id: "quality-metrics"
+        name: "Quality Metrics & Reporting"
+        purpose: "Aggregate success analytics and operational reports."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        dependent_missions: ["quality-gate", "pr-generation"]
+

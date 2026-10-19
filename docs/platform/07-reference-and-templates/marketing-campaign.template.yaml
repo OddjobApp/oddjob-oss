@@ -1,0 +1,71 @@
+# AI Marketing & Advertising Campaign Manifest Template
+# Oddjob Reference Implementation
+#
+# Declarative configuration for orchestrating AI-driven ad campaigns,
+# multi-variant creatives, psychographic OCEAN targeting, and ROAS optimization.
+
+version: "1.0.0"
+campaign_id: "mkt_q3_enterprise_growth_v1"
+name: "Q3 Enterprise AI Control Plane Growth Campaign"
+objective: "CONVERSIONS" # CONVERSIONS | LEAD_GEN | BRAND_AWARENESS | RETARGETING
+
+budget_and_bidding:
+  daily_spend_limit_usd: 150.00
+  hard_monthly_cap_usd: 4500.00
+  target_roas_multiplier: 3.0 # Minimum 3.0x Return on Ad Spend
+  target_max_cac_usd: 45.00
+  optimization_algorithm: "BAYESIAN_THOMPSON_SAMPLING"
+  auto_reallocation_threshold_usd: 100.00 # Max autonomous daily shift without HIL
+
+audience_targeting:
+  psychographic_profile:
+    dominant_traits:
+      conscientiousness: "HIGH" # ROI, efficiency, benchmarks
+      openness: "HIGH" # Innovation, autonomous systems
+  spatial_geofencing:
+    h3_resolution: 7
+    target_regions:
+      - "US_BAY_AREA_TECH_CORRIDOR"
+      - "US_AUSTIN_INNOVATION_DISTRICT"
+      - "US_NYC_FINTECH_HUB"
+  exclusions:
+    - "EXISTING_PAID_CUSTOMERS"
+    - "RECENT_UNSUBSCRIBED_LEADS"
+
+channels:
+  - platform: "LINKEDIN_ADS"
+    campaign_type: "SPONSORED_CONTENT"
+    placements: ["FEED"]
+  - platform: "META_ADS"
+    campaign_type: "ADVANTAGE_PLUS"
+    placements: ["FEED", "REELS"]
+  - platform: "GOOGLE_ADS"
+    campaign_type: "PERFORMANCE_MAX"
+    placements: ["SEARCH", "YOUTUBE"]
+
+creative_variants:
+  - variant_id: "var_roi_metric_angle"
+    hook_type: "QUANTITATIVE_ROI"
+    headline: "Cut Cloud & Agent Compute Costs by 42% with Governed AI"
+    primary_text: "Oddjob's 5-layer control plane eliminates hallucinated mutations and optimizes LLM token spend in real time. Deploy your first autonomous crew room today."
+    cta: "Start Free Trial"
+    aspect_ratio: "1:1"
+    image_prompt_ref: "Clean isometric analytics dashboard with dark glassmorphism and purple accents"
+
+  - variant_id: "var_security_angle"
+    hook_type: "SECURITY_COMPLIANCE"
+    headline: "Zero-Trust Agent Governance with Cryptographic Audit Trails"
+    primary_text: "Empower your engineering teams with autonomous AI agents bounded by SOC2-verified decision gates and automated rollback protection."
+    cta: "Book Security Demo"
+    aspect_ratio: "1:1"
+    image_prompt_ref: "Futuristic digital security shield protecting enterprise database infrastructure"
+
+fatigue_and_governance:
+  max_frequency_per_user_7d: 3.5
+  auto_pause_ctr_drop_percent: 25.0
+  ftc_ai_disclosure_enabled: true
+  gdpr_consent_verification: true
+  hil_escalation_triggers:
+    - "daily_spend_burn_rate > 1.20"
+    - "ad_policy_rejection_detected"
+    - "creative_negative_feedback_rate > 0.02"

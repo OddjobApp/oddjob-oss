@@ -1,0 +1,53 @@
+import { Router } from "express";
+import { desc } from "drizzle-orm";
+import { db } from "./client.js";
+import { {{datasetIdent}} } from "./schema.js";
+
+/**
+ * Read and write the {{appName}} dataset.
+ *
+ * Mounted at /api/dataset by the assembly. Kept deliberately small: this is the
+ * dataset layer, not the application's business logic, which belongs in the
+ * pipeline that calls it.
+ */
+export const datasetRouter = Router();
+
+/** Append a record. The body is stored as the record's payload. */
+datasetRouter.post("/", async (req, res) => {
+  const payload = req.body;
+
+  if (payload == null || typeof payload !== "object" || Array.isArray(payload)) {
+    return res.status(400).json({
+      error: "A record payload must be a JSON object.",
+    });
+  }
+
+  try {
+    const [record] = await db.insert({{datasetIdent}}).values({ payload }).returning();
+    return res.status(201).json(record);
+  } catch (err) {
+    // Surface the reason. A dataset write that fails silently is how an app ends
+    // up reporting success while storing nothing.
+    const message = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ error: `Could not write to the dataset: ${message}` });
+  }
+});
+
+/** Most recent records first. */
+datasetRouter.get("/", async (req, res) => {
+  const limitRaw = Number.parseInt(String(req.query.limit ?? "50"), 10);
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 200) : 50;
+
+  try {
+    const records = await db
+      .select()
+      .from({{datasetIdent}})
+      .orderBy(desc({{datasetIdent}}.createdAt))
+      .limit(limit);
+
+    return res.json({ count: records.length, records });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ error: `Could not read the dataset: ${message}` });
+  }
+});

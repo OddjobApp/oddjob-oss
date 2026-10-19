@@ -1,0 +1,89 @@
+﻿[dotenv@17.2.3] injecting env (20) from .env -- tip: ΓÜÖ∩╕Å  load multiple .env files with { path: ['.env.local', '.env'] }
+--- Investigating Child Executions for Parent 234 ---
+Recent 41/42 Executions: [
+  {
+    "id": 236,
+    "pipeline_id": 42,
+    "status": "completed",
+    "started_at": "2026-02-13T22:27:03.480Z",
+    "completed_at": "2026-02-14T06:27:03.953Z",
+    "parent_execution_id": 235
+  },
+  {
+    "id": 233,
+    "pipeline_id": 42,
+    "status": "completed",
+    "started_at": "2026-02-13T22:08:05.509Z",
+    "completed_at": "2026-02-14T06:08:07.087Z",
+    "parent_execution_id": 232
+  },
+  {
+    "id": 231,
+    "pipeline_id": 42,
+    "status": "completed",
+    "started_at": "2026-02-13T22:05:53.700Z",
+    "completed_at": "2026-02-14T06:05:54.337Z",
+    "parent_execution_id": 230
+  },
+  {
+    "id": 229,
+    "pipeline_id": 42,
+    "status": "completed",
+    "started_at": "2026-02-13T22:03:37.031Z",
+    "completed_at": "2026-02-14T06:03:37.522Z",
+    "parent_execution_id": 228
+  },
+  {
+    "id": 227,
+    "pipeline_id": 42,
+    "status": "completed",
+    "started_at": "2026-02-13T22:02:41.454Z",
+    "completed_at": "2026-02-14T06:02:42.085Z",
+    "parent_execution_id": 226
+  },
+  {
+    "id": 225,
+    "pipeline_id": 41,
+    "status": "running",
+    "started_at": "2026-02-13T21:57:11.344Z",
+    "completed_at": null,
+    "parent_execution_id": 224
+  },
+  {
+    "id": 215,
+    "pipeline_id": 42,
+    "status": "completed",
+    "started_at": "2026-02-13T04:14:56.139Z",
+    "completed_at": "2026-02-13T12:14:56.983Z",
+    "parent_execution_id": 213
+  },
+  {
+    "id": 214,
+    "pipeline_id": 41,
+    "status": "completed",
+    "started_at": "2026-02-13T04:14:43.111Z",
+    "completed_at": "2026-02-13T12:14:49.180Z",
+    "parent_execution_id": 213
+  },
+  {
+    "id": 212,
+    "pipeline_id": 41,
+    "status": "completed",
+    "started_at": "2026-02-13T04:13:49.694Z",
+    "completed_at": "2026-02-13T12:13:54.874Z",
+    "parent_execution_id": 211
+  },
+  {
+    "id": 197,
+    "pipeline_id": 41,
+    "status": "failed",
+    "started_at": "2026-02-13T03:46:44.941Z",
+    "completed_at": "2026-02-13T11:46:45.150Z",
+    "parent_execution_id": 195
+  }
+]
+Parent Status: {
+  status: 'running',
+  started_at: 2026-02-13T22:08:24.365Z,
+  completed_at: null
+}

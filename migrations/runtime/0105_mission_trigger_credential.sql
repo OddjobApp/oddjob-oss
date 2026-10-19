@@ -1,0 +1,13 @@
+-- Secure the mission webhook the way pipeline webhooks are secured.
+--
+-- POST /api/webhooks/trigger/mission/:id is a public route by design. Until
+-- now webhookService.triggerMission read `x-api-key`, threw only when it was
+-- absent, and never compared it to anything — the line where the check belongs
+-- was a comment reading "Verify API key against org (simplified)". Any
+-- non-empty string launched the mission, in whatever organization owned it,
+-- and mission ids are sequential.
+--
+-- pipelines.trigger_credential_id already carries this: a credentials row whose
+-- secret lives in an environment variable, compared against the presented key.
+-- Missions get the same column so the same check can run.
+ALTER TABLE "missions" ADD COLUMN IF NOT EXISTS "trigger_credential_id" integer;

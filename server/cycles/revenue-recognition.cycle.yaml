@@ -1,0 +1,164 @@
+name: "Oddjob ASC 606 Revenue Recognition & Audit Ledger"
+version: "1.0.0"
+description: "Enterprise ASC 606 5-Step Model revenue amortization, performance obligation tracking, double-entry journal entry generation, dual-control Controller HIL sign-offs, and SHA-256 cryptographic audit ledger proofs."
+author: "Oddjob Financial Engineering"
+
+ui_metadata:
+  display_name: "Revenue Recognition & Audit Ledger"
+  icon: "currency-dollar"
+  theme_color: "#059669"
+  display_priority: 2
+  category: "finance_and_accounting"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 350000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-1.5-pro-latest"
+  fallback_model: "gemini-flash-latest"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "CC-FIN-01"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "knowledge/guidelines/coding_standards.md"
+  accounting_standards:
+    required: true
+    path: "knowledge/guidelines/accounting_standards.md"
+  compliance:
+    enabled: true
+    frameworks: ["GAAP", "IFRS_15", "ASC_606", "SOX"]
+
+integrations:
+  source_control:
+    required: false
+  database:
+    required: true
+    dialect: "postgres"
+    dev_url: "${ENV.DATABASE_URL}"
+  stripe:
+    required: true
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+  slack:
+    required: false
+    approvals_channel: "#finance-approvals"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    export_prometheus: true
+
+directories:
+  knowledge_base: "knowledge/"
+  backend: ["server/"]
+
+agents:
+  - id: "revenue-accountant-ai"
+    name: "ASC 606 Revenue Accountant AI"
+    role: "worker"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.0
+    system_prompt: "You are the Lead Technical Revenue Accountant. Apply the ASC 606 5-Step Model to contracts, calculate monthly amortization waterfalls, allocate transaction prices, and generate General Ledger journal entries."
+    boundaries: ["accounting", "contracts", "ledger"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write"]
+    tools:
+      - "ingest_subscription_contracts"
+      - "calculate_asc606_amortization"
+      - "generate_journal_entries"
+
+  - id: "corporate-controller-ai"
+    name: "Corporate Controller Supervisor"
+    role: "supervisor"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.0
+    system_prompt: "You are the Corporate Controller Supervisor. Enforce dual-control financial sign-offs, verify journal entry balances (Debits == Credits), and seal cryptographic SHA-256 audit ledger proofs."
+    boundaries: ["governance", "sox-compliance", "audit-ledger"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write", "hil:trigger"]
+    tools:
+      - "generate_journal_entries"
+      - "record_audit_ledger_proof"
+      - "trigger_hil_approval"
+
+phases:
+  - id: "phase_1_contract_ingestion_and_amortization"
+    name: "Contract Ingestion & ASC 606 Amortization"
+    description: "Ingests enterprise subscription contracts, identifies performance obligations, and builds monthly recognition waterfalls."
+    tasks:
+      - id: "task_ingest_contracts"
+        name: "Ingest Subscription Contracts"
+        type: "system_computation"
+        agent: "revenue-accountant-ai"
+        instructions: "Execute ingest_subscription_contracts to load active billing terms and allocated performance obligation values."
+      - id: "task_calculate_schedule"
+        name: "Compute ASC 606 Amortization Waterfall"
+        type: "system_computation"
+        agent: "revenue-accountant-ai"
+        instructions: "Execute calculate_asc606_amortization to produce monthly recognized vs unearned revenue schedules."
+
+  - id: "phase_2_journal_entry_generation"
+    name: "Double-Entry General Ledger Generation"
+    description: "Produces balanced debit/credit journal entries transferring unearned deferred revenue into recognized SaaS revenue."
+    tasks:
+      - id: "task_generate_jes"
+        name: "Generate Balanced Journal Entries"
+        type: "system_computation"
+        agent: "revenue-accountant-ai"
+        instructions: "Execute generate_journal_entries to prepare double-entry ledger records for the target period."
+
+  - id: "phase_3_hil_controller_signoff"
+    name: "Dual-Control Controller Financial Sign-off"
+    description: "Requires explicit Human-in-the-Loop review and attestation from the Corporate Controller or VP of Finance."
+    tasks:
+      - id: "task_controller_signoff"
+        name: "Controller Ledger Approval Gate"
+        type: "human_in_the_loop"
+        form_schema:
+          title: "ASC 606 Monthly Revenue Recognition Attestation"
+          description: "Review calculated amortization schedules, journal entries, and deferred revenue balances before ledger posting."
+          fields:
+            - name: "approved"
+              type: "boolean"
+              label: "Approve Monthly Revenue Journal Posting"
+              required: true
+            - name: "accountingPeriod"
+              type: "text"
+              label: "Target Accounting Fiscal Period (YYYY-MM)"
+              required: true
+            - name: "controllerAttestation"
+              type: "textarea"
+              label: "Controller SOX Attestation & Notes"
+              required: false
+
+  - id: "phase_4_audit_ledger_sealing"
+    name: "Cryptographic Audit Ledger Sealing"
+    description: "Seals the approved revenue transactions into an immutable SHA-256 cryptographic audit proof."
+    tasks:
+      - id: "task_seal_proof"
+        name: "Record Cryptographic Audit Proof"
+        type: "system_computation"
+        agent: "corporate-controller-ai"
+        instructions: "Execute record_audit_ledger_proof to seal the approved financial transactions with SHA-256 hash proof."

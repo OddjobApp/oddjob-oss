@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "core-node-express",
+  "name": "Node Express Core Host Pack",
+  "version": "1.0.0",
+  "category": "core",
+  "requires": [],
+  "conflicts": [],
+  "recommends": ["auth-jwt", "data-postgres-drizzle", "observability-otel"],
+  "provides": ["web-host"],
+  "inject": [
+    {
+      "target": "package.json",
+      "action": "MERGE_JSON",
+      "content": {
+        "name": "oddjob-scaffolded-app",
+        "version": "1.0.0",
+        "type": "module",
+        "scripts": {
+          "dev": "tsx watch src/app.ts",
+          "build": "tsc",
+          "start": "node dist/app.js"
+        },
+        "dependencies": {
+          "express": "^4.19.2",
+          "dotenv": "^16.4.5"
+        },
+        "devDependencies": {
+          "@types/express": "^4.17.21",
+          "@types/node": "^20.12.7",
+          "tsx": "^4.7.2",
+          "typescript": "^5.4.5"
+        }
+      }
+    }
+  ],
+  "templates": [
+    {
+      "source": "app.ts.hbs",
+      "destination": "src/app.ts"
+    },
+    {
+      "source": "tsconfig.json.hbs",
+      "destination": "tsconfig.json"
+    }
+  ]
+}

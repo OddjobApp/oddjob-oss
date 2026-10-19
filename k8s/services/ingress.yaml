@@ -1,0 +1,40 @@
+# Oddjob Ingress
+# Provides external access to the API service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oddjob-ingress
+  namespace: oddjob
+  labels:
+    app.kubernetes.io/name: oddjob
+  annotations:
+    # NGINX Ingress Controller annotations
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    # Enable WebSocket/SSE support
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+    # SSL redirect (enable in production)
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: oddjob.example.com  # Replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: oddjob-api
+                port:
+                  number: 80
+  # TLS configuration (uncomment for HTTPS)
+  # tls:
+  #   - hosts:
+  #       - oddjob.example.com
+  #     secretName: oddjob-tls

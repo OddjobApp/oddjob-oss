@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "suites": [
+    {
+      "id": "platform.smoke",
+      "name": "Platform Shell & Navigation",
+      "path": "tests/smoke",
+      "domain": "platform",
+      "feature": "shell-navigation",
+      "tier": "smoke",
+      "owner": "platform",
+      "routes": ["/", "/dashboard"],
+      "tags": ["smoke", "navigation", "critical"],
+      "schedule": "per-commit",
+      "description": "Critical availability, authenticated shell, and primary navigation checks."
+    },
+    {
+      "id": "health.e2e-testing",
+      "name": "E2E Test Health",
+      "path": "tests/features/health",
+      "domain": "health",
+      "feature": "e2e-testing",
+      "tier": "feature",
+      "owner": "platform",
+      "routes": ["/health", "/health/e2e-tests"],
+      "tags": ["health", "playwright", "change-validation"],
+      "schedule": "on-change",
+      "description": "Test health, suite execution, incidents, and validation-loop behavior."
+    },
+    {
+      "id": "platform-maintenance.documentation",
+      "name": "Platform Documentation & Change Register",
+      "path": "tests/features/platform-maintenance",
+      "domain": "platform-maintenance",
+      "feature": "documentation",
+      "tier": "feature",
+      "owner": "platform",
+      "routes": ["/platform-maintenance/documentation"],
+      "tags": ["documentation", "change-register"],
+      "schedule": "on-change",
+      "description": "Generated specifications, freshness, release notes, and change-register workflows."
+    },
+    {
+      "id": "sdlc.change-validation",
+      "name": "Change Validation Workflow",
+      "path": "tests/workflows",
+      "domain": "sdlc-pipeline",
+      "feature": "change-validation",
+      "tier": "workflow",
+      "owner": "platform",
+      "routes": ["/health/e2e-tests", "/health/pulse"],
+      "tags": ["workflow", "system-graph", "pulse"],
+      "schedule": "on-change",
+      "description": "Version commit through behavior reconciliation, test execution, documentation, and Pulse."
+    },
+    {
+      "id": "platform.accessibility",
+      "name": "Critical Route Accessibility",
+      "path": "tests/accessibility",
+      "domain": "platform",
+      "feature": "accessibility",
+      "tier": "accessibility",
+      "owner": "platform",
+      "routes": ["/health", "/health/e2e-tests", "/platform-maintenance/documentation"],
+      "tags": ["accessibility", "critical-routes"],
+      "schedule": "nightly",
+      "description": "Keyboard, semantic navigation, and critical-route accessibility checks."
+    },
+    {
+      "id": "generated.ui-contracts",
+      "name": "Generated UI Behavior Contracts",
+      "path": "tests/regression/generated",
+      "domain": "platform",
+      "feature": "generated-ui-contracts",
+      "tier": "generated",
+      "owner": "platform",
+      "routes": [],
+      "tags": ["generated", "behavior-contract"],
+      "schedule": "on-change",
+      "description": "High-confidence, low-risk atomic tests authored from uncovered UI behavior contracts."
+    }
+  ]
+}

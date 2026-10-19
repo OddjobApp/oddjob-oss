@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds may reach a local dev server (http://10.0.2.2:5000 from the
+     emulator, or the dev machine's LAN address from a phone). -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

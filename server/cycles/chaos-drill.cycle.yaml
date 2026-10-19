@@ -1,0 +1,153 @@
+name: "Oddjob Autonomous Chaos Engineering & SRE Resilience Drill"
+version: "1.0.0"
+description: "Safe, automated chaos engineering drills featuring pre-flight error budget safety checks, controlled network latency & upstream failure injections, circuit breaker trip verification, and automated incident post-mortem generation."
+author: "Oddjob Reliability Engineering"
+
+ui_metadata:
+  display_name: "Chaos Drill & SRE Resilience"
+  icon: "flame"
+  theme_color: "#dc2626"
+  display_priority: 5
+  category: "reliability_and_sre"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 2
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-1.5-pro-latest"
+  fallback_model: "gemini-flash-latest"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "CC-SRE-01"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "knowledge/guidelines/coding_standards.md"
+  compliance:
+    enabled: true
+    frameworks: ["SRE_BEST_PRACTICES", "ISO_27001", "SOC2_AVAILABILITY"]
+
+integrations:
+  database:
+    required: true
+    dialect: "postgres"
+    dev_url: "${ENV.DATABASE_URL}"
+  slack:
+    required: false
+    alerts_channel: "#sre-chaos-drills"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    export_prometheus: true
+
+directories:
+  knowledge_base: "knowledge/"
+  backend: ["server/"]
+
+agents:
+  - id: "chaos-engineer-ai"
+    name: "Chaos Experimentation Engineer AI"
+    role: "worker"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.1
+    system_prompt: "You are the Chaos Experimentation Engineer. Check Prometheus error budgets, execute controlled fault injections (latency, service failure), verify circuit breaker fallbacks, and ensure no customer SLAs are breached."
+    boundaries: ["chaos-runner", "fault-injector", "telemetry"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write"]
+    tools:
+      - "check_error_budget_safety"
+      - "simulate_network_latency"
+      - "simulate_service_failure"
+
+  - id: "sre-incident-commander-ai"
+    name: "SRE Incident Commander"
+    role: "supervisor"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.1
+    system_prompt: "You are the SRE Incident Commander. Review pre-drill blast radius approvals, oversee drill safety bounds, synthesize telemetry into automated post-mortems, and assign preventive action items."
+    boundaries: ["governance", "sre-command", "post-mortem"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write", "hil:trigger"]
+    tools:
+      - "check_error_budget_safety"
+      - "generate_chaos_post_mortem"
+      - "trigger_hil_approval"
+
+phases:
+  - id: "phase_1_safety_preflight"
+    name: "Error Budget & Blast Radius Pre-Flight Check"
+    description: "Verifies that Prometheus SLO/SLI error budgets permit chaos fault injection without endangering production availability."
+    tasks:
+      - id: "task_check_error_budget"
+        name: "Verify Service Error Budget"
+        type: "system_computation"
+        agent: "chaos-engineer-ai"
+        instructions: "Execute check_error_budget_safety on the target service to ensure >= 20% remaining error budget."
+
+  - id: "phase_2_hil_drill_authorization"
+    name: "SRE Lead Drill Authorization Gate"
+    description: "Requires explicit Human-in-the-Loop approval from the on-call SRE Lead before injecting live faults."
+    tasks:
+      - id: "task_sre_drill_approval"
+        name: "SRE Drill Authorization"
+        type: "human_in_the_loop"
+        form_schema:
+          title: "Chaos Experiment Authorization Gate"
+          description: "Review target service, planned fault scenario, and current availability SLO before authorizing execution."
+          fields:
+            - name: "approved"
+              type: "boolean"
+              label: "Authorize Chaos Fault Injection"
+              required: true
+            - name: "faultScenario"
+              type: "select"
+              label: "Fault Injection Scenario"
+              options:
+                - "Upstream Latency Injection (1500ms)"
+                - "Dependency Service 503 Outage"
+                - "Database Connection Starvation"
+              required: true
+            - name: "sreCommanderNotes"
+              type: "textarea"
+              label: "SRE Commander Safety Directives"
+              required: false
+
+  - id: "phase_3_controlled_fault_injection"
+    name: "Controlled Fault Injection & Fallback Verification"
+    description: "Injects the approved fault scenario, measures circuit breaker trip latency, and confirms graceful fallback."
+    tasks:
+      - id: "task_inject_fault"
+        name: "Execute Controlled Fault Injection"
+        type: "system_computation"
+        agent: "chaos-engineer-ai"
+        instructions: "Execute simulate_network_latency or simulate_service_failure and record circuit breaker recovery metrics."
+
+  - id: "phase_4_post_mortem_and_remediation"
+    name: "Automated Post-Mortem & Preventative Remediation"
+    description: "Synthesizes drill telemetry into an automated SRE incident post-mortem with actionable reliability tickets."
+    tasks:
+      - id: "task_generate_post_mortem"
+        name: "Synthesize Chaos Post-Mortem"
+        type: "system_computation"
+        agent: "sre-incident-commander-ai"
+        instructions: "Execute generate_chaos_post_mortem to create incident timeline logs, resilience score, and action items."

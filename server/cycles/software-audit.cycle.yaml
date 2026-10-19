@@ -1,0 +1,192 @@
+name: "Oddjob Enterprise Software & Security Audit"
+version: "1.0.0"
+description: "Autonomous end-to-end AST security auditing, dependency CVE triage, CVSS exploitability prioritization, governed HIL remediation sign-offs, and continuous compliance posture verification."
+author: "Oddjob Security Engineering"
+
+ui_metadata:
+  display_name: "Software & Security Audit"
+  icon: "shield-check"
+  theme_color: "#2563eb"
+  display_priority: 6
+  category: "security_and_compliance"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 350000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-1.5-pro-latest"
+  fallback_model: "gemini-flash-latest"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+  mobile_framework: "React Native"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "CC-SEC-01"
+
+organizational_guidelines:
+  constitution:
+    required: true
+    path: "knowledge/guidelines/ai_constitution.md"
+  coding_standards:
+    required: true
+    path: "knowledge/guidelines/coding_standards.md"
+  security_standards:
+    required: true
+    path: "knowledge/guidelines/security_standards.md"
+  compliance:
+    enabled: true
+    frameworks: ["SOC2", "OWASP_TOP_10", "CWE", "HIPAA"]
+
+integrations:
+  source_control:
+    required: true
+    provider: "github"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "postgres"
+    dev_url: "${ENV.DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: false
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "#security-alerts"
+    approvals_channel: "#security-approvals"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    export_prometheus: true
+
+directories:
+  knowledge_base: "knowledge/"
+  backend: ["server/", "shared/schema/"]
+  frontend: ["client/", "src/"]
+  testing: ["tests/"]
+
+agents:
+  - id: "security-auditor-ai"
+    name: "Static Code Security Auditor"
+    role: "worker"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.1
+    system_prompt: "You are the Lead Application Security Auditor. Perform AST static analysis to identify hardcoded secrets, SQL injection, prototype pollution, command injection, and vulnerable package dependencies."
+    boundaries: ["source-control", "security", "ast-analyzer"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write"]
+    tools:
+      - "trigger_sast_scan"
+      - "trigger_sca_scan"
+      - "aggregate_findings"
+      - "prioritize_vulnerabilities"
+
+  - id: "secops-triage-lead"
+    name: "SecOps Triage Supervisor"
+    role: "supervisor"
+    model: "gemini-1.5-pro-latest"
+    temperature: 0.2
+    system_prompt: "You are the SecOps Triage Lead. Validate vulnerability exploitability, coordinate HIL security exception sign-offs, generate surgical remediation diffs, and record compliance audit evidence."
+    boundaries: ["security", "governance", "remediation"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write", "hil:trigger"]
+    tools:
+      - "aggregate_findings"
+      - "prioritize_vulnerabilities"
+      - "generate_security_patch"
+      - "trigger_hil_approval"
+      - "knowledge_graph_query"
+
+phases:
+  - id: "phase_1_ast_and_sca_scanning"
+    name: "AST Static Analysis & Dependency Vulnerability Scanning"
+    description: "Executes deep AST scanning on target source code and Software Composition Analysis (SCA) across package manifests."
+    tasks:
+      - id: "task_sast_scan"
+        name: "Execute SAST AST Scan"
+        type: "system_computation"
+        agent: "security-auditor-ai"
+        instructions: "Run trigger_sast_scan across target repository files to detect secret leakage, SQLi, command injection, and prototype pollution."
+      - id: "task_sca_scan"
+        name: "Execute SCA Dependency Scan"
+        type: "system_computation"
+        agent: "security-auditor-ai"
+        instructions: "Run trigger_sca_scan on package.json to identify vulnerable transitive/direct dependencies matching known CVEs."
+
+  - id: "phase_2_aggregation_and_prioritization"
+    name: "Finding Aggregation & CVSS Prioritization"
+    description: "Aggregates findings across all scanners, calculates the Security Posture Score, and ranks vulnerabilities by exploitability."
+    tasks:
+      - id: "task_aggregate_report"
+        name: "Aggregate Security Findings"
+        type: "system_computation"
+        agent: "secops-triage-lead"
+        instructions: "Execute aggregate_findings to merge SAST and SCA findings into a unified SecurityAuditReport with posture scores."
+      - id: "task_prioritize_triage"
+        name: "CVSS Severity Prioritization"
+        type: "ai_analysis"
+        agent: "secops-triage-lead"
+        instructions: "Execute prioritize_vulnerabilities to group findings into Blockers, Sprint Fixes, and Backlog items."
+
+  - id: "phase_3_hil_security_gate"
+    name: "Governed SecOps / CISO Sign-off Gate"
+    description: "Halts pipeline progression for human approval if Critical or High severity vulnerabilities are detected."
+    tasks:
+      - id: "task_secops_approval"
+        name: "Security Lead & CISO Sign-off"
+        type: "human_in_the_loop"
+        form_schema:
+          title: "Security Audit & Vulnerability Sign-off"
+          description: "Review detected CVEs and SAST vulnerabilities. Approve remediation plan or grant temporary compliance exceptions."
+          fields:
+            - name: "approved"
+              type: "boolean"
+              label: "Approve Security Remediation Plan"
+              required: true
+            - name: "riskAcceptance"
+              type: "select"
+              label: "Risk Acceptance Decision"
+              options:
+                - "Auto-Remediate Blockers (Generate PR)"
+                - "Accept Risk with 30-Day Exception"
+                - "Block Release & Escalate to CISO"
+              required: true
+            - name: "mitigationNotes"
+              type: "textarea"
+              label: "Security Officer Review & Justification Notes"
+              required: false
+
+  - id: "phase_4_remediation_and_compliance"
+    name: "Automated Patch Generation & Compliance Evidence Ledger"
+    description: "Generates surgical AST code patches, creates dependency upgrade pull requests, and logs immutable audit evidence."
+    tasks:
+      - id: "task_generate_patches"
+        name: "Generate Surgical Security Patches"
+        type: "ai_generation"
+        agent: "secops-triage-lead"
+        instructions: "Execute generate_security_patch for each approved blocker to create surgical code diffs and dependency updates."
+      - id: "task_compliance_ledger_log"
+        name: "Record SOC2 / HIPAA Audit Evidence"
+        type: "system_computation"
+        agent: "secops-triage-lead"
+        instructions: "Record the completed security audit report and HIL attestation in the immutable compliance knowledge graph."

@@ -1,0 +1,683 @@
+{
+ "scope": {
+  "bill": "80",
+  "tip": 15,
+  "rate": 6.5,
+  "years": 30,
+  "principal": "300000",
+  "name": "ada lovelace",
+  "empty": "",
+  "flag": true,
+  "zero": 0,
+  "n": "12abc",
+  "list": [
+   "a",
+   "b"
+  ]
+ },
+ "expressions": [
+  {
+   "expr": "bill + tip",
+   "ok": true,
+   "value": 95,
+   "missing": null,
+   "error": null,
+   "str": "95"
+  },
+  {
+   "expr": "bill * tip / 100",
+   "ok": true,
+   "value": 12,
+   "missing": null,
+   "error": null,
+   "str": "12"
+  },
+  {
+   "expr": "round(bill * tip / 100, 2)",
+   "ok": true,
+   "value": 12,
+   "missing": null,
+   "error": null,
+   "str": "12"
+  },
+  {
+   "expr": "-pmt(rate / 100 / 12, years * 12, principal)",
+   "ok": true,
+   "value": 1896.204070478896,
+   "missing": null,
+   "error": null,
+   "str": "1896.204070478896"
+  },
+  {
+   "expr": "round(-pmt(rate / 100 / 12, years * 12, principal), 2)",
+   "ok": true,
+   "value": 1896.2,
+   "missing": null,
+   "error": null,
+   "str": "1896.2"
+  },
+  {
+   "expr": "pv(0.05/12, 360, -1500)",
+   "ok": true,
+   "value": 279422.4255691129,
+   "missing": null,
+   "error": null,
+   "str": "279422.4255691129"
+  },
+  {
+   "expr": "fv(0.05, 10, -100)",
+   "ok": true,
+   "value": 1257.7892535548845,
+   "missing": null,
+   "error": null,
+   "str": "1257.7892535548845"
+  },
+  {
+   "expr": "nper(0.01, -100, 1000)",
+   "ok": true,
+   "value": 10.58864445942323,
+   "missing": null,
+   "error": null,
+   "str": "10.58864445942323"
+  },
+  {
+   "expr": "rate(360, -1896.2, 300000)",
+   "ok": true,
+   "value": 0.0054192839002346295,
+   "missing": null,
+   "error": null,
+   "str": "0.0054192839002346295"
+  },
+  {
+   "expr": "bill > 50 ? 'big' : 'small'",
+   "ok": true,
+   "value": "big",
+   "missing": null,
+   "error": null,
+   "str": "big"
+  },
+  {
+   "expr": "bill == 80",
+   "ok": true,
+   "value": true,
+   "missing": null,
+   "error": null,
+   "str": "true"
+  },
+  {
+   "expr": "name + ' x'",
+   "ok": true,
+   "value": "ada lovelace x",
+   "missing": null,
+   "error": null,
+   "str": "ada lovelace x"
+  },
+  {
+   "expr": "upper(name)",
+   "ok": true,
+   "value": "ADA LOVELACE",
+   "missing": null,
+   "error": null,
+   "str": "ADA LOVELACE"
+  },
+  {
+   "expr": "title(name)",
+   "ok": true,
+   "value": "Ada Lovelace",
+   "missing": null,
+   "error": null,
+   "str": "Ada Lovelace"
+  },
+  {
+   "expr": "len(name)",
+   "ok": true,
+   "value": 12,
+   "missing": null,
+   "error": null,
+   "str": "12"
+  },
+  {
+   "expr": "left(name, 3)",
+   "ok": true,
+   "value": "ada",
+   "missing": null,
+   "error": null,
+   "str": "ada"
+  },
+  {
+   "expr": "right(name, 0)",
+   "ok": true,
+   "value": "ada lovelace",
+   "missing": null,
+   "error": null,
+   "str": "ada lovelace"
+  },
+  {
+   "expr": "right(name, 4)",
+   "ok": true,
+   "value": "lace",
+   "missing": null,
+   "error": null,
+   "str": "lace"
+  },
+  {
+   "expr": "substr(name, -8, 4)",
+   "ok": true,
+   "value": "love",
+   "missing": null,
+   "error": null,
+   "str": "love"
+  },
+  {
+   "expr": "replace(name, 'a', 'A')",
+   "ok": true,
+   "value": "AdA lovelAce",
+   "missing": null,
+   "error": null,
+   "str": "AdA lovelAce"
+  },
+  {
+   "expr": "contains(name, 'LOVE')",
+   "ok": true,
+   "value": true,
+   "missing": null,
+   "error": null,
+   "str": "true"
+  },
+  {
+   "expr": "coalesce(empty, 'fallback')",
+   "ok": true,
+   "value": "fallback",
+   "missing": null,
+   "error": null,
+   "str": "fallback"
+  },
+  {
+   "expr": "if(flag, 1, 2)",
+   "ok": true,
+   "value": 1,
+   "missing": null,
+   "error": null,
+   "str": "1"
+  },
+  {
+   "expr": "and(flag, zero)",
+   "ok": true,
+   "value": false,
+   "missing": null,
+   "error": null,
+   "str": "false"
+  },
+  {
+   "expr": "or(zero, flag)",
+   "ok": true,
+   "value": true,
+   "missing": null,
+   "error": null,
+   "str": "true"
+  },
+  {
+   "expr": "not(zero)",
+   "ok": true,
+   "value": true,
+   "missing": null,
+   "error": null,
+   "str": "true"
+  },
+  {
+   "expr": "-2 ^ 2",
+   "ok": true,
+   "value": -4,
+   "missing": null,
+   "error": null,
+   "str": "-4"
+  },
+  {
+   "expr": "2 ^ 3 ^ 2",
+   "ok": true,
+   "value": 512,
+   "missing": null,
+   "error": null,
+   "str": "512"
+  },
+  {
+   "expr": "10 % 3",
+   "ok": true,
+   "value": 1,
+   "missing": null,
+   "error": null,
+   "str": "1"
+  },
+  {
+   "expr": "-7 % 3",
+   "ok": true,
+   "value": -1,
+   "missing": null,
+   "error": null,
+   "str": "-1"
+  },
+  {
+   "expr": "bill / zero",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "Division by zero",
+   "str": null
+  },
+  {
+   "expr": "missingField + 1",
+   "ok": false,
+   "value": null,
+   "missing": [
+    "missingField"
+   ],
+   "error": null,
+   "str": null
+  },
+  {
+   "expr": "empty * 2",
+   "ok": false,
+   "value": null,
+   "missing": [
+    "empty"
+   ],
+   "error": null,
+   "str": null
+  },
+  {
+   "expr": "flag && empty",
+   "ok": false,
+   "value": null,
+   "missing": [
+    "empty"
+   ],
+   "error": null,
+   "str": null
+  },
+  {
+   "expr": "!flag || empty",
+   "ok": false,
+   "value": null,
+   "missing": [
+    "empty"
+   ],
+   "error": null,
+   "str": null
+  },
+  {
+   "expr": "min(3, 1, 2)",
+   "ok": true,
+   "value": 1,
+   "missing": null,
+   "error": null,
+   "str": "1"
+  },
+  {
+   "expr": "max()",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "Calculation is not finite (check divisors and domains).",
+   "str": null
+  },
+  {
+   "expr": "sum(1, '2', '$3,000')",
+   "ok": true,
+   "value": 3003,
+   "missing": null,
+   "error": null,
+   "str": "3003"
+  },
+  {
+   "expr": "avg(1, 2)",
+   "ok": true,
+   "value": 1.5,
+   "missing": null,
+   "error": null,
+   "str": "1.5"
+  },
+  {
+   "expr": "clamp(15, 0, 10)",
+   "ok": true,
+   "value": 10,
+   "missing": null,
+   "error": null,
+   "str": "10"
+  },
+  {
+   "expr": "sqrt(2)",
+   "ok": true,
+   "value": 1.4142135623730951,
+   "missing": null,
+   "error": null,
+   "str": "1.4142135623730951"
+  },
+  {
+   "expr": "atan2(1, 1)",
+   "ok": true,
+   "value": 0.7853981633974483,
+   "missing": null,
+   "error": null,
+   "str": "0.7853981633974483"
+  },
+  {
+   "expr": "1 / 3",
+   "ok": true,
+   "value": 0.3333333333333333,
+   "missing": null,
+   "error": null,
+   "str": "0.3333333333333333"
+  },
+  {
+   "expr": "0.1 + 0.2",
+   "ok": true,
+   "value": 0.30000000000000004,
+   "missing": null,
+   "error": null,
+   "str": "0.30000000000000004"
+  },
+  {
+   "expr": "1e3",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "Unexpected trailing input in formula near \"e3\"",
+   "str": null
+  },
+  {
+   "expr": "1.2.3",
+   "ok": true,
+   "value": 1.2,
+   "missing": null,
+   "error": null,
+   "str": "1.2"
+  },
+  {
+   "expr": "n + 1",
+   "ok": true,
+   "value": "12abc1",
+   "missing": null,
+   "error": null,
+   "str": "12abc1"
+  },
+  {
+   "expr": "concat(1, true, 'x')",
+   "ok": true,
+   "value": "1truex",
+   "missing": null,
+   "error": null,
+   "str": "1truex"
+  },
+  {
+   "expr": "1 +",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "The formula ends before it is complete.",
+   "str": null
+  },
+  {
+   "expr": "foo(1)",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "Unknown function: foo",
+   "str": null
+  },
+  {
+   "expr": "a ? b",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "Ternary is missing its ':' branch",
+   "str": null
+  },
+  {
+   "expr": "1 # 2",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "Unsupported character in formula: #",
+   "str": null
+  },
+  {
+   "expr": "(1 + 2",
+   "ok": false,
+   "value": null,
+   "missing": null,
+   "error": "Unbalanced parentheses in formula",
+   "str": null
+  },
+  {
+   "expr": "floor(-2.5)",
+   "ok": true,
+   "value": -3,
+   "missing": null,
+   "error": null,
+   "str": "-3"
+  },
+  {
+   "expr": "round(-2.5)",
+   "ok": true,
+   "value": -2,
+   "missing": null,
+   "error": null,
+   "str": "-2"
+  },
+  {
+   "expr": "list",
+   "ok": true,
+   "value": [
+    "a",
+    "b"
+   ],
+   "missing": null,
+   "error": null,
+   "str": "a,b"
+  },
+  {
+   "expr": "100000000000000000000000",
+   "ok": true,
+   "value": 1e+23,
+   "missing": null,
+   "error": null,
+   "str": "1e+23"
+  },
+  {
+   "expr": "0.0000001 * 1",
+   "ok": true,
+   "value": 1e-7,
+   "missing": null,
+   "error": null,
+   "str": "1e-7"
+  },
+  {
+   "expr": "123456789.123456789",
+   "ok": true,
+   "value": 123456789.12345679,
+   "missing": null,
+   "error": null,
+   "str": "123456789.12345679"
+  }
+ ],
+ "forms": [
+  {
+   "title": "Mortgage Calculator",
+   "schema": {
+    "fields": [
+     {
+      "key": "principal",
+      "type": "number",
+      "label": "Loan Amount",
+      "required": true
+     },
+     {
+      "key": "interestRate",
+      "type": "number",
+      "label": "Annual Interest Rate (%)",
+      "required": true
+     },
+     {
+      "key": "loanTerm",
+      "type": "number",
+      "label": "Loan Term (Years)",
+      "required": true
+     },
+     {
+      "key": "monthlyPayment",
+      "type": "computed",
+      "label": "Monthly Payment",
+      "format": "currency",
+      "formula": "-pmt(interestRate / 100 / 12, loanTerm * 12, principal)"
+     }
+    ]
+   },
+   "inputs": {
+    "principal": "300000",
+    "interestRate": "6.5",
+    "loanTerm": "30"
+   },
+   "errors": {},
+   "message": "I submitted the \"Mortgage Calculator\" with: {\"principal\":300000,\"interestRate\":6.5,\"loanTerm\":30,\"monthlyPayment\":1896.204070478896}"
+  },
+  {
+   "title": "Mortgage Calculator",
+   "schema": {
+    "fields": [
+     {
+      "key": "principal",
+      "type": "number",
+      "label": "Loan Amount",
+      "required": true
+     },
+     {
+      "key": "monthlyPayment",
+      "type": "computed",
+      "label": "Monthly",
+      "formula": "principal / 12"
+     }
+    ]
+   },
+   "inputs": {},
+   "errors": {
+    "principal": "This field is required."
+   },
+   "message": "I submitted the \"Mortgage Calculator\" with: {\"principal\":\"\",\"monthlyPayment\":\"\"}"
+  },
+  {
+   "title": "Tip",
+   "schema": {
+    "fields": [
+     {
+      "key": "total",
+      "type": "computed",
+      "label": "Total",
+      "formula": "bill + tipAmount"
+     },
+     {
+      "key": "bill",
+      "type": "currency",
+      "label": "Bill",
+      "required": true
+     },
+     {
+      "key": "tipAmount",
+      "type": "computed",
+      "label": "Tip",
+      "formula": "round(bill * pct / 100, 2)"
+     },
+     {
+      "key": "pct",
+      "type": "dropdown",
+      "label": "Tip %",
+      "options": [
+       "10",
+       "15",
+       "20"
+      ],
+      "required": true
+     },
+     {
+      "key": "agree",
+      "type": "checkbox",
+      "label": "Agree",
+      "required": true
+     },
+     {
+      "key": "tags",
+      "type": "checkboxes",
+      "label": "Tags",
+      "options": [
+       {
+        "value": "a",
+        "label": "A"
+       },
+       {
+        "value": "b",
+        "label": "B"
+       }
+      ]
+     },
+     {
+      "key": "score",
+      "type": "rating",
+      "label": "Score",
+      "min": 1,
+      "max": 5
+     }
+    ]
+   },
+   "inputs": {
+    "bill": "80",
+    "pct": "15",
+    "agree": true,
+    "tags": [
+     "b"
+    ],
+    "score": 4
+   },
+   "errors": {},
+   "message": "I submitted the \"Tip\" with: {\"bill\":80,\"pct\":\"15\",\"agree\":true,\"tags\":[\"b\"],\"score\":4,\"tipAmount\":12,\"total\":92}"
+  },
+  {
+   "title": "Tip",
+   "schema": {
+    "fields": [
+     {
+      "key": "pct",
+      "type": "select",
+      "label": "Tip %",
+      "options": [
+       "10",
+       "15"
+      ]
+     },
+     {
+      "key": "bill",
+      "type": "number",
+      "label": "Bill",
+      "min": 0,
+      "max": 100
+     },
+     {
+      "key": "agree",
+      "type": "boolean",
+      "label": "Agree",
+      "required": true
+     }
+    ]
+   },
+   "inputs": {
+    "pct": "99",
+    "bill": "250",
+    "agree": false
+   },
+   "errors": {
+    "pct": "Choose an available option.",
+    "bill": "Enter a number within the allowed range.",
+    "agree": "This must be checked."
+   },
+   "message": "I submitted the \"Tip\" with: {\"pct\":\"99\",\"bill\":250,\"agree\":false}"
+  }
+ ]
+}

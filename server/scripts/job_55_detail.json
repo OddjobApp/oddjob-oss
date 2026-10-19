@@ -1,0 +1,47 @@
+﻿[dotenv@17.2.3] injecting env (20) from .env -- tip: ΓÜÖ∩╕Å  override existing env vars with { override: true }
+[
+  {
+    "id": 55,
+    "name": "System Triage Master",
+    "description": "Orchestrates multi-agent triage workstreams.",
+    "type": "supervisor",
+    "is_hidden": false,
+    "tool": "None",
+    "config": {
+      "model": "gemini-flash-latest",
+      "intent": "{{data.intent}}",
+      "maxSteps": 5,
+      "credentialId": 3,
+      "allowedPipelines": [
+        41,
+        42
+      ],
+      "requirePlanApproval": false
+    },
+    "priority": 2,
+    "is_active": true,
+    "parameter_schema": null,
+    "render_template": null,
+    "cpu_limit_millicores": null,
+    "memory_limit_mb": null,
+    "organization_id": 1,
+    "created_by": "admin",
+    "created_at": "2026-02-08T19:39:43.219Z",
+    "updated_at": "2026-02-08T19:39:43.219Z",
+    "last_tested_at": null,
+    "last_test_status": null,
+    "output_storage_enabled": false,
+    "enable_knowledge_store": false,
+    "output_knowledge_topic_id": null,
+    "output_tags": [],
+    "output_storage_settings": null,
+    "input_schema": null,
+    "output_schema": null,
+    "test_config": null,
+    "diff_config": {},
+    "output_dataset_id": null,
+    "lifecycle_status": "active",
+    "governor_settings": null,
+    "governor_policy_id": null
+  }
+]

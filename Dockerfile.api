@@ -1,0 +1,41 @@
+# Dockerfile.api - Node.js Backend & Frontend
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY packages ./packages
+COPY services ./services
+
+# Install dependencies (including devDependencies for build)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build frontend and server
+RUN npm run build
+
+# Production stage
+FROM node:20-slim AS runner
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Copy built assets and production dependencies
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+# Install production-only dependencies to keep image small
+RUN npm prune --production
+
+# Add necessary system tools for runtime (curl for healthchecks)
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Expose the API port
+EXPOSE 5000
+
+# Start the server
+CMD ["node", "dist/index.js"]

@@ -1,0 +1,347 @@
+name: "Content Marketing"
+version: "1.0"
+containers: {}
+description: "Automated content calendar management, SEO optimization, and content distribution. Integrates with CMS, JIRA for content tasks, and Confluence for documentation."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Content Marketing"
+  icon: "✍️"
+  theme_color: "#ec4899"
+  display_priority: 2
+  category: "marketing"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "marketing"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  brand_guidelines:
+    required: true
+    path: "file://knowledge/guidelines/brand_guidelines.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "content_brief_template"
+    path: "file://knowledge/document-templates/content_brief_template.md"
+  - id: "content_calendar_template"
+    path: "file://knowledge/document-templates/content_calendar_template.md"
+
+forms:
+  - id: "content_intake"
+    name: "Content Intake"
+    description: "Provide content details for production."
+    fields:
+      - name: "content_type"
+        label: "Content Type"
+        type: "select"
+        required: true
+        options: ["Blog Post", "Whitepaper", "Case Study", "Infographic", "Video", "E-book", "Webinar"]
+      - name: "topic"
+        label: "Topic"
+        type: "text"
+        required: true
+      - name: "target_audience"
+        label: "Target Audience"
+        type: "textarea"
+        required: true
+      - name: "keywords"
+        label: "SEO Keywords"
+        type: "textarea"
+        required: true
+      - name: "publish_date"
+        label: "Target Publish Date"
+        type: "date"
+        required: true
+      - name: "distribution_channels"
+        label: "Distribution Channels"
+        type: "multiselect"
+        required: true
+        options: ["Blog", "LinkedIn", "Twitter", "Email Newsletter", "Medium", "Industry Publications"]
+      - name: "word_count"
+        label: "Target Word Count"
+        type: "number"
+        required: true
+
+  - id: "content_review"
+    name: "Content Review"
+    description: "Review and approve content for publication."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Publish", "Request Revisions", "Reject"]
+      - name: "seo_check"
+        label: "SEO Optimization"
+        type: "select"
+        required: true
+        options: ["Yes - Optimized", "Yes - Minor Improvements", "No - Needs Work"]
+      - name: "brand_check"
+        label: "Brand Compliance"
+        type: "select"
+        required: true
+        options: ["Yes - Compliant", "Yes - Minor Adjustments", "No - Not Compliant"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-content-strategist"
+    name: "Content Marketing Planner"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.3
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Storyteller"
+      legend: "Develops content strategy and creates content briefs."
+      traits: { compliance: 80, creativity: 70, speed: 60 }
+    system_prompt: "file://knowledge/prompts/content-strategist.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-seo-specialist"
+    name: "SEO Optimization Specialist"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Search Optimizer"
+      legend: "Optimizes content for SEO and performance."
+      traits: { compliance: 90, creativity: 30, speed: 70 }
+    system_prompt: "file://knowledge/prompts/seo-specialist.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-create-brief"
+    name: "Create Content Brief"
+    objective: "Generate content brief from requirements"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "marketing_workbench"
+    primary_agent: "ai-content-strategist"
+    inputs: ["content_intake"]
+    outputs: ["content_brief"]
+    sequence:
+      - step_code: "BRIEF-1"
+        action: "research_topic"
+        description: "Research topic and audience"
+        estimated_duration_minutes: 15
+        tool: "knowledge_graph_query"
+      - step_code: "BRIEF-2"
+        action: "analyze_keywords"
+        description: "Analyze SEO keywords"
+        estimated_duration_minutes: 15
+      - step_code: "BRIEF-3"
+        action: "define_structure"
+        description: "Define content structure"
+        estimated_duration_minutes: 15
+      - step_code: "BRIEF-4"
+        action: "outline_content"
+        description: "Create content outline"
+        estimated_duration_minutes: 15
+      - step_code: "BRIEF-5"
+        action: "generate_brief_document"
+        description: "Generate content brief document"
+        estimated_duration_minutes: 10
+        template: "content_brief_template"
+
+  - id: "mission-create-tasks"
+    name: "Create Content Tasks"
+    objective: "Create JIRA tasks for content production"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-create-brief)"
+    primary_agent: "ai-content-strategist"
+    inputs: ["content_brief"]
+    outputs: ["content_tasks"]
+    sequence:
+      - step_code: "TASK-1"
+        action: "create_jira_tasks"
+        description: "Create JIRA tasks for production"
+        estimated_duration_minutes: 15
+        tool: "jira_create_sprint"
+      - step_code: "TASK-2"
+        action: "assign_owners"
+        description: "Assign content creators"
+        estimated_duration_minutes: 10
+      - step_code: "TASK-3"
+        action: "set_deadlines"
+        description: "Set production deadlines"
+        estimated_duration_minutes: 5
+
+  - id: "mission-seo-optimization"
+    name: "SEO Optimization"
+    objective: "Optimize content for SEO"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-create-brief)"
+    primary_agent: "ai-seo-specialist"
+    inputs: ["content_brief"]
+    outputs: ["seo_recommendations"]
+    sequence:
+      - step_code: "SEO-1"
+        action: "keyword_analysis"
+        description: "Analyze keyword density and placement"
+        estimated_duration_minutes: 15
+      - step_code: "SEO-2"
+        action: "meta_tag_recommendations"
+        description: "Recommend meta tags and descriptions"
+        estimated_duration_minutes: 15
+      - step_code: "SEO-3"
+        action: "structure_optimization"
+        description: "Optimize content structure for SEO"
+        estimated_duration_minutes: 15
+      - step_code: "SEO-4"
+        action: "link_suggestions"
+        description: "Suggest internal and external links"
+        estimated_duration_minutes: 15
+
+  - id: "mission-update-calendar"
+    name: "Update Content Calendar"
+    objective: "Update content calendar with new content"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-create-tasks)"
+    primary_agent: "ai-content-strategist"
+    inputs: ["content_brief"]
+    outputs: ["updated_calendar"]
+    sequence:
+      - step_code: "CAL-1"
+        action: "query_calendar"
+        description: "Query current content calendar"
+        estimated_duration_minutes: 10
+        tool: "jira_jql_search"
+      - step_code: "CAL-2"
+        action: "add_content"
+        description: "Add new content to calendar"
+        estimated_duration_minutes: 10
+      - step_code: "CAL-3"
+        action: "check_conflicts"
+        description: "Check for scheduling conflicts"
+        estimated_duration_minutes: 5
+      - step_code: "CAL-4"
+        action: "publish_calendar"
+        description: "Publish updated calendar to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+
+  - id: "mission-review-content"
+    name: "Review Content"
+    objective: "Human review and approval of content"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-seo-optimization)"
+    primary_agent: "ai-content-strategist"
+    inputs: ["content_brief", "seo_recommendations"]
+    outputs: ["approved_content"]
+    requires_human: true
+    form_ref: "content_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_content"
+        description: "Present content for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect marketing director approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_content"
+        description: "Finalize content based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-distribute-content"
+    name: "Distribute Content"
+    objective: "Distribute content across channels"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-content)"
+    primary_agent: "ai-content-strategist"
+    inputs: ["approved_content"]
+    outputs: ["distributed_content"]
+    sequence:
+      - step_code: "DIST-1"
+        action: "publish_to_cms"
+        description: "Publish to CMS"
+        estimated_duration_minutes: 20
+      - step_code: "DIST-2"
+        action: "distribute_to_channels"
+        description: "Distribute to selected channels"
+        estimated_duration_minutes: 20
+      - step_code: "DIST-3"
+        action: "track_performance"
+        description: "Set up performance tracking"
+        estimated_duration_minutes: 10
+      - step_code: "DIST-4"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

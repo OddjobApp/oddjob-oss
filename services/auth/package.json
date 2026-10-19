@@ -1,0 +1,30 @@
+{
+    "name": "@oddjob/auth-service",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "./src/index.ts",
+    "scripts": {
+        "dev": "tsx src/index.ts",
+        "start": "node dist/index.js",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@oddjob/shared-db": "*",
+        "@oddjob/shared-auth": "*",
+        "@oddjob/shared-messaging": "*",
+        "express": "^4.21.2",
+        "express-session": "^1.18.1",
+        "connect-redis": "^9.0.0",
+        "ioredis": "^5.8.2",
+        "cors": "^2.8.5",
+        "helmet": "^8.1.0",
+        "dotenv": "^17.2.3"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.21",
+        "@types/express-session": "^1.18.0",
+        "@types/cors": "^2.8.17",
+        "tsx": "^4.21.0",
+        "typescript": "5.6.3"
+    }
+}

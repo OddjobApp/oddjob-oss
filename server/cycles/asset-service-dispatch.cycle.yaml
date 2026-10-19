@@ -1,0 +1,849 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "QR Asset Triage & Service Dispatch"
+version: "2.1"
+containers: {}
+description: "Generic asset service triage and dispatch cycle. Users scan a QR code on any managed asset to reach ServiceBot for troubleshooting, restock requests, feedback, health checks, and dispatch escalation. Every interaction writes operational signals back into asset health, provider scoring, and routing recommendations so the system improves on each run."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "QR Asset Triage & Service Dispatch"
+  icon: "Wrench"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 200000
+  token_budget_per_launch: 500000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+    dispatch_channel: "${ENV.SLACK_DISPATCH_CHANNEL}"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 1.0
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+knowledge_datasets:
+  - id: "managed_assets"
+    source: "dataset:Managed Assets"
+    primary_key: "assetId"
+    vectorize: true
+    schema:
+      assetId: "string"
+      name: "string"
+      type: "string"
+      manufacturer: "string"
+      make: "string"
+      model: "string"
+      serialNumber: "string"
+      address: "string"
+      lat: "number"
+      lng: "number"
+      floor: "string"
+      building: "string"
+      room: "string"
+      accessInstructions: "string"
+      lastServiceDate: "string"
+      warrantyExpiry: "string"
+      inventory: "array"
+      qr_data_url: "string"
+      shortlink: "string"
+      health_score: "number"
+      chronic_issue_flag: "boolean"
+
+  - id: "service_providers"
+    source: "dataset:Service Providers"
+    primary_key: "providerId"
+    vectorize: true
+    schema:
+      providerId: "string"
+      name: "string"
+      lat: "number"
+      lng: "number"
+      rating: "number"
+      specialties: "array"
+      availability: "string"
+      current_load: "number"
+      acceptance_rate: "number"
+      sla_compliance_rate: "number"
+
+  - id: "service_requests"
+    source: "dataset:Service Requests"
+    primary_key: "request_id"
+    vectorize: true
+    schema:
+      request_id: "string"
+      assetId: "string"
+      request_type: "string"
+      issue_category: "string"
+      status: "string"
+      urgency: "string"
+      diagnostic_answers: "json"
+      photo_url: "string"
+      contact_method: "string"
+      contact_value: "string"
+      providerId: "string"
+      tracking_url: "string"
+      created_at: "string"
+      accepted_at: "string"
+      completed_at: "string"
+
+  - id: "dispatch_assignments"
+    source: "manual"
+    primary_key: "assignment_id"
+    vectorize: false
+    schema:
+      assignment_id: "string"
+      request_id: "string"
+      assetId: "string"
+      providerId: "string"
+      status: "string"
+      rank_score: "number"
+      eta_minutes: "number"
+      accepted_at: "string"
+      reassigned_from: "string"
+      created_at: "string"
+
+  - id: "asset_health_scores"
+    source: "manual"
+    primary_key: "score_id"
+    vectorize: false
+    schema:
+      score_id: "string"
+      assetId: "string"
+      health_score: "number"
+      health_grade: "string"
+      service_age_days: "number"
+      recent_incident_count: "number"
+      warranty_status: "string"
+      recommended_action: "string"
+      calculated_at: "string"
+
+  - id: "asset_issue_counters"
+    source: "manual"
+    primary_key: "counter_id"
+    vectorize: false
+    schema:
+      counter_id: "string"
+      assetId: "string"
+      issue_category: "string"
+      window_days: "number"
+      count: "number"
+      chronic: "boolean"
+      updated_at: "string"
+
+  - id: "restock_demand_counters"
+    source: "manual"
+    primary_key: "counter_id"
+    vectorize: false
+    schema:
+      counter_id: "string"
+      assetId: "string"
+      item_name: "string"
+      slot_reference: "string"
+      window_hours: "number"
+      count: "number"
+      vendor_notified_at: "string"
+
+  - id: "provider_sla_metrics"
+    source: "manual"
+    primary_key: "metric_id"
+    vectorize: false
+    schema:
+      metric_id: "string"
+      providerId: "string"
+      request_id: "string"
+      response_minutes: "number"
+      resolution_minutes: "number"
+      met_sla: "boolean"
+      user_rating: "number"
+      created_at: "string"
+
+  - id: "service_feedback"
+    source: "manual"
+    primary_key: "feedback_id"
+    vectorize: true
+    schema:
+      feedback_id: "string"
+      request_id: "string"
+      assetId: "string"
+      providerId: "string"
+      rating: "number"
+      resolved: "boolean"
+      comment: "string"
+      created_at: "string"
+
+forms:
+  - id: "escalation_confirmation"
+    name: "Escalation Confirmation"
+    description: "Confirm asset location and collect user contact details before dispatching a service provider."
+    fields:
+      - name: "confirm_address"
+        label: "Is the asset address correct?"
+        type: "select"
+        required: true
+        options: ["Correct", "Different Address"]
+      - name: "alternate_address"
+        label: "Alternate address or access detail"
+        type: "text"
+        required: false
+      - name: "contact_method"
+        label: "Preferred contact method"
+        type: "select"
+        required: true
+        options: ["Email", "SMS"]
+      - name: "contact_value"
+        label: "Email or phone number"
+        type: "text"
+        required: true
+
+  - id: "restock_request"
+    name: "Restock Request"
+    description: "Collect restock details including item, slot reference, urgency, and optional photo."
+    fields:
+      - name: "item_name"
+        label: "Item to restock"
+        type: "text"
+        required: true
+      - name: "slot_reference"
+        label: "Slot reference (if applicable)"
+        type: "text"
+        required: false
+      - name: "urgency"
+        label: "Urgency level"
+        type: "select"
+        required: true
+        options: ["Low", "Normal", "Urgent"]
+      - name: "photo_attached"
+        label: "Photo attached?"
+        type: "select"
+        required: false
+        options: ["Yes", "No"]
+
+  - id: "satisfaction_poll"
+    name: "Service Satisfaction Poll"
+    description: "Quick post-service satisfaction rating sent to the user 24 hours after dispatch completion."
+    fields:
+      - name: "rating"
+        label: "How would you rate the service?"
+        type: "select"
+        required: true
+        options: ["5 - Excellent", "4 - Good", "3 - Average", "2 - Poor", "1 - Terrible"]
+      - name: "resolved"
+        label: "Was the issue resolved?"
+        type: "select"
+        required: true
+        options: ["Yes", "Partially", "No"]
+      - name: "feedback"
+        label: "Any additional comments? (optional)"
+        type: "text"
+        required: false
+
+  - id: "dispatch_override"
+    name: "Dispatch Override"
+    description: "Supervisor approval for manual reassignment or exception handling."
+    fields:
+      - name: "override_reason"
+        label: "Reason for override"
+        type: "textarea"
+        required: true
+      - name: "target_provider_id"
+        label: "Provider ID"
+        type: "text"
+        required: false
+
+agents:
+  - id: "ai-service-bot"
+    name: "Automated Service Dispatch Bot"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.2
+    interaction_model: "form-agent"
+    chat_mode: "direct"
+    skip_mission_resolution: true
+    soul_profile:
+      archetype: "The Diagnostic Guide"
+      legend: "Patient, precise triage assistant that walks users through troubleshooting before escalating. Handles problem reports, restock requests, feedback, status checks, and photo evidence."
+    system_prompt: "file://knowledge/prompts/asset-triage-agent.md"
+    boundaries: ["managed_assets", "service_requests", "asset_health_scores", "asset_issue_counters", "restock_demand_counters", "service_feedback"]
+    permissions: ["datasets:read", "datasets:write", "slack:write:channel"]
+    tools: ["show_pipeline_input_form", "dataset_query", "dataset_write", "slack_post_message", "geo_discovery", "generate_diagnostic_questions"]
+    publish_as_public_agent:
+      slug: "service-bot"
+      title: "ServiceBot - Asset Support"
+      access_policy: "public"
+      welcome_message: "Hi! I'm ServiceBot. Scan a QR code on any managed asset and I'll help you report issues, request restocks, give feedback, or check service status."
+    asset_forms:
+      intent:
+        title: "How can I help?"
+        fields:
+          - { name: "intent", label: "What would you like to do?", type: "button_group", required: true, options: ["Report a problem", "Request a restock", "Give feedback", "Check service status"] }
+      diagnostics:
+        coffee_vending:
+          - { name: "problem_type", label: "What's the issue?", type: "select", required: true, options: ["Not dispensing", "Wrong drink made", "Payment not accepted", "Leak or overflow", "Cup jam", "Machine won't turn on"] }
+          - { name: "powered_on", label: "Is it powered on?", type: "button_group", required: true, options: ["Yes - lights are on", "No - completely dark", "Partially flickering"] }
+          - { name: "error_code", label: "Error code on display? (optional)", type: "text", required: false, placeholder: "e.g., E04, ERR-WATER" }
+        hvac:
+          - { name: "problem_type", label: "What's the issue?", type: "select", required: true, options: ["Not cooling", "Not heating", "Unusual noise", "Water leak", "No airflow", "Error on panel"] }
+          - { name: "area_impact", label: "How widespread is the impact?", type: "select", required: true, options: ["Single room", "Floor or zone", "Whole building", "Unsure"] }
+        printer:
+          - { name: "problem_type", label: "What's the issue?", type: "select", required: true, options: ["Paper jam", "Low toner", "Offline", "Poor print quality", "Not scanning", "Other"] }
+          - { name: "error_code", label: "Error message or code? (optional)", type: "text", required: false }
+      restock:
+        fields:
+          - { name: "item", label: "Which item needs restocking?", type: "select", required: true, options_from: "asset.inventory[].item" }
+          - { name: "urgency", label: "How urgent?", type: "button_group", required: true, options: ["Low - whenever convenient", "Normal - within a day", "Urgent - empty or critical"] }
+          - { name: "photo", label: "Photo of current stock? (optional)", type: "photo", required: false }
+      feedback:
+        fields:
+          - { name: "category", label: "What's your feedback about?", type: "select", required: true, options: ["Cleanliness", "Reliability", "Selection/Options", "Location/Access", "Other"] }
+          - { name: "comment", label: "Your feedback", type: "textarea", required: true, placeholder: "Tell us what's on your mind..." }
+      escalation:
+        fields:
+          - { name: "confirm_location", label: "Is this address correct?", type: "button_group", required: true, options: ["Yes, correct", "No, different address"] }
+          - { name: "contact_method", label: "How should we send updates?", type: "button_group", required: true, options: ["Email", "SMS"] }
+          - { name: "contact_value", label: "Your email or phone number", type: "text", required: true, placeholder: "name@company.com or +1-555-0123" }
+
+  - id: "ai-dispatch-coordinator"
+    name: "Service Dispatch Coordinator"
+    role: "supervisor"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Strategic Coordinator"
+      legend: "Backend orchestrator that matches service providers to assets by proximity, rating, specialty, acceptance behavior, and SLA history."
+    system_prompt: "file://knowledge/prompts/rescue-dispatcher.md"
+    boundaries: ["service_providers", "service_requests", "dispatch_assignments", "provider_sla_metrics", "service_feedback", "asset_issue_counters"]
+    permissions: ["datasets:read", "datasets:write", "slack:write:channel"]
+    tools: ["dataset_query", "dataset_write", "slack_post_message", "geo_discovery", "sla_timer", "app_provision"]
+
+  - id: "ai-qr-provisioner"
+    name: "QR Provisioner"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Utility Automator"
+      legend: "Utility agent that bulk-generates QR codes and shortlinks for managed assets, then stores QR data URLs back in asset records."
+    system_prompt: "You are a QR provisioning utility agent. Generate QR codes and shortlinks for managed assets that do not have one, and store the resulting QR data URL back in the asset record. You can also regenerate QR codes for specific assets on demand."
+    boundaries: ["managed_assets"]
+    permissions: ["datasets:read", "datasets:write"]
+    tools: ["dataset_query", "dataset_write", "qr_generate", "shortlink_create"]
+
+missions:
+  - id: "mission-asset-triage"
+    name: "Asset Triage"
+    objective: "Ground the QR scan in the managed asset record, detect user intent, run deterministic forms when possible, and use the LLM only for ambiguous follow-ups or generated troubleshooting prose."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "webhook"
+      source: "qr_scan"
+      condition: "event.type == 'qr_asset_scan'"
+    primary_agent: "ai-service-bot"
+    inputs: ["assetId"]
+    outputs: ["asset_context", "triage_result", "intent_type", "diagnostic_answers", "photo_url", "resolution_status"]
+    sequence:
+      - step_code: "TRIAGE-1"
+        action: "load_asset_record"
+        description: "Query managed_assets using the assetId from the QR scan URL and hydrate asset context."
+        estimated_duration_minutes: 2
+        agent: "ai-service-bot"
+      - step_code: "TRIAGE-2"
+        action: "confirm_asset_identity"
+        description: "Greet the user and confirm asset name, room, floor, building, and access context."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+      - step_code: "TRIAGE-3"
+        action: "detect_intent"
+        description: "Ask how the user needs help and present options: Report a problem, Request a restock, Give feedback, Check service status."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+      - step_code: "TRIAGE-4"
+        action: "run_diagnostic_questions"
+        description: "For problem reports, ask structured diagnostic questions based on asset type and offer photo attachment."
+        estimated_duration_minutes: 10
+        agent: "ai-service-bot"
+      - step_code: "TRIAGE-5"
+        action: "attempt_self_service"
+        description: "Provide safe self-service steps and ask the user whether the issue is resolved."
+        estimated_duration_minutes: 10
+        agent: "ai-service-bot"
+      - step_code: "TRIAGE-6"
+        action: "write_triage_signal"
+        description: "Persist intent, diagnostic answers, resolution status, and photo metadata to service_requests or asset_issue_counters."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+
+  - id: "mission-restock-feedback"
+    name: "Restock & Feedback Processing"
+    objective: "Log restock requests, aggregate demand per item/asset, process feedback, and notify vendors when threshold is met."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_intent(mission-asset-triage, intent_type in ['restock', 'feedback'])"
+    primary_agent: "ai-service-bot"
+    inputs: ["assetId", "asset_context", "intent_type", "triage_result"]
+    outputs: ["restock_log_entry", "feedback_log_entry", "demand_signal"]
+    sequence:
+      - step_code: "RESTOCK-1"
+        action: "collect_restock_details"
+        description: "If restock: show inventory when available, ask which item, urgency, slot reference, and optional photo."
+        estimated_duration_minutes: 5
+        requires_human: true
+        form_ref: "restock_request"
+        agent: "ai-service-bot"
+      - step_code: "RESTOCK-2"
+        action: "log_restock_request"
+        description: "Write the restock request to service_requests and increment restock_demand_counters."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+      - step_code: "RESTOCK-3"
+        action: "check_demand_threshold"
+        description: "Aggregate demand for this item and asset within the current window; flag vendor notification if threshold is met."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+      - step_code: "RESTOCK-4"
+        action: "process_feedback"
+        description: "If feedback: collect freeform text, optional photo, sentiment, and asset context; log to service_feedback."
+        estimated_duration_minutes: 5
+        agent: "ai-service-bot"
+
+  - id: "mission-escalation-dispatch"
+    name: "Escalation & Dispatch"
+    objective: "If triage fails or the user asks for help, confirm location, collect user contact details, attach evidence, and create a dispatch-ready service request."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_failure(mission-asset-triage)"
+    primary_agent: "ai-service-bot"
+    inputs: ["triage_result", "assetId", "asset_context", "diagnostic_answers", "photo_url"]
+    outputs: ["dispatch_request"]
+    sequence:
+      - step_code: "ESC-1"
+        action: "confirm_location"
+        description: "Verify the asset address, room, floor, and access instructions before dispatch."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+      - step_code: "ESC-2"
+        action: "collect_contact_info"
+        description: "Present escalation confirmation form to collect contact method, contact value, and any alternate location detail."
+        estimated_duration_minutes: 5
+        requires_human: true
+        form_ref: "escalation_confirmation"
+        routing_channel: "alerts_channel"
+        agent: "ai-service-bot"
+      - step_code: "ESC-3"
+        action: "attach_photo_evidence"
+        description: "Attach any user-provided photo to the dispatch request for technician reference."
+        estimated_duration_minutes: 2
+        agent: "ai-service-bot"
+      - step_code: "ESC-4"
+        action: "write_service_request"
+        description: "Create a service_requests record with diagnostics, evidence, contact details, issue category, and SLA priority."
+        estimated_duration_minutes: 5
+        agent: "ai-service-bot"
+      - step_code: "ESC-5"
+        action: "notify_dispatch_queue"
+        description: "Notify the dispatch channel with the new request and return the dispatch_request payload for assignment."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+
+  - id: "mission-provider-assignment"
+    name: "Provider Assignment & Tracking"
+    objective: "Select a provider by specialty, proximity, load, rating, acceptance behavior, and SLA history; assign with a response deadline and user tracking link."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-escalation-dispatch)"
+    primary_agent: "ai-dispatch-coordinator"
+    inputs: ["dispatch_request"]
+    outputs: ["assignment_confirmation", "tracking_url", "provider_acceptance_deadline"]
+    sequence:
+      - step_code: "ASSIGN-1"
+        action: "find_nearby_providers"
+        description: "Query geo index for providers within radius, filtered by asset type specialty, availability, and current load."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+      - step_code: "ASSIGN-2"
+        action: "rank_and_select"
+        description: "Score candidates by distance, rating, specialty match, acceptance rate, SLA compliance, and workload balance."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+      - step_code: "ASSIGN-3"
+        action: "assign_provider"
+        description: "Write dispatch_assignments, notify selected provider, and set an acceptance deadline."
+        estimated_duration_minutes: 10
+        agent: "ai-dispatch-coordinator"
+      - step_code: "ASSIGN-4"
+        action: "send_tracking_update"
+        description: "Send ETA and tracking link to the user via their selected contact method."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+      - step_code: "ASSIGN-5"
+        action: "append_assignment_audit"
+        description: "Append provider ranking inputs and selection rationale to service_requests for auditability."
+        estimated_duration_minutes: 3
+        agent: "ai-dispatch-coordinator"
+
+  - id: "mission-dispatch-acceptance-monitoring"
+    name: "Dispatch Acceptance Monitoring"
+    objective: "Watch assigned provider acceptance and SLA risk, reassign when a provider misses the response deadline, and escalate exceptions to a supervisor."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-provider-assignment)"
+    primary_agent: "ai-dispatch-coordinator"
+    inputs: ["dispatch_request", "assignment_confirmation", "provider_acceptance_deadline"]
+    outputs: ["acceptance_status", "reassignment_status", "sla_risk"]
+    sequence:
+      - step_code: "MONITOR-1"
+        action: "watch_acceptance_deadline"
+        description: "Check whether the assigned provider accepted before the deadline and mark pending assignments at risk."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+      - step_code: "MONITOR-2"
+        action: "reassign_if_needed"
+        description: "If no acceptance, select the next eligible provider and update dispatch_assignments and service_requests."
+        estimated_duration_minutes: 8
+        agent: "ai-dispatch-coordinator"
+      - step_code: "MONITOR-3"
+        action: "escalate_sla_risk"
+        description: "If reassignment fails or SLA risk is critical, alert the dispatch channel and open supervisor override."
+        estimated_duration_minutes: 5
+        requires_human: true
+        form_ref: "dispatch_override"
+        agent: "ai-dispatch-coordinator"
+
+  - id: "mission-qr-provisioning"
+    name: "QR Code Provisioning"
+    objective: "Bulk-generate QR codes and shortlinks for all managed assets that lack one. Store QR data URL and shortlink in the asset record."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "admin_panel"
+      condition: "event.type == 'qr_provision_request'"
+    primary_agent: "ai-qr-provisioner"
+    inputs: ["target_asset_ids"]
+    outputs: ["provisioned_count", "qr_results"]
+    sequence:
+      - step_code: "QR-1"
+        action: "identify_assets_without_qr"
+        description: "Query managed_assets for records missing qr_data_url or use specific target_asset_ids when provided."
+        estimated_duration_minutes: 5
+        agent: "ai-qr-provisioner"
+      - step_code: "QR-2"
+        action: "generate_qr_codes"
+        description: "For each asset, generate a QR code encoding the triage URL and create a shortlink."
+        estimated_duration_minutes: 15
+        agent: "ai-qr-provisioner"
+      - step_code: "QR-3"
+        action: "store_qr_data"
+        description: "Write qr_data_url and shortlink back to each asset record in managed_assets."
+        estimated_duration_minutes: 10
+        agent: "ai-qr-provisioner"
+      - step_code: "QR-4"
+        action: "report_results"
+        description: "Output total provisioned, failures, and generated shortlinks."
+        estimated_duration_minutes: 5
+        agent: "ai-qr-provisioner"
+
+  - id: "mission-demand-aggregation"
+    name: "Demand Aggregation & Vendor Notification"
+    objective: "Monitor restock request counts per item/asset and notify the assigned vendor when demand reaches 3 or more requests in 24 hours."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-restock-feedback)"
+    primary_agent: "ai-dispatch-coordinator"
+    inputs: ["restock_log_entry"]
+    outputs: ["vendor_notification_status"]
+    sequence:
+      - step_code: "DEMAND-1"
+        action: "check_demand_threshold"
+        description: "Query restock_demand_counters for this asset and item within the 24-hour window."
+        estimated_duration_minutes: 3
+        agent: "ai-dispatch-coordinator"
+      - step_code: "DEMAND-2"
+        action: "notify_vendor"
+        description: "If threshold is met, post aggregated restock request to the vendor channel with asset location and item counts."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+
+  - id: "mission-recurring-issue-detection"
+    name: "Recurring Issue Detection"
+    objective: "Detect assets with 3 or more reports of the same issue category within 30 days, flag chronic issues, and route to facilities management."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-escalation-dispatch)"
+    primary_agent: "ai-dispatch-coordinator"
+    inputs: ["dispatch_request", "assetId"]
+    outputs: ["recurring_issue_flag"]
+    sequence:
+      - step_code: "RECUR-1"
+        action: "check_issue_history"
+        description: "Query asset_issue_counters for this asset and issue category, then determine whether the recurring threshold is met."
+        estimated_duration_minutes: 3
+        agent: "ai-dispatch-coordinator"
+      - step_code: "RECUR-2"
+        action: "escalate_if_chronic"
+        description: "If recurring, flag the asset as chronic, notify facilities management, and route future work to a specialist provider."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+
+  - id: "mission-satisfaction-followup"
+    name: "User Satisfaction Follow-up"
+    objective: "After dispatch completion, queue a 24-hour satisfaction poll and write SLA metrics for provider scoring."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "app_event"
+      source: "service-dispatch"
+      condition: "event.type == 'dispatch_completed'"
+    primary_agent: "ai-dispatch-coordinator"
+    inputs: ["dispatch_request", "assignment_confirmation", "tracking_url", "completion_event"]
+    outputs: ["followup_scheduled", "provider_sla_metric"]
+    sequence:
+      - step_code: "SAT-1"
+        action: "schedule_followup"
+        description: "Queue the satisfaction poll to send 24 hours after dispatch completion via the user's selected contact method."
+        estimated_duration_minutes: 3
+        agent: "ai-dispatch-coordinator"
+      - step_code: "SAT-2"
+        action: "record_sla_metrics"
+        description: "Log provider response time, resolution time, and SLA compliance to provider_sla_metrics."
+        estimated_duration_minutes: 3
+        agent: "ai-dispatch-coordinator"
+
+  - id: "mission-satisfaction-response-processing"
+    name: "Satisfaction Response Processing"
+    objective: "Record satisfaction poll responses, feed ratings into provider scoring, and reopen issues when the user says service was not resolved."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "webhook"
+      source: "satisfaction_poll"
+      condition: "event.type == 'form_submitted'"
+    primary_agent: "ai-dispatch-coordinator"
+    inputs: ["satisfaction_poll_response", "dispatch_request"]
+    outputs: ["service_feedback_record", "provider_score_update", "reopen_recommendation"]
+    sequence:
+      - step_code: "RESP-1"
+        action: "record_feedback_response"
+        description: "Write rating, resolved status, and comment to service_feedback."
+        estimated_duration_minutes: 3
+        agent: "ai-dispatch-coordinator"
+      - step_code: "RESP-2"
+        action: "update_provider_score"
+        description: "Blend user rating and SLA result into provider_sla_metrics and provider ranking signals."
+        estimated_duration_minutes: 3
+        agent: "ai-dispatch-coordinator"
+      - step_code: "RESP-3"
+        action: "reopen_if_unresolved"
+        description: "If the user reports unresolved service, reopen or create a follow-up service_request."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+
+  - id: "mission-health-scoring"
+    name: "Asset Health Assessment"
+    objective: "Calculate real-time health score for the asset based on service age, incident frequency, restock pressure, warranty status, and unresolved dispatches."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_intent(mission-asset-triage, intent_type == 'status')"
+    primary_agent: "ai-service-bot"
+    inputs: ["assetId"]
+    outputs: ["health_score", "health_grade", "health_factors", "recommended_action"]
+    sequence:
+      - step_code: "HEALTH-1"
+        action: "load_asset_service_history"
+        description: "Load managed asset details, recent service_requests, issue counters, and latest SLA metrics."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+      - step_code: "HEALTH-2"
+        action: "calculate_health_score"
+        description: "Compute health score from service age, recent incidents, restock pressure, unresolved requests, and warranty expiry date."
+        estimated_duration_minutes: 5
+        agent: "ai-service-bot"
+      - step_code: "HEALTH-3"
+        action: "write_health_score"
+        description: "Persist score, grade, factors, and recommendation to asset_health_scores and managed_assets."
+        estimated_duration_minutes: 2
+        agent: "ai-service-bot"
+      - step_code: "HEALTH-4"
+        action: "present_health_report"
+        description: "Display health grade, contributing factors, and next recommended action to the user."
+        estimated_duration_minutes: 3
+        agent: "ai-service-bot"
+
+  - id: "mission-continuous-asset-learning"
+    name: "Continuous Asset Operations Learning"
+    objective: "Continuously evolve triage, dispatch routing, restock thresholds, and provider scoring from every request, restock, feedback, completion, or satisfaction event."
+    type: "sweep"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "dataset_event"
+      source: "service_requests"
+      condition: "event.type in ['created', 'updated', 'closed', 'feedback_logged', 'restock_logged']"
+    primary_agent: "ai-dispatch-coordinator"
+    inputs: ["managed_assets", "service_requests", "dispatch_assignments", "asset_health_scores", "asset_issue_counters", "restock_demand_counters", "provider_sla_metrics", "service_feedback"]
+    outputs: ["asset_health_updates", "provider_score_updates", "routing_rule_recommendations", "triage_prompt_recommendations"]
+    sequence:
+      - step_code: "LEARN-1"
+        action: "aggregate_operational_signals"
+        description: "Group new events by asset, issue category, provider, location, user rating, restock demand, and SLA outcome."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+      - step_code: "LEARN-2"
+        action: "update_asset_and_provider_scores"
+        description: "Refresh asset health, chronic issue flags, provider ranking features, and demand thresholds."
+        estimated_duration_minutes: 8
+        agent: "ai-dispatch-coordinator"
+      - step_code: "LEARN-3"
+        action: "emit_improvement_recommendations"
+        description: "Write recommended diagnostic form changes, provider routing adjustments, and asset maintenance actions for review."
+        estimated_duration_minutes: 5
+        agent: "ai-dispatch-coordinator"
+
+schedules:
+  - id: "pending_dispatch_acceptance_watch"
+    cron: "*/10 * * * *"
+    action: "run mission-dispatch-acceptance-monitoring"
+    agent: "ai-dispatch-coordinator"
+  - id: "daily_asset_operations_learning"
+    cron: "0 7 * * *"
+    action: "run mission-continuous-asset-learning"
+    agent: "ai-dispatch-coordinator"
+  - id: "weekly_qr_inventory_audit"
+    cron: "0 8 * * 1"
+    action: "run mission-qr-provisioning"
+    agent: "ai-qr-provisioner"
+
+escalations:
+  - mission_ref: "mission-escalation-dispatch"
+    alert_channels: ["slack:alerts_channel", "slack:dispatch_channel"]
+    warning_threshold_minutes: 15
+    critical_threshold_minutes: 30
+  - mission_ref: "mission-dispatch-acceptance-monitoring"
+    alert_channels: ["slack:alerts_channel", "slack:dispatch_channel"]
+    warning_threshold_minutes: 20
+    critical_threshold_minutes: 45
+  - mission_ref: "mission-recurring-issue-detection"
+    alert_channels: ["slack:approvals_channel"]
+    warning_threshold_minutes: 60
+    critical_threshold_minutes: 240
+
+deployment:
+  rollback:
+    enabled: true
+    automatic_on_failure: true
+    max_rollback_attempts: 2
+
+apps:
+  - id: "service-dispatch"
+    name: "Service Dispatch"
+    description: "Live dispatcher cockpit for asset service requests, provider assignments, SLA risk, and dispatch chat."
+    path: "server/blueprints/apps/rescue-dispatch"
+    blueprint: "rescue-dispatch"
+    interaction_model: "standalone-app"
+    enabled: true
+    dependent_missions:
+      - "mission-provider-assignment"
+      - "mission-dispatch-acceptance-monitoring"
+      - "mission-satisfaction-followup"
+    bindings:
+      - mission: "mission-provider-assignment"
+        role: "primary"
+        label: "Open Dispatch Tracker"
+        openMode: "modal"
+      - mission: "mission-dispatch-acceptance-monitoring"
+        role: "reference"
+        label: "Acceptance Monitor"
+        openMode: "modal"
+    workbench_modules:
+      - id: "asset-dispatch-board"
+        name: "Asset Dispatch Board"
+        purpose: "Track active service requests, provider assignments, SLA risk, and satisfaction outcomes."
+        route: "/"
+        datasets: ["service_requests", "dispatch_assignments", "service_providers", "provider_sla_metrics", "service_feedback"]
+        primary_actions:
+          - "view_active_dispatches"
+          - "reassign_provider"
+          - "record_completion"
+          - "open_dispatch_chat"
+
+# Multi-Agent Ceremony & Deliberation Rooms
+ceremonies:
+  - stage_id: "dispatch-escalation-council"
+    title: "Field Dispatch Escalation Council"
+    topic: "Triage unassigned tickets, SLA breaches, and high-priority field repair dispatches"
+    mode: "decide"
+    is_standing_room: false
+    roster_agents:
+      - "ai-service-bot"
+      - "ai-dispatch-coordinator"
+    required_decisions:
+      - "Approve Provider Reassignment"
+      - "Authorize Priority SLA Dispatch Override"
+    auto_convene: true
+

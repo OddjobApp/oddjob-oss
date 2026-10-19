@@ -1,0 +1,35 @@
+{
+  "updatedAt": "2026-08-29",
+  "commit": "a40f6305c5d42ae41f16775a90a39511bad7e315",
+  "_measurement": "Cut from a real run: live Gemini (preflight provider=google), 7 scenarios x 5 repeats = 35 mission runs, against a dedicated oddjob_evals database.",
+  "_caveat": "The capability subjects are NOT valid capability measurements yet. Each scores on tool_used (weight 3) + final_output_contains (weight 1); the tool was never called on any repeat, hence the flat 0.25 and zero variance. Across all 42 runs the orchestrator only ever selected browse_web, get_blackboard, google_search, http_request, python, think_step and update_blackboard. Two of the five scenarios also named tools that do not exist — write_file (the registered name is file_write) and save_to_dataset (a job type, not a capability) — so those two could never have scored regardless of what the orchestrator chose; they are corrected now, and tests/evals/scenario-tools.test.ts keeps them honest. Their old subject keys are removed rather than carried over with invented numbers, so capability:file_write and capability:add_dataset_items fall to defaultThreshold until someone re-cuts against a real run. The remaining three numbers describe what the harness currently does, not what the platform can do.",
+  "regressionDelta": 0.05,
+  "defaultThreshold": 0.8,
+  "subjects": [
+    {
+      "subjectKey": "mission-type:basic_market_research",
+      "passRate": 0.667,
+      "threshold": 0.617
+    },
+    {
+      "subjectKey": "capability:create_pipeline",
+      "passRate": 0.25,
+      "threshold": 0.2
+    },
+    {
+      "subjectKey": "capability:generate_pdf",
+      "passRate": 0.25,
+      "threshold": 0.2
+    },
+    {
+      "subjectKey": "capability:github_create_pr",
+      "passRate": 0.0,
+      "threshold": 0.0
+    },
+    {
+      "subjectKey": "mission-type:llm_judge_test",
+      "passRate": 0.0,
+      "threshold": 0.0
+    }
+  ]
+}

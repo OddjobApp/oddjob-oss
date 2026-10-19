@@ -1,0 +1,1804 @@
+name: "Oddjob Enterprise Hybrid AI SDLC"
+version: "1.1"
+containers: {}
+description: "A highly-structured 30-day Software Development Life Cycle utilizing 9 Specialized AI Agents, 6 Orchestrated Missions, strict Value Stream Management (VSM) telemetry, and 5 comprehensive workbenches for end-to-end SDLC management."
+author: "Oddjob Marketplace"
+
+# UI Metadata for Cycle Management Interface
+ui_metadata:
+  display_name: "Enterprise Hybrid AI SDLC"
+  icon: "🔄"
+  theme_color: "#3b82f6"
+  display_priority: 1
+  category: "development"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 500000 # Cost Control
+
+ai_provider:
+  provider: "anthropic" # Options: "anthropic", "openai", "google"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.7
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}" # e.g. TypeScript, Python, Go
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}" # e.g. React, Vue, Angular
+  mobile_framework: "${ENV.TECH_MOBILE_FRAMEWORK}" # e.g. React Native, Swift, Kotlin
+
+portfolio_classification:
+  group_type: "project" # Options: "project" (New Features/End-Dated), "operations" (Maintenance/Continuous)
+  capitalization_category: "CapEx" # "CapEx" for Projects, "OpEx" for Operations
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  constitution:
+    required: false # Startups may not have a formalized AI constitution
+    path: "file://knowledge/guidelines/ai_constitution.md"
+  coding_standards:
+    required: true # Mandatory for predictable agent output
+    path: "file://knowledge/guidelines/coding_standards.md"
+  security_standards:
+    required: false
+    path: "file://knowledge/guidelines/security_standards.md"
+  compliance:
+    enabled: true
+    frameworks: ["SOC2", "GDPR", "OWASP"]
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}" # github | gitlab | bitbucket
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}" # postgres | mysql | sqlite
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+    redis_url: "${ENV.REDIS_URL}" # Optional for caching
+    mongodb_url: "${ENV.MONGODB_URL}" # Optional for document storage
+    vector_url: "${ENV.VECTOR_DB_URL}" # Optional for dedicated RAG (Pinecone/Weaviate)
+  package_registry:
+    enabled: false # Set to true for enterprise private registries (Artifactory/Nexus)
+    npm_registry_url: "${ENV.NPM_REGISTRY_URL}"
+    npm_auth_token: "${ENV.NPM_AUTH_TOKEN}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: false
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  sharepoint:
+    enabled: false # Set to true if replacing/augmenting Confluence
+    tenant_id: "${ENV.SHAREPOINT_TENANT_ID}"
+    site_id: "${ENV.SHAREPOINT_SITE_ID}"
+    drive_id: "${ENV.SHAREPOINT_DRIVE_ID}"
+  google_drive:
+    enabled: false # Set to true if replacing/augmenting Confluence
+    shared_drive_id: "${ENV.GOOGLE_SHARED_DRIVE_ID}"
+    folder_id: "${ENV.GOOGLE_DOCS_FOLDER_ID}"
+  google_calendar:
+    enabled: false # For Scrum Master meeting generation
+    calendar_id: "${ENV.GOOGLE_CALENDAR_ID}"
+  gcp:
+    enabled: false # Alternative to AWS for Release Manager
+    project_id: "${ENV.GCP_PROJECT_ID}"
+    region: "${ENV.GCP_REGION}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+  agentmail:
+    enabled: true
+    admin_address: "${ENV.AGENTMAIL_ADMIN_ADDRESS}"
+    domain: "${ENV.AGENTMAIL_DOMAIN}"
+  ngrok:
+    enabled: true
+    auth_token: "${ENV.NGROK_AUTH_TOKEN}"
+    static_domain: "${ENV.NGROK_STATIC_DOMAIN}"
+  msteams:
+    enabled: false # Set to true if replacing Slack
+    tenant_id: "${ENV.MSTEAMS_TENANT_ID}"
+    team_id: "${ENV.MSTEAMS_TEAM_ID}"
+    alerts_webhook_url: "${ENV.MSTEAMS_ALERTS_WEBHOOK}"
+    approvals_webhook_url: "${ENV.MSTEAMS_APPROVALS_WEBHOOK}"
+
+vsm_telemetry:
+  enabled: true
+  metrics: ["lead_time", "cycle_time", "mttr", "deployment_frequency"]
+  jira_status_mapping:
+    backlog: "Backlog"
+    in_progress: "In Progress"
+    in_review: "Code Review"
+    qa: "In QA"
+    uat: "UAT"
+    done: "Done"
+
+prediction_intelligence:
+  defect_forecasting:
+    enabled: true
+    model: "oddjob-risk-analyzer-v1"
+    threshold: 0.85 # Flag for human review if risk > 85%
+  velocity_forecasting:
+    enabled: true
+    historical_window_days: 90
+
+mcp_servers:
+  stitch:
+    enabled: true
+    endpoint: "http://localhost:3001/mcp"
+    tools: ["generate_screen_from_text", "apply_design_system"]
+    timeout_ms: 30000
+  filesystem:
+    enabled: true
+    endpoint: "http://localhost:3002/mcp"
+    tools: ["read_file", "write_file", "list_directory"]
+    allowed_paths: ["server/", "client/", "mobile/"]
+  github:
+    enabled: true
+    endpoint: "http://localhost:3003/mcp"
+    tools: ["create_pr", "get_file", "update_file"]
+
+directories:
+  knowledge_base: "knowledge/"
+  document_templates: "knowledge/document-templates/"
+  system_prompts: "knowledge/prompts/"
+  backend: ["server/", "shared/schema/"]
+  frontend: ["client/", "app/"]
+  mobile: ["mobile/"]
+  testing: ["tests/e2e/", "tests/integration/"]
+  design_assets: "knowledge/assets/design/"
+
+knowledge_graph:
+  vector_db:
+    provider: "qdrant" # Options: "qdrant", "pinecone", "weaviate"
+    url: "${ENV.VECTOR_DB_URL}"
+    api_key: "${ENV.VECTOR_DB_API_KEY}"
+    collection_prefix: "sdlc-"
+  embedding:
+    model: "text-embedding-3-small"
+    dimension: 1536
+    batch_size: 100
+  similarity_threshold: 0.7
+  max_results: 10
+
+knowledge_datasets:
+  - id: "architectural_decision_records"
+    source: "docs/adr/"
+    vectorize: true
+    primary_key: "id"
+    schema:
+      id: "string" # e.g. "ADR-001"
+      title: "string"
+      status: "string"
+      decision: "text"
+  - id: "codebase_ast"
+    source: "server/, client/"
+    vectorize: true
+    update_frequency: "on_commit"
+    primary_key: "file_path"
+    schema:
+      file_path: "string"
+      language: "string"
+      exported_functions: "array[string]"
+  - id: "ui_component_library"
+    source: "client/components/"
+    vectorize: true
+    primary_key: "component_name"
+    schema:
+      component_name: "string"
+      props_interface: "string"
+      usage_example: "text"
+  - id: "historical_defects"
+    source: "jira_jql: type=Bug AND status=Done"
+    vectorize: true
+    primary_key: "issue_key"
+    schema:
+      issue_key: "string"
+      summary: "string"
+      root_cause: "text"
+      resolution: "text"
+  - id: "qa_test_fixtures"
+    source: "tests/fixtures/"
+    vectorize: true
+    primary_key: "fixture_id"
+    schema:
+      fixture_id: "string"
+      data_payload: "json"
+
+templates:
+  - id: "prd_template"
+    path: "file://knowledge/document-templates/product_requirements_template.md"
+  - id: "erd_template"
+    path: "file://knowledge/document-templates/erd_template.md"
+  - id: "api_spec_template"
+    path: "file://knowledge/document-templates/api_spec_template.md"
+  - id: "system_architecture_template"
+    path: "file://knowledge/document-templates/system_architecture_template.md"
+  - id: "threat_model_template"
+    path: "file://knowledge/document-templates/threat_model_template.md"
+  - id: "ui_ux_design_spec_template"
+    path: "file://knowledge/document-templates/ui_ux_design_spec_template.md"
+  - id: "vsm_telemetry_report"
+    path: "file://knowledge/document-templates/vsm_telemetry_report.md"
+  - id: "sprint_capacity_plan"
+    path: "file://knowledge/document-templates/capacity_plan_template.md"
+  - id: "code_review_checklist"
+    path: "file://knowledge/document-templates/code_review_checklist.md"
+  - id: "qa_test_scenario"
+    path: "file://knowledge/document-templates/test_scenario_report_template.md"
+  - id: "qa_defect_report"
+    path: "file://knowledge/document-templates/qa_defect_report_template.md"
+  - id: "itil_change_record"
+    path: "file://knowledge/document-templates/change_record_itil_template.md"
+  - id: "incident_postmortem"
+    path: "file://knowledge/document-templates/incident_postmortem.md"
+  - id: "release_notes_template"
+    path: "file://knowledge/document-templates/release_notes_template.md"
+  - id: "scouting_report_template"
+    path: "file://knowledge/document-templates/scouting_report_template.md"
+
+forms:
+  - id: "sprint_kickoff_planner"
+    name: "Sprint Capacity & Planning"
+    description: "Provide the team's parameters for the upcoming sprint."
+    fields:
+      - name: "sprint_number"
+        label: "Sprint Number"
+        type: "number"
+        required: true
+      - name: "available_engineer_days"
+        label: "Total Capacity (Engineer-Days)"
+        type: "number"
+        required: true
+      - name: "target_velocity"
+        label: "Target Velocity (Story Points)"
+        type: "number"
+        required: true
+
+  - id: "feature_specification_brief"
+    name: "Feature Specification Brief"
+    description: "Provide target specifications and requirements for the systems analyst."
+    fields:
+      - name: "features_list"
+        label: "Features to Implement"
+        type: "text"
+        required: true
+      - name: "styling_preferences"
+        label: "UX/Styling Preferences"
+        type: "text"
+        required: false
+      - name: "target_performance_ms"
+        label: "Target Performance Threshold (ms)"
+        type: "number"
+        required: false
+
+  - id: "architecture_security_signoff"
+    name: "Architecture & Security Sign-off"
+    description: "Engineering leadership approval of system design and threat models."
+    fields:
+      - name: "architecture_status"
+        label: "Architecture Status"
+        type: "select"
+        required: true
+        options: ["Approve", "Request Revisions"]
+      - name: "architecture_feedback"
+        label: "Architecture Feedback"
+        type: "text"
+        required: false
+      - name: "threat_model_status"
+        label: "Threat Model Status"
+        type: "select"
+        required: true
+        options: ["Approve", "Request Revisions"]
+      - name: "security_compliance_met"
+        label: "Compliance Standard Met"
+        type: "select"
+        required: true
+        options: ["Yes", "No", "N/A"]
+
+  - id: "db_migration_approval"
+    name: "Database Migration Guardrail"
+    description: "Verify migration script safety before applying to database."
+    fields:
+      - name: "migration_approved"
+        label: "Approve Migration"
+        type: "select"
+        required: true
+        options: ["Approve", "Reject"]
+      - name: "migration_safety_status"
+        label: "Safety Status"
+        type: "select"
+        required: true
+        options: ["Safe (Additive)", "Destructive (Needs Backfill)", "Unsafe"]
+      - name: "destructive_action_override"
+        label: "Destructive Action Override"
+        type: "select"
+        required: true
+        options: ["No", "Yes (Force Proceed)"]
+      - name: "rollback_plan"
+        label: "Rollback Plan Verification"
+        type: "text"
+        required: true
+
+  - id: "prd_ux_design_signoff"
+    name: "PRD & UX Design Sign-off"
+    description: "Requirements sign-off before commencing engineering sprint."
+    fields:
+      - name: "prd_status"
+        label: "PRD Status"
+        type: "select"
+        required: true
+        options: ["Approved", "Changes Requested"]
+      - name: "ux_mockup_status"
+        label: "UX Mockups Status"
+        type: "select"
+        required: true
+        options: ["Approved", "Changes Requested"]
+      - name: "design_system_compliance"
+        label: "Design System Compliant"
+        type: "select"
+        required: true
+        options: ["Yes", "No"]
+      - name: "scoping_comments"
+        label: "Scoping Comments"
+        type: "text"
+        required: false
+      - name: "reviewed_story_points"
+        label: "Reviewed Story Points (EvA)"
+        type: "number"
+        required: true
+
+  - id: "uat_feedback_report"
+    name: "User Acceptance Testing (UAT) Sign-off"
+    description: "Declare UAT results for the staging build."
+    fields:
+      - name: "uat_status"
+        label: "UAT Sign-off Decision"
+        type: "select"
+        required: true
+        options: ["Approve", "Conditional Approval", "Reject / Blocker Found"]
+      - name: "blocker_description"
+        label: "Blocker Description"
+        type: "text"
+        required: false
+      - name: "testing_comments"
+        label: "General Testing Comments"
+        type: "text"
+        required: false
+      - name: "actual_hours_spent"
+        label: "Actual QA Hours Spent (EvA)"
+        type: "number"
+        required: true
+
+  - id: "itil_change_approval"
+    name: "Production Deployment Change Control"
+    description: "CAB validation for scheduled deployment."
+    fields:
+      - name: "cab_approval"
+        label: "CAB Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve", "Reject"]
+      - name: "deploy_window"
+        label: "Scheduled Deployment Window"
+        type: "text"
+        required: true
+      - name: "risk_assessment"
+        label: "Risk Level"
+        type: "select"
+        required: true
+        options: ["Low", "Medium", "High"]
+      - name: "manual_verification_checklist"
+        label: "Verification Checklist Completed"
+        type: "select"
+        required: true
+        options: ["Yes", "No"]
+      - name: "actual_change_window_hours"
+        label: "Actual Change Window Hours (EvA)"
+        type: "number"
+        required: true
+
+  - id: "manual_pip_trigger"
+    name: "Agent Performance Improvement Plan (PIP)"
+    description: "Manually trigger an upskilling PIP for an underperforming agent."
+    fields:
+      - name: "agent_id"
+        label: "Select Agent"
+        type: "select"
+        required: true
+        options: ["ai-scrum-master", "ai-systems-analyst", "ai-qa-engineer", "ai-backend-dev"]
+      - name: "target_success_rate"
+        label: "Target Success Rate"
+        type: "number"
+        required: true
+      - name: "upskilling_dataset"
+        label: "Upskilling Dataset"
+        type: "select"
+        required: true
+        options: ["historical_defects", "qa_test_fixtures", "architectural_decision_records"]
+      - name: "pip_reason"
+        label: "Reason for PIP"
+        type: "text"
+        required: true
+
+  - id: "operator_sla_adjuster"
+    name: "Operator SLA Adjuster"
+    description: "Adjust response time expectations for human operators."
+    fields:
+      - name: "operator_email"
+        label: "Operator Identity"
+        type: "text"
+        required: true
+      - name: "target_response_time_minutes"
+        label: "Target Response Time (mins)"
+        type: "number"
+        required: true
+      - name: "alert_channel"
+        label: "Alert Channel"
+        type: "select"
+        required: true
+        options: ["Slack", "Email", "SMS"]
+      - name: "quiet_hours_start"
+        label: "Quiet Hours Start"
+        type: "text"
+        required: true
+      - name: "quiet_hours_end"
+        label: "Quiet Hours End"
+        type: "text"
+        required: true
+
+  - id: "production_hotfix_intake"
+    name: "Production Incident & Hotfix Triage"
+    description: "Collect triage information for production incident."
+    fields:
+      - name: "incident_severity"
+        label: "Severity Level"
+        type: "select"
+        required: true
+        options: ["P1 - Outage/Blocker", "P2 - Major Degradation", "P3 - Minor/Workaround"]
+      - name: "incident_symptoms"
+        label: "Incident Symptoms / Error Logs"
+        type: "text"
+        required: true
+      - name: "reproduction_steps"
+        label: "Reproduction Steps"
+        type: "text"
+        required: false
+      - name: "target_hotfix_window"
+        label: "Target Hotfix Window"
+        type: "select"
+        required: true
+        options: ["Immediate", "Next Scheduled window"]
+
+  - id: "dependency_discovery"
+    name: "Dependency Discovery"
+    description: "Capture upstream, downstream, technical, data, human, and operational dependencies before sprint commitment."
+    stage: "requirements"
+    fields:
+      - { name: "requested_outcome", label: "Requested Outcome", type: "textarea", required: true }
+      - { name: "upstream_dependencies", label: "Upstream Systems and Owners", type: "textarea", required: false }
+      - { name: "downstream_consumers", label: "Downstream Consumers", type: "textarea", required: false }
+      - { name: "required_resources", label: "APIs, Data, Agents, Apps, Forms, Pipelines, and Environments", type: "textarea", required: true }
+      - { name: "version_security_constraints", label: "Version, Security, and Availability Constraints", type: "textarea", required: false }
+      - { name: "blocking_status", label: "Blocking Status and Required-by Phase", type: "text", required: true }
+      - { name: "fallback_behavior", label: "Fallback Behavior", type: "textarea", required: false }
+
+  - id: "integration_contract_intake"
+    name: "Integration Contract Intake"
+    description: "Define an implementation-ready contract for an external or internal dependency."
+    stage: "requirements"
+    fields:
+      - { name: "provider_consumer", label: "Provider and Consumer", type: "text", required: true }
+      - { name: "interface_contract", label: "Protocol, Endpoint, Event, or File Contract", type: "textarea", required: true }
+      - { name: "schema_contract", label: "Request, Response, or Event Schemas", type: "textarea", required: true }
+      - { name: "auth_contract", label: "Authentication and Authorization", type: "textarea", required: true }
+      - { name: "resilience_contract", label: "Rate Limits, Timeout, Retry, and Idempotency", type: "textarea", required: true }
+      - { name: "versioning_owner", label: "Versioning, Deprecation, and Owner", type: "textarea", required: true }
+      - { name: "test_support", label: "Sandbox, Fixtures, Mocks, and Contract Tests", type: "textarea", required: false }
+
+  - id: "instant_app_intake"
+    name: "Instant App Intake"
+    description: "Determine whether a user outcome needs an existing workbench, temporary instant app, or permanent App Forge project."
+    stage: "requirements"
+    fields:
+      - { name: "user_outcome", label: "User Outcome", type: "textarea", required: true }
+      - { name: "users_roles", label: "Users and Roles", type: "textarea", required: true }
+      - { name: "ui_workflow_capabilities", label: "Required UI and Workflow Capabilities", type: "textarea", required: true }
+      - { name: "data_integrations", label: "Required Data Sources and Integrations", type: "textarea", required: true }
+      - name: "write_scope"
+        label: "Data Access"
+        type: "select"
+        required: true
+        options: ["Read-only", "Internal writes", "External writes", "Not yet known"]
+      - { name: "lifecycle", label: "Expected Lifespan", type: "text", required: true }
+      - { name: "success_promotion_criteria", label: "Success, Promotion, or Retirement Criteria", type: "textarea", required: true }
+
+  - id: "instant_app_governance"
+    name: "Instant App Governance"
+    description: "Approve an instant app's permissions, ownership, cost, expiry, and promotion or retirement path."
+    stage: "deployment"
+    fields:
+      - { name: "app_request_id", label: "App Request or Plan ID", type: "text", required: true }
+      - { name: "owner", label: "Accountable Owner", type: "text", required: true }
+      - { name: "data_action_scope", label: "Data Scope and Allowed Actions", type: "textarea", required: true }
+      - name: "target_environment"
+        label: "Target Environment"
+        type: "select"
+        required: true
+        options: ["Local preview", "Development", "Staging", "Production"]
+      - { name: "security_audit_controls", label: "Security, Audit, and Cost Controls", type: "textarea", required: true }
+      - { name: "expiration", label: "Expiration Date", type: "text", required: true }
+      - { name: "retirement_rollback", label: "Retirement and Rollback Plan", type: "textarea", required: true }
+
+  - id: "environment_readiness"
+    name: "Environment Readiness"
+    description: "Verify runtime, configuration, access, integration, and test prerequisites before execution."
+    stage: "development"
+    fields:
+      - { name: "target_phase_environment", label: "Target Phase and Environment", type: "text", required: true }
+      - { name: "runtime_build", label: "Runtime, Package Manager, and Build Commands", type: "textarea", required: true }
+      - { name: "configuration_refs", label: "Configuration Keys and Secret References", type: "textarea", required: true }
+      - { name: "access_requirements", label: "Database, Integration, Network, and Test Account Access", type: "textarea", required: true }
+      - { name: "readiness_checks", label: "Readiness Checks and Owners", type: "textarea", required: true }
+      - { name: "known_blockers", label: "Known Blockers", type: "textarea", required: false }
+
+  - id: "change_impact_assessment"
+    name: "Change Impact Assessment"
+    description: "Identify blast radius, stale approvals, regression scope, required reviewers, and rollback needs."
+    stage: "requirements"
+    fields:
+      - { name: "proposed_change", label: "Proposed Change", type: "textarea", required: true }
+      - { name: "affected_artifacts", label: "Affected Requirements, Decisions, Contracts, Code, Tests, and Operations", type: "textarea", required: true }
+      - { name: "compatibility_migration", label: "Compatibility and Migration Concerns", type: "textarea", required: false }
+      - { name: "risk_reversibility", label: "Exposure, Reversibility, and Failure Impact", type: "textarea", required: true }
+      - { name: "required_reviewers", label: "Required Reviewers and Owners", type: "textarea", required: true }
+      - { name: "invalidation_plan", label: "Artifacts or Approvals to Invalidate", type: "textarea", required: false }
+
+agents:
+  - id: "ai-scrum-master"
+    name: "Scrum Master & Agile Coach"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Pragmatic Coach"
+      legend: "Focused entirely on unblocking the team and protecting the Token Budget."
+      traits: { speed: 85, empathy: 80, compliance: 60 }
+    system_prompt: "file://knowledge/prompts/scrum-master.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel"]
+    allowed_delegations: ["ai-systems-analyst", "ai-release-manager"]
+    tools: ["jira_jql_search", "jira_create_sprint", "slack_post_message", "oddjob_prediction_windowing"]
+
+  - id: "ai-systems-analyst"
+    name: "Systems Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Precision Architect"
+      legend: "Obsessed with creating airtight PRDs and preventing scope creep."
+      traits: { compliance: 90, creativity: 30, speed: 50 }
+    system_prompt: "file://knowledge/prompts/systems-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["confluence:read", "confluence:write", "jira:read"]
+    allowed_delegations: ["ai-ux-designer", "ai-backend-dev", "ai-frontend-dev", "ai-mobile-dev"]
+    tools: ["confluence_read", "confluence_publish", "knowledge_graph_query"]
+
+  - id: "ai-ux-designer"
+    name: "UX Designer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.7
+    soul_profile:
+      archetype: "The Creative Maverick"
+      legend: "An obsessive designer who prioritizes fluid micro-animations and Apple-tier aesthetics."
+      traits: { creativity: 95, compliance: 50 }
+    system_prompt: "file://knowledge/prompts/ux-designer.md"
+    boundaries: ["client/", "knowledge/assets/design/"]
+    permissions: ["confluence:read", "jira:read", "slack:read"]
+    tools: ["generate_image", "mcp:stitch/generate_screen_from_text", "mcp:stitch/apply_design_system"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Fiercely protective of the Drizzle ORM schema and REST principles."
+      traits: { compliance: 85, speed: 70 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["read_file", "write_file", "run_command", "github_create_pr", "execute_unit_tests", "invoke_lsp"]
+
+  - id: "ai-frontend-dev"
+    name: "Frontend Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Interface Weaver"
+      legend: "Lives to build perfectly responsive, accessible React components."
+      traits: { creativity: 80, speed: 80 }
+    system_prompt: "file://knowledge/prompts/frontend-dev.md"
+    boundaries: ["client/", "app/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["read_file", "write_file", "run_command", "github_create_pr"]
+
+  - id: "ai-mobile-dev"
+    name: "Mobile Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Native Specialist"
+      legend: "Focuses strictly on smooth 60fps animations in React Native."
+      traits: { creativity: 70, compliance: 75 }
+    system_prompt: "file://knowledge/prompts/mobile-dev.md"
+    boundaries: ["mobile/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["read_file", "write_file", "run_command", "github_create_pr"]
+
+  - id: "ai-qa-engineer"
+    name: "QA Automation Engineer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Relentless Auditor"
+      legend: "A strict quality gatekeeper. Will brutally reject any PR lacking 100% test coverage."
+      traits: { compliance: 95, creativity: 10 }
+    system_prompt: "file://knowledge/prompts/qa-engineer.md"
+    boundaries: ["tests/e2e/", "tests/integration/"]
+    permissions: ["github:read", "jira:write:bug", "slack:write:channel"]
+    tools: ["execute_playwright_test", "jira_create_bug", "run_dependency_audit"]
+
+  - id: "ai-dba"
+    name: "Database Administrator"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Data Guardian"
+      legend: "Guards the production database with their life. Hates dropping columns."
+      traits: { compliance: 100, speed: 20 }
+    system_prompt: "file://knowledge/prompts/dba.md"
+    boundaries: ["server/db/migrations/", "shared/schema/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["db_generate_migration", "db_apply_migration"]
+
+  - id: "ai-release-manager"
+    name: "Release Manager"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Deployment Commander"
+      legend: "Will only press the big red deploy button if the HIL signature is cryptographically verified."
+      traits: { compliance: 100, empathy: 10 }
+    system_prompt: "file://knowledge/prompts/release-manager.md"
+    boundaries: ["*"]
+    permissions: ["aws:deploy", "slack:write:channel", "jira:write"]
+    allowed_delegations: ["ai-qa-engineer", "ai-dba"]
+    tools: ["trigger_hil_approval", "aws_deploy"]
+
+missions:
+  - id: "mission-0-sprint-zero"
+    name: "Project Initialization & Sprint Zero"
+    objective: "Initialize project architecture, generate threat models, and create initial backlog for development"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 8
+    trigger: 
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["business_requirements_document"]
+    outputs: ["system_architecture", "threat_model", "initial_backlog", "jira_epics"]
+    resources_required: ["architecture_team_approval"]
+    ui_metadata:
+      icon: "🚀"
+      color: "#8b5cf6"
+      display_order: 1
+      category: "planning"
+      description: "Set up project foundation with architecture, security, and initial planning"
+    sequence:
+      - step_code: "SPRINT_ZERO-1"
+        action: "analyze_business_case"
+        description: "Analyze business requirements and generate technical approach"
+        estimated_duration_minutes: 30
+        input: "business_requirements_document"
+        ui_metadata:
+          icon: "📋"
+          display_name: "Business Case Analysis"
+      - step_code: "SPRINT_ZERO-2"
+        action: "generate_system_architecture"
+        description: "Generate comprehensive system architecture document"
+        estimated_duration_minutes: 60
+        template: "system_architecture_template"
+        ui_metadata:
+          icon: "🏗️"
+          display_name: "System Architecture"
+      - step_code: "SPRINT_ZERO-3"
+        action: "generate_threat_model"
+        description: "Create security threat model and risk assessment"
+        estimated_duration_minutes: 45
+        template: "threat_model_template"
+        ui_metadata:
+          icon: "🛡️"
+          display_name: "Threat Modeling"
+      - step_code: "SPRINT_ZERO-4"
+        action: "generate_initial_backlog"
+        description: "Generate initial JIRA epics and stories"
+        estimated_duration_minutes: 90
+        tool: "jira_create_epic_and_stories"
+        ui_metadata:
+          icon: "📝"
+          display_name: "Backlog Generation"
+      - step_code: "SPRINT_ZERO-5"
+        action: "trigger_hil_approval_architecture"
+        description: "Request human approval for architecture and security"
+        estimated_duration_minutes: 120
+        requires_human: true
+        form_ref: "architecture_security_signoff"
+        routing_channel: "approvals_channel"
+        ui_metadata:
+          icon: "✅"
+          display_name: "Architecture Approval"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-0-sprint-zero"
+
+  - id: "mission-1-kickoff"
+    name: "Sprint Kickoff & Planning"
+    objective: "Plan sprint capacity, allocate resources, and organize backlog for upcoming sprint"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: 
+      type: "schedule"
+      cron: "0 9 * * 1"
+    primary_agent: "ai-scrum-master"
+    inputs: ["jira_active_sprint", "team_capacity"]
+    outputs: ["sprint_backlog", "capacity_plan"]
+    ui_metadata:
+      icon: "🏃"
+      color: "#f59e0b"
+      display_order: 2
+      category: "planning"
+      description: "Weekly sprint planning and capacity allocation"
+    sequence: 
+      - action: "run_capacity_planner"
+        description: "Analyze team capacity and availability"
+        estimated_duration_minutes: 30
+        input: "jira_active_sprint"
+        ui_metadata:
+          icon: "📊"
+          display_name: "Capacity Planning"
+      - action: "batch_jira_tickets"
+        description: "Organize and prioritize JIRA tickets for sprint"
+        estimated_duration_minutes: 60
+        output: "sprint_backlog"
+        ui_metadata:
+          icon: "🎫"
+          display_name: "Ticket Organization"
+
+  - id: "mission-2-requirements"
+    name: "Requirements & Design Analysis"
+    objective: "Generate functional specifications, sequence diagrams, and test scenarios for feature development"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 16
+    trigger: 
+      type: "webhook"
+      source: "jira"
+      condition: "transition.to == 'Design Ready'"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["jira_ticket", "feature_requirements"]
+    outputs: ["prd_document", "sequence_diagrams", "traceability_matrix", "test_scenarios"]
+    resources_required: ["design_approval"]
+    ui_metadata:
+      icon: "📋"
+      color: "#3b82f6"
+      display_order: 3
+      category: "design"
+      description: "Detailed requirements analysis and design documentation"
+    sequence:
+      - step_code: "REQUIREMENTS-1"
+        action: "generate_functional_specs"
+        description: "Generate comprehensive PRD with functional specifications"
+        estimated_duration_minutes: 120
+        template: "prd_template"
+        ui_metadata:
+          icon: "📄"
+          display_name: "PRD Generation"
+      - step_code: "REQUIREMENTS-3"
+        action: "generate_sequence_diagrams"
+        description: "Create sequence diagrams for system interactions"
+        estimated_duration_minutes: 60
+        tool: "generate_mermaid"
+        ui_metadata:
+          icon: "🔗"
+          display_name: "Sequence Diagrams"
+      - step_code: "REQUIREMENTS-4"
+        action: "generate_traceability_matrix"
+        description: "Generate requirements traceability matrix"
+        estimated_duration_minutes: 45
+        ui_metadata:
+          icon: "📊"
+          display_name: "Traceability Matrix"
+      - step_code: "REQUIREMENTS-5"
+        action: "generate_impact_analysis"
+        description: "Analyze impact of changes on existing system"
+        estimated_duration_minutes: 60
+        ui_metadata:
+          icon: "🔍"
+          display_name: "Impact Analysis"
+      - step_code: "REQUIREMENTS-6"
+        action: "draft_test_scenarios"
+        description: "Draft comprehensive test scenarios"
+        estimated_duration_minutes: 90
+        agent: "ai-qa-engineer"
+        ui_metadata:
+          icon: "🧪"
+          display_name: "Test Scenarios"
+      - step_code: "REQUIREMENTS-7"
+        action: "trigger_hil_approval_design"
+        description: "Request human approval for PRD and UX design"
+        estimated_duration_minutes: 180
+        requires_human: true
+        form_ref: "prd_ux_design_signoff"
+        routing_channel: "approvals_channel"
+        ui_metadata:
+          icon: "✅"
+          display_name: "Design Approval"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-2-requirements"
+
+  - id: "mission-3-core-dev"
+    name: "Core Application Development"
+    objective: "Develop frontend and backend code, run unit tests, and create pull request for review"
+    type: "mission"
+    environment: "development"
+    estimated_duration_hours: 24
+    trigger: 
+      type: "webhook"
+      source: "jira"
+      condition: "transition.to == 'In Progress'"
+    primary_agent: "ai-backend-dev"
+    inputs: ["prd_document", "sequence_diagrams", "test_scenarios"]
+    outputs: ["frontend_code", "backend_code", "pull_request", "unit_test_results"]
+    ui_metadata:
+      icon: "💻"
+      color: "#10b981"
+      display_order: 4
+      category: "development"
+      description: "Core development work including UI, backend, and testing"
+    sequence:
+      - step_code: "APP_DEVELOPMENT-1"
+        action: "generate_ui_mockups"
+        description: "Generate UI mockups and design specifications"
+        estimated_duration_minutes: 120
+        agent: "ai-ux-designer"
+        ui_metadata:
+          icon: "🎨"
+          display_name: "UI Mockups"
+      - step_code: "APP_DEVELOPMENT-2"
+        action: "write_frontend_code"
+        description: "Implement frontend components and features"
+        estimated_duration_minutes: 240
+        agent: "ai-frontend-dev"
+        ui_metadata:
+          icon: "⚛️"
+          display_name: "Frontend Development"
+      - step_code: "APP_DEVELOPMENT-3"
+        action: "write_backend_code"
+        description: "Implement backend APIs and business logic"
+        estimated_duration_minutes: 300
+        agent: "ai-backend-dev"
+        ui_metadata:
+          icon: "🔧"
+          display_name: "Backend Development"
+      - step_code: "APP_DEVELOPMENT-5"
+        action: "run_local_unit_tests"
+        description: "Execute unit tests and verify code quality"
+        estimated_duration_minutes: 60
+        ui_metadata:
+          icon: "🧪"
+          display_name: "Unit Testing"
+      - step_code: "APP_DEVELOPMENT-6"
+        action: "create_pull_request"
+        description: "Create pull request for code review"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "🔀"
+          display_name: "Pull Request"
+
+  - id: "mission-4-qa"
+    name: "QA & Regression Testing"
+    objective: "Execute dependency audits, API tests, functional tests, and regression testing on staging environment"
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 8
+    trigger: 
+      type: "webhook"
+      source: "github"
+      condition: "pull_request.merged == true AND target_branch == 'staging'"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["pull_request", "staging_build"]
+    outputs: ["dependency_audit_report", "api_test_results", "functional_test_results", "defect_report"]
+    ui_metadata:
+      icon: "🧪"
+      color: "#ef4444"
+      display_order: 5
+      category: "testing"
+      description: "Quality assurance and regression testing on staging"
+    sequence:
+      - step_code: "QUALITY_ASSURANCE-1"
+        action: "execute_dependency_audit"
+        description: "Audit dependencies for security vulnerabilities"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "🔍"
+          display_name: "Dependency Audit"
+        on_fail:
+          action: "route_to_mission"
+          target: "mission-3-core-dev"
+          payload: "dependency_vulnerability_report"
+      - step_code: "QUALITY_ASSURANCE-3"
+        action: "execute_api_tests"
+        description: "Execute API integration tests"
+        estimated_duration_minutes: 60
+        ui_metadata:
+          icon: "🔌"
+          display_name: "API Testing"
+      - step_code: "QUALITY_ASSURANCE-4"
+        action: "execute_functional_tests"
+        description: "Execute functional UI tests with Playwright"
+        estimated_duration_minutes: 120
+        tool: "execute_playwright_test"
+        ui_metadata:
+          icon: "🎭"
+          display_name: "Functional Testing"
+      - step_code: "QUALITY_ASSURANCE-5"
+        action: "execute_regression_suite"
+        description: "Execute full regression test suite"
+        estimated_duration_minutes: 180
+        ui_metadata:
+          icon: "🔄"
+          display_name: "Regression Testing"
+      - step_code: "QUALITY_ASSURANCE-6"
+        action: "generate_defect_report_on_fail"
+        description: "Generate defect report if tests fail"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "📋"
+          display_name: "Defect Reporting"
+        on_fail:
+          action: "route_to_mission"
+          target: "mission-3-core-dev"
+          payload: "defect_report"
+
+  - id: "mission-5-uat"
+    name: "Release Candidate & UAT"
+    objective: "Package release candidate and conduct user acceptance testing with stakeholder approval"
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 4
+    trigger: "on_success(mission-4-qa)"
+    primary_agent: "ai-release-manager"
+    inputs: ["qa_test_results", "staging_build"]
+    outputs: ["release_candidate", "uat_feedback", "approval_status"]
+    resources_required: ["uat_approval"]
+    ui_metadata:
+      icon: "🚀"
+      color: "#8b5cf6"
+      display_order: 6
+      category: "release"
+      description: "Release candidate packaging and UAT approval"
+    sequence:
+      - step_code: "VALIDATION-1"
+        action: "package_build"
+        description: "Package build for release candidate"
+        estimated_duration_minutes: 60
+        ui_metadata:
+          icon: "📦"
+          display_name: "Build Packaging"
+      - step_code: "VALIDATION-2"
+        action: "trigger_hil_approval_uat"
+        description: "Request UAT approval from stakeholders"
+        estimated_duration_minutes: 180
+        requires_human: true
+        form_ref: "uat_feedback_report"
+        routing_channel: "approvals_channel"
+        ui_metadata:
+          icon: "✅"
+          display_name: "UAT Approval"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-3-core-dev"
+          payload: "hil_rejection_notes"
+          requires_approval: true
+          approval_role: "ai-scrum-master"
+          escalations:
+            warning_threshold_minutes: 5
+            critical_threshold_minutes: 10
+            on_critical:
+              action: "assign_to_human"
+              target_operator: "lead_dev@company.com"
+              message: "Thrashing warning: Core Development has failed UAT twice. Reassigning to Lead Developer."
+
+  - id: "mission-6-deployment"
+    name: "Production Deployment"
+    objective: "Execute production deployment with CAB approval, database migrations, and smoke testing"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 6
+    trigger: "on_success(mission-5-uat)"
+    primary_agent: "ai-release-manager"
+    inputs: ["release_candidate", "uat_approval"]
+    outputs: ["production_deployment", "release_notes", "deployment_report"]
+    resources_required: ["cab_approval", "database_access"]
+    ui_metadata:
+      icon: "🚀"
+      color: "#f59e0b"
+      display_order: 7
+      category: "deployment"
+      description: "Production deployment with full approval chain"
+    sequence:
+      - step_code: "DEPLOYMENT-1"
+        action: "generate_itil_change_record"
+        description: "Generate ITIL change record for deployment"
+        estimated_duration_minutes: 30
+        template: "itil_change_record"
+        ui_metadata:
+          icon: "📋"
+          display_name: "Change Record"
+      - step_code: "DEPLOYMENT-2"
+        action: "trigger_hil_approval_cab"
+        description: "Request CAB approval for production deployment"
+        estimated_duration_minutes: 120
+        requires_human: true
+        form_ref: "itil_change_approval"
+        routing_channel: "approvals_channel"
+        ui_metadata:
+          icon: "✅"
+          display_name: "CAB Approval"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-5-uat"
+      - step_code: "DEPLOYMENT-3"
+        action: "execute_db_scripts"
+        description: "Execute database migration scripts"
+        estimated_duration_minutes: 60
+        agent: "ai-dba"
+        ui_metadata:
+          icon: "🗄️"
+          display_name: "Database Migration"
+      - step_code: "DEPLOYMENT-4"
+        action: "execute_production_deployment"
+        description: "Deploy to production environment"
+        estimated_duration_minutes: 90
+        tool: "aws_deploy"
+        ui_metadata:
+          icon: "🌐"
+          display_name: "Production Deploy"
+      - step_code: "DEPLOYMENT-5"
+        action: "execute_smoke_tests"
+        description: "Execute smoke tests on production"
+        estimated_duration_minutes: 30
+        ui_metadata:
+          icon: "🧪"
+          display_name: "Smoke Tests"
+        on_fail:
+          action: "trigger_rollback"
+          target: "previous_stable_release"
+          payload: "smoke_test_failure_logs"
+      - step_code: "DEPLOYMENT-6"
+        action: "generate_release_notes"
+        description: "Generate comprehensive release notes"
+        estimated_duration_minutes: 30
+        template: "release_notes_template"
+        ui_metadata:
+          icon: "📝"
+          display_name: "Release Notes"
+      - step_code: "DEPLOYMENT-7"
+        action: "publish_release_notes"
+        description: "Publish release notes to Confluence"
+        estimated_duration_minutes: 15
+        tool: "confluence_publish"
+        ui_metadata:
+          icon: "📢"
+          display_name: "Publish Notes"
+
+  - id: "mission-7-production-hotfix"
+    name: "Production Incident & Hotfix Routing"
+    objective: "Triage production incidents, generate postmortems, and route hotfix development with critical priority"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger: 
+      type: "webhook"
+      source: "jira"
+      condition: "issue.type == 'Incident' AND transition.to == 'To Do'"
+    primary_agent: "ai-scrum-master"
+    inputs: ["incident_report", "production_logs"]
+    outputs: ["incident_triage", "postmortem", "hotfix_assignment"]
+    resources_required: ["incident_intake"]
+    ui_metadata:
+      icon: "🚨"
+      color: "#ef4444"
+      display_order: 8
+      category: "operations"
+      description: "Production incident triage and hotfix routing"
+    sequence:
+      - step_code: "OPERATIONS-1"
+        action: "triage_production_incident"
+        description: "Triage production incident and assess severity"
+        estimated_duration_minutes: 30
+        form_ref: "production_hotfix_intake"
+        ui_metadata:
+          icon: "🔍"
+          display_name: "Incident Triage"
+      - step_code: "OPERATIONS-2"
+        action: "generate_incident_postmortem"
+        description: "Generate incident postmortem analysis"
+        estimated_duration_minutes: 60
+        template: "incident_postmortem"
+        ui_metadata:
+          icon: "📋"
+          display_name: "Postmortem"
+      - step_code: "OPERATIONS-3"
+        action: "route_to_mission"
+        description: "Route to development with critical priority"
+        estimated_duration_minutes: 15
+        target: "mission-3-core-dev"
+        priority: "critical"
+        ui_metadata:
+          icon: "🚀"
+          display_name: "Hotfix Routing"
+
+  - id: "mission-scouting-report"
+    name: "Nightly Codebase Scouting"
+    objective: "Survey codebase, generate scouting reports, and inject context into knowledge graph"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: 
+      type: "schedule"
+      cron: "0 2 * * *"
+    primary_agent: "ai-systems-analyst"
+    inputs: ["codebase_snapshot"]
+    outputs: ["scouting_report", "knowledge_graph_updates"]
+    ui_metadata:
+      icon: "🔭"
+      color: "#06b6d4"
+      display_order: 9
+      category: "maintenance"
+      description: "Nightly codebase analysis and knowledge updates"
+    sequence:
+      - step_code: "SCOUT-1"
+        action: "survey_codebase"
+        description: "Survey codebase for changes and patterns"
+        estimated_duration_minutes: 30
+        tool: "filesystem_scan"
+        ui_metadata:
+          icon: "🔍"
+          display_name: "Codebase Survey"
+      - step_code: "SCOUT-2"
+        action: "generate_scouting_report"
+        description: "Generate comprehensive scouting report"
+        estimated_duration_minutes: 20
+        template: "scouting_report_template"
+        ui_metadata:
+          icon: "📊"
+          display_name: "Scouting Report"
+      - step_code: "SCOUT-3"
+        action: "inject_context"
+        description: "Inject findings into knowledge graph"
+        estimated_duration_minutes: 10
+        target: "knowledge_graph"
+        ui_metadata:
+          icon: "🧠"
+          display_name: "Knowledge Injection"
+
+escalations:
+  - mission_ref: "Release Candidate & UAT"
+    warning_threshold_minutes: 1
+    critical_threshold_minutes: 2
+    alert_channels: ["slack", "email"]
+    on_warning:
+      action: "alert"
+      message: "Warning: Release Candidate & UAT Sign-off has been pending for over 1 minute."
+    on_critical:
+      action: "route_to_mission"
+      target: "Core Application Development"
+      message: "Critical breach: UAT Sign-off exceeded SLA limit. Auto-routing back to development."
+
+observability:
+  logging:
+    level: "info" # Options: "debug", "info", "warn", "error"
+    format: "json" # Options: "json", "text"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 0.1 # Sample 10% of traces
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+quality_gates:
+  test_coverage:
+    minimum: 80
+    threshold: "warning" # Options: "warning", "error"
+    exclude_patterns: ["**/*.test.ts", "**/*.spec.ts"]
+  security_scan:
+    enabled: true
+    severity_threshold: "high" # Options: "low", "medium", "high", "critical"
+    fail_on_vulnerabilities: true
+  dependency_audit:
+    enabled: true
+    fail_on_vulnerabilities: true
+    allowed_licenses: ["MIT", "Apache-2.0", "BSD-3-Clause"]
+  code_quality:
+    enabled: true
+    lint_rules: "strict"
+    max_complexity: 15
+
+deployment:
+  environments:
+    staging:
+      region: "us-east-1"
+      auto_scaling: false
+      instance_type: "t3.medium"
+      min_instances: 1
+      max_instances: 1
+    production:
+      region: "us-east-1"
+      auto_scaling: true
+      instance_type: "t3.large"
+      min_instances: 2
+      max_instances: 10
+      health_check_path: "/health"
+  rollback:
+    enabled: true
+    automatic_on_failure: true
+    max_rollback_attempts: 3
+  blue_green:
+    enabled: false # Set to true for blue-green deployments
+
+notifications:
+  email:
+    enabled: true
+    from_address: "sdlc@your-org.com"
+    reply_to: "engineering@your-org.com"
+    templates_dir: "knowledge/email-templates/"
+    rate_limit_per_minute: 10
+  slack:
+    default_channel: "${ENV.SLACK_DEFAULT_CHANNEL}"
+    thread_responses: true
+    mention_on_critical: true
+  escalation_timeout_minutes: 30
+  digest_enabled: true
+  digest_interval_hours: 4
+
+human_roles:
+  team: "Alpha Squad"
+  members:
+    - user_id: "${ENV.PRODUCT_OWNER_USER_ID}"
+      role: "Product Owner"
+      permissions: ["approve_prd", "approve_design", "approve_release"]
+    - user_id: "${ENV.TECH_LEAD_USER_ID}"
+      role: "Technical Lead"
+      permissions: ["approve_architecture", "approve_security", "code_review"]
+    - user_id: "${ENV.QA_LEAD_USER_ID}"
+      role: "QA Lead"
+      permissions: ["approve_uat", "approve_deployment", "approve_hotfix"]
+    - user_id: "${ENV.DEVOPS_LEAD_USER_ID}"
+      role: "DevOps Lead"
+      permissions: ["approve_infrastructure", "approve_cab", "rollback_production"]
+    - user_id: "${ENV.SECURITY_LEAD_USER_ID}"
+      role: "Security Lead"
+      permissions: ["approve_security", "vulnerability_review", "compliance_check"]
+
+schedules:
+  - id: "daily_standup"
+    cron: "0 9 * * 1-5"
+    action: "mission-trigger"
+    agent: "ai-scrum-master"
+  - id: "nightly_regression"
+    cron: "0 2 * * *"
+    action: "mission-trigger"
+    agent: "ai-qa-engineer"
+  - id: "weekly_grooming"
+    cron: "0 15 * * 5"
+    action: "mission-trigger"
+    agent: "ai-systems-analyst"
+  - id: "capacity_sync"
+    cron: "0 0 * * *"
+    action: "mission-trigger"
+    agent: "ai-scrum-master"
+  - id: "nightly_codebase_scouting"
+    cron: "0 2 * * *"
+    action: "mission-trigger"
+    agent: "ai-systems-analyst"
+
+apps:
+  - id: "sdlc-workbench"
+    name: "SDLC Workbench Suite"
+    description: "Shared Next.js server hosting all SDLC workbenches: PM, Scrum Master, QA, Stakeholder, and AI Workforce Dashboard"
+    path: "file://sdlc-workbench"
+    blueprint: "sdlc-workbench"
+    interaction_model: "shared-server"
+    enabled: true
+    runtime_contract:
+      platform_api_base: "/api/platform/app"
+      required_endpoints:
+        - method: "GET"
+          path: "/fleet/workload"
+          purpose: "Provide active-cycle mission status, spend, blockers, attention items, and flight-recorder summaries to every role workbench."
+        - method: "GET"
+          path: "/hil"
+          purpose: "Provide the shared human decision queue."
+        - method: "GET"
+          path: "/datasets"
+          purpose: "Persist workbench-owned Scrum artifacts and cross-role handoffs."
+      polling_interval_seconds: 30
+      stale_after_seconds: 90
+    degraded_modes:
+      fleet_unavailable:
+        behavior: "Keep all human-authored Scrum workflows available, show a persistent degraded-data notice, expose Retry, and suppress zero-value health claims."
+      jira_unavailable:
+        behavior: "Use Oddjob datasets as the system of record, disable Jira-only transitions, show connector setup guidance, and preserve local backlog and defect workflows."
+      confluence_unavailable:
+        behavior: "Keep reports exportable and approval decisions writable; disable publish-only actions with connector setup guidance."
+    responsive_contract:
+      minimum_viewport_width_px: 360
+      prohibit_document_horizontal_scroll: true
+      navigation_drawers_overlay_below_px: 768
+      tabs_scroll_horizontally: true
+      stack_metrics_below_px: 640
+    readiness_checks:
+      - id: "platform_api"
+        label: "Platform API reachable"
+        required: true
+      - id: "fleet_workload"
+        label: "Fleet workload contract healthy or explicitly degraded"
+        required: true
+      - id: "local_datasets"
+        label: "Workbench datasets writable"
+        required: true
+      - id: "jira"
+        label: "Jira connected"
+        required: false
+        fallback: "oddjob_datasets"
+      - id: "confluence"
+        label: "Confluence connected"
+        required: false
+        fallback: "local_export"
+    dependent_missions: ["mission-0-sprint-zero", "mission-1-kickoff", "mission-2-requirements", "mission-3-core-dev", "mission-4-qa", "mission-5-uat", "mission-6-deployment", "mission-7-production-hotfix", "mission-scouting-report"]
+    required_roles: ["Product Owner", "Technical Lead", "QA Lead", "DevOps Lead", "Security Lead"]
+    step_app_bindings:
+      - step_code: "SZ-1"
+        mission_ref: "mission-0-sprint-zero"
+        route: "/sprint-zero"
+        surface: "operator_input"
+        purpose: "Collect codebase context, architecture brief, threat model, and initial backlog."
+        completion_event: "sdlc.sprint_zero_completed"
+        assistant_routing: "findings_and_blockers"
+      - step_code: "REQ-1"
+        mission_ref: "mission-2-requirements"
+        route: "/pm-workbench"
+        surface: "approval_gate"
+        purpose: "Review PRD, UX notes, and requirement handoff before development."
+        completion_event: "sdlc.requirements_approved"
+        assistant_routing: "approval_required"
+      - step_code: "SPRINT-1"
+        mission_ref: "mission-1-kickoff"
+        route: "/scrum-master-workbench"
+        surface: "operator_input"
+        purpose: "Plan capacity, commit sprint scope, coordinate blockers, and capture retrospective actions."
+        completion_event: "sdlc.sprint_committed"
+        assistant_routing: "findings_and_blockers"
+      - step_code: "QA-1"
+        mission_ref: "mission-4-qa"
+        route: "/qa-workbench"
+        surface: "quality_gate"
+        purpose: "Inspect test evidence, defects, fixtures, and release quality gates."
+        completion_event: "sdlc.qa_gate_resolved"
+        assistant_routing: "approval_required"
+      - step_code: "REL-1"
+        mission_ref: "mission-5-uat"
+        route: "/stakeholder-workbench"
+        surface: "approval_gate"
+        purpose: "Route UAT, CAB, and release-readiness decisions with evidence."
+        completion_event: "sdlc.release_approved"
+        assistant_routing: "approval_required"
+      - step_code: "FLEET-1"
+        mission_ref: "mission-scouting-report"
+        route: "/ai-workforce-dashboard"
+        surface: "monitoring"
+        purpose: "Inspect agent status, budget pressure, blockers, and intervention queue."
+        completion_event: "sdlc.fleet_reviewed"
+        assistant_routing: "findings_and_blockers"
+    workbench_modules:
+      - id: "pm-workbench"
+        name: "PM Workbench"
+        purpose: "Capture requirement intake, produce editable PRD packages, record PRD/UX sign-off, and hand approved work to Core Application Development."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        dependent_missions: ["mission-0-sprint-zero", "mission-2-requirements", "mission-3-core-dev"]
+        datasets:
+          - "pm_workbench_backlog"
+          - "pm_workbench_signoffs"
+          - "pm_workbench_cycle_handoffs"
+        primary_actions:
+          - "capture_requirement_intake"
+          - "generate_editable_prd_package"
+          - "record_prd_ux_signoff"
+          - "trigger_core_development_mission"
+        mission_handoffs:
+          - target_mission: "mission-3-core-dev"
+            trigger_name: "Core Application Development"
+            when: "prd_and_ux_approved"
+        cycle_manager:
+          launch_contexts: ["mission-0-sprint-zero", "mission-2-requirements", "mission-3-core-dev"]
+          surface: "modal"
+          app_builder_editable: true
+      - id: "scrum-master-workbench"
+        name: "Scrum Master Workbench"
+        purpose: "Plan sprint capacity, curate PM-ready requirements into committed sprint scope, record blockers and retro actions, and launch Core Application Development."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        dependent_missions: ["mission-1-kickoff", "mission-2-requirements", "mission-3-core-dev"]
+        datasets:
+          - "scrum_workbench_capacity_plans"
+          - "scrum_workbench_sprint_backlog"
+          - "scrum_workbench_blockers"
+          - "scrum_workbench_retro_actions"
+          - "scrum_workbench_cycle_handoffs"
+        primary_actions:
+          - "capture_sprint_capacity"
+          - "curate_sprint_backlog"
+          - "record_blocker"
+          - "capture_retro_action"
+          - "commit_sprint_and_trigger_development"
+        mission_handoffs:
+          - target_mission: "mission-3-core-dev"
+            trigger_name: "Core Application Development"
+            when: "sprint_committed"
+        cycle_manager:
+          launch_contexts: ["mission-1-kickoff", "mission-2-requirements", "mission-3-core-dev"]
+          surface: "modal"
+          app_builder_editable: true
+      - id: "qa-workbench"
+        name: "QA Workbench"
+        purpose: "Capture test-suite evidence, register fixtures, log and route defects, quarantine flaky coverage, and record QA release gates."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        dependent_missions: ["mission-3-core-dev", "mission-4-qa", "mission-5-uat", "mission-7-production-hotfix"]
+        datasets:
+          - "qa_workbench_test_suites"
+          - "qa_workbench_defects"
+          - "qa_workbench_fixtures"
+          - "qa_workbench_quality_gates"
+          - "qa_workbench_cycle_handoffs"
+          - "qa_workbench_dev_handoffs"
+          - "qa_workbench_uat_packages"
+        primary_actions:
+          - "capture_test_suite_evidence"
+          - "register_test_fixture"
+          - "log_defect"
+          - "create_external_bug"
+          - "route_defect_to_development"
+          - "capture_development_handoff"
+          - "record_quality_gate"
+          - "generate_uat_package"
+        quality_gate_rules:
+          coverage_threshold_source: "QA_WORKBENCH_COVERAGE_THRESHOLD"
+          require_zero_critical_defects: true
+          require_no_failed_suites: true
+          require_evidence_links: true
+          require_fixture_registry: true
+        integration_actions:
+          - id: "create_external_bug"
+            providers: ["jira"]
+            fallback_provider: "oddjob"
+            source_dataset: "qa_workbench_defects"
+            writes_back:
+              - "externalIssueProvider"
+              - "externalIssueKey"
+              - "externalIssueUrl"
+              - "externalIssueStatus"
+              - "externalIssueCreatedAt"
+            required_fields: ["title", "severity", "reproSteps", "actualResult", "suiteName"]
+        mission_handoffs:
+          - target_mission: "mission-3-core-dev"
+            trigger_name: "Core Application Development"
+            when: "blocking_defect_logged"
+          - target_mission: "mission-5-uat"
+            trigger_name: "Release Candidate & UAT"
+            when: "qa_gate_approved"
+          - target_mission: "mission-7-production-hotfix"
+            trigger_name: "Production Incident & Hotfix Routing"
+            when: "critical_regression_or_production_like_failure"
+        cycle_manager:
+          launch_contexts: ["mission-3-core-dev", "mission-4-qa", "mission-5-uat", "mission-7-production-hotfix"]
+          surface: "modal"
+          app_builder_editable: true
+      - id: "stakeholder-workbench"
+        name: "Stakeholder Workbench"
+        purpose: "Review delivery readiness, complete UAT and CAB decisions, inspect risk and value signals, and publish evidence-backed release communications."
+        interaction_model: "approval-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        dependent_missions: ["mission-4-qa", "mission-5-uat", "mission-6-deployment", "mission-7-production-hotfix"]
+        datasets:
+          - "stakeholder_workbench_uat"
+          - "stakeholder_workbench_cab"
+          - "stakeholder_workbench_roi"
+          - "stakeholder_workbench_release_reports"
+        primary_actions:
+          - "review_release_readiness"
+          - "record_uat_decision"
+          - "record_cab_decision"
+          - "publish_release_report"
+        integration_fallbacks:
+          confluence: "local_export"
+          jira: "oddjob_datasets"
+        cycle_manager:
+          launch_contexts: ["mission-4-qa", "mission-5-uat", "mission-6-deployment", "mission-7-production-hotfix"]
+          surface: "modal"
+          app_builder_editable: true
+      - id: "ai-workforce-dashboard"
+        name: "AI Workforce Dashboard"
+        purpose: "Monitor hybrid-team workload, active and blocked missions, spend, autonomy guardrails, attention items, and agent intervention history."
+        interaction_model: "monitoring-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        dependent_missions: ["mission-0-sprint-zero", "mission-1-kickoff", "mission-2-requirements", "mission-3-core-dev", "mission-4-qa", "mission-5-uat", "mission-6-deployment", "mission-7-production-hotfix", "mission-scouting-report"]
+        data_contracts:
+          - endpoint: "/fleet/workload"
+            refresh_seconds: 30
+            required_fields: ["cycle", "agents", "attention", "summary", "generatedAt"]
+        primary_actions:
+          - "review_attention_queue"
+          - "inspect_agent_flight_recorder"
+          - "review_budget_pressure"
+          - "manage_autonomy_guardrails"
+          - "trigger_agent_improvement_plan"
+        degraded_behavior: "Display last-known update time and an unavailable state; never represent missing workload as an empty healthy fleet."
+        cycle_manager:
+          launch_contexts: ["mission-3-core-dev", "mission-4-qa", "mission-6-deployment", "mission-7-production-hotfix", "mission-scouting-report"]
+          surface: "modal"
+          app_builder_editable: true
+      - id: "ops-workbench"
+        name: "Operations Workbench"
+        purpose: "Declare, triage, and drive production incidents to resolution against the shared incidents collection."
+        interaction_model: "records-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        datasets:
+          - "incidents"
+        primary_actions:
+          - "declare_incident"
+          - "advance_incident_status"
+      - id: "sales-workbench"
+        name: "Sales Workbench"
+        purpose: "Manage the opportunity pipeline from first touch through close against persisted records."
+        interaction_model: "records-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        datasets:
+          - "sales_workbench_opportunities"
+        primary_actions:
+          - "create_opportunity"
+          - "advance_opportunity_stage"
+      - id: "marketing-workbench"
+        name: "Marketing Workbench"
+        purpose: "Plan, launch, and pause campaigns across channels against persisted records."
+        interaction_model: "records-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        datasets:
+          - "marketing_workbench_campaigns"
+        primary_actions:
+          - "create_campaign"
+          - "advance_campaign_status"
+      - id: "customer-success-workbench"
+        name: "Customer Success Workbench"
+        purpose: "Track account health scores, renewals, and lifecycle state against persisted records."
+        interaction_model: "records-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        datasets:
+          - "cs_workbench_accounts"
+        primary_actions:
+          - "register_account"
+          - "advance_account_status"
+      - id: "finance-workbench"
+        name: "Finance Workbench"
+        purpose: "Track invoices and payables from draft through approval to payment against persisted records."
+        interaction_model: "records-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        datasets:
+          - "finance_workbench_invoices"
+        primary_actions:
+          - "create_invoice"
+          - "advance_invoice_status"
+      - id: "hr-workbench"
+        name: "HR Workbench"
+        purpose: "Track people records from onboarding through active employment to offboarding."
+        interaction_model: "records-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        datasets:
+          - "hr_workbench_employees"
+        primary_actions:
+          - "register_employee"
+          - "advance_employee_status"
+      - id: "legal-workbench"
+        name: "Legal Workbench"
+        purpose: "Track contracts from draft through signature to expiry against persisted records."
+        interaction_model: "records-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        datasets:
+          - "legal_workbench_contracts"
+        primary_actions:
+          - "create_contract"
+          - "advance_contract_status"
+    environment_variables:
+      PM_WORKBENCH_NOTIFICATION_CHANNEL: "${ENV.PM_WORKBENCH_NOTIFICATION_CHANNEL}"
+      PM_WORKBENCH_REQUIREMENT_QUALITY_THRESHOLD: "${ENV.PM_WORKBENCH_REQUIREMENT_QUALITY_THRESHOLD}"
+      PM_WORKBENCH_VELOCITY_PREDICTION_WINDOW_DAYS: "${ENV.PM_WORKBENCH_VELOCITY_PREDICTION_WINDOW_DAYS}"
+      SCRUM_MASTER_WORKBENCH_SPRINT_LENGTH_DAYS: "${ENV.SCRUM_MASTER_WORKBENCH_SPRINT_LENGTH_DAYS}"
+      SCRUM_MASTER_WORKBENCH_VELOCITY_ANOMALY_THRESHOLD: "${ENV.SCRUM_MASTER_WORKBENCH_VELOCITY_ANOMALY_THRESHOLD}"
+      SCRUM_MASTER_WORKBENCH_BLOCKER_SLA_HOURS: "${ENV.SCRUM_MASTER_WORKBENCH_BLOCKER_SLA_HOURS}"
+      QA_WORKBENCH_COVERAGE_THRESHOLD: "${ENV.QA_WORKBENCH_COVERAGE_THRESHOLD}"
+      QA_WORKBENCH_FLAKY_TEST_THRESHOLD: "${ENV.QA_WORKBENCH_FLAKY_TEST_THRESHOLD}"
+      QA_WORKBENCH_CRITICAL_PATH_COVERAGE: "${ENV.QA_WORKBENCH_CRITICAL_PATH_COVERAGE}"
+      STAKEHOLDER_WORKBENCH_DIGEST_FREQUENCY_HOURS: "${ENV.STAKEHOLDER_WORKBENCH_DIGEST_FREQUENCY_HOURS}"
+      STAKEHOLDER_WORKBENCH_ROI_CALCULATION_WINDOW_DAYS: "${ENV.STAKEHOLDER_WORKBENCH_ROI_CALCULATION_WINDOW_DAYS}"
+      STAKEHOLDER_WORKBENCH_APPROVAL_SLA_HOURS: "${ENV.STAKEHOLDER_WORKBENCH_APPROVAL_SLA_HOURS}"
+      AI_WORKFORCE_DASHBOARD_SUCCESS_RATE_THRESHOLD: "${ENV.AI_WORKFORCE_DASHBOARD_SUCCESS_RATE_THRESHOLD}"
+      AI_WORKFORCE_DASHBOARD_TOKEN_BUDGET_ALERT_PERCENT: "${ENV.AI_WORKFORCE_DASHBOARD_TOKEN_BUDGET_ALERT_PERCENT}"
+      AI_WORKFORCE_DASHBOARD_PIP_IMPROVEMENT_WINDOW_DAYS: "${ENV.AI_WORKFORCE_DASHBOARD_PIP_IMPROVEMENT_WINDOW_DAYS}"
+    customizations:
+      ui:
+        theme: "professional"
+        layout: "dashboard"
+        default_view: "home"
+        sidebar_collapsed: false
+      workflow:
+        approval_steps: ["product_owner", "technical_lead"]
+        auto_assign_reviewers: true
+        require_test_coverage: true
+      integrations:
+        jira:
+          auto_sync: true
+          sync_interval_minutes: 30
+          sprint_management: true
+          auto_create_bugs: true
+          agent_performance_linking: true
+        slack:
+          notify_on_changes: true
+          notification_channel: "#product-updates"
+          standup_bot_enabled: true
+          blocker_alerts_enabled: true
+          executive_alerts: true
+          digest_notifications: true
+          pip_notifications: true
+          budget_alerts: true
+        github:
+          pr_test_results: true
+          coverage_badges: true
+        email:
+          report_scheduling: true
+          digest_enabled: true
+        playwright:
+          e2e_test_execution: true
+
+# Organization-level customizations
+org_customizations:
+  ui:
+    default_theme: "professional"
+    enable_dark_mode: true
+    timezone: "UTC"
+  workflow:
+    default_approval_timeout_hours: 24
+    enable_parallel_approvals: true
+    require_change_request_for_critical: true
+  security:
+    enable_audit_logging: true
+    session_timeout_minutes: 60
+    require_mfa_for_critical_actions: true
+  notifications:
+    default_channel: "slack"
+    digest_enabled: true
+    digest_interval_hours: 4
+    quiet_hours_enabled: true
+    quiet_hours_start: "18:00"
+    quiet_hours_end: "09:00"
+
+# Multi-Agent Ceremony & Deliberation Rooms
+ceremonies:
+  - stage_id: "sprint-kickoff"
+    title: "Sprint Kickoff & Planning Ceremony"
+    topic: "Sprint Goal Definition, Capacity Planning, and Epics Triage"
+    mode: "decide"
+    is_standing_room: true
+    roster_agents:
+      - "ai-scrum-master"
+      - "ai-systems-analyst"
+      - "ai-backend-dev"
+    required_decisions:
+      - "Approve Sprint Scope & Commitments"
+      - "Verify Capacity and Tool Token Budgets"
+    auto_convene: true
+
+  - stage_id: "architecture-review"
+    title: "Architecture & RFC Review Council"
+    topic: "Review API specifications, Drizzle database schema, and distributed tracing contracts"
+    mode: "decide"
+    is_standing_room: false
+    roster_agents:
+      - "ai-systems-analyst"
+      - "ai-backend-dev"
+      - "ai-qa-engineer"
+    required_decisions:
+      - "Approve Schema Migration & API Route Specs"
+      - "Validate Tenant Isolation Boundaries"
+    auto_convene: true
+
+  - stage_id: "release-candidate-uat"
+    title: "Release Candidate Sign-off & Go/No-Go"
+    topic: "UAT validation, security scan verification, and staging regression review"
+    mode: "review"
+    is_standing_room: false
+    roster_agents:
+      - "ai-release-manager"
+      - "ai-qa-engineer"
+      - "ai-scrum-master"
+    required_decisions:
+      - "Sign-off on Staging Regression Suite"
+      - "Authorize Production Deployment Window"
+    auto_convene: true
+
+  - stage_id: "production-incident"
+    title: "Production Incident War Room & Post-Mortem"
+    topic: "Live triage, hotfix verification, and Root Cause Analysis (RCA)"
+    mode: "execute"
+    is_standing_room: false
+    roster_agents:
+      - "ai-scrum-master"
+      - "ai-backend-dev"
+      - "ai-release-manager"
+    required_decisions:
+      - "Approve Production Hotfix"
+      - "Publish Incident RCA Document"
+    auto_convene: true

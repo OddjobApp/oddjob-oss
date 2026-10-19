@@ -1,0 +1,37 @@
+policies:
+  - name: "Enterprise Default Policy"
+    description: "Standard policy for internal automation tools and agents"
+    rules:
+      - type: "tool_allow"
+        configuration:
+          tools: ["read_file", "search", "list_dir", "sql_query"]
+      - type: "tool_deny"
+        configuration:
+          tools: ["execute_command", "write_file", "delete_file"]
+      - type: "budget_limit"
+        configuration:
+          maxCostUSD: 15.0
+          scope: "mission"
+      - type: "pii_redaction"
+        configuration:
+          patterns:
+            - name: "SSN"
+              regex: "\\d{3}-\\d{2}-\\d{4}"
+            - name: "CreditCard"
+              regex: "(?:\\d[ -]*?){13,16}"
+      - type: "model_cap"
+        configuration:
+          maxModelTier: "premium"
+          allowedModels: ["gemini-2.0-flash", "claude-3-5-sonnet", "claude-3-5-haiku", "llama3.2:latest"]
+      - type: "file_path_restriction"
+        configuration:
+          allowedPaths:
+            - "${PROJECT_ROOT}/**"
+            - "/tmp/**"
+      - type: "network_destination_restriction"
+        configuration:
+          allowedDomains:
+            - "api.github.com"
+            - "google.com"
+            - "wikipedia.org"
+            - "npmjs.org"

@@ -1,0 +1,364 @@
+name: "Contract Management"
+version: "1.0"
+containers: {}
+description: "Automated contract generation, review, approval workflows, and renewal tracking. Integrates with e-signature tools, JIRA for task management, and Confluence for document storage."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Contract Management"
+  icon: "📄"
+  theme_color: "#8b5cf6"
+  display_priority: 2
+  category: "legal"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "legal"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  legal_standards:
+    required: true
+    path: "file://knowledge/guidelines/legal_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "contract_template"
+    path: "file://knowledge/document-templates/contract_template.md"
+  - id: "contract_review_template"
+    path: "file://knowledge/document-templates/contract_review_template.md"
+
+forms:
+  - id: "contract_intake"
+    name: "Contract Intake"
+    description: "Provide contract details for generation."
+    fields:
+      - name: "contract_type"
+        label: "Contract Type"
+        type: "select"
+        required: true
+        options: ["License Agreement", "MSA", "SOW", "DPA", "NDA", "Service Agreement"]
+      - name: "party_name"
+        label: "Counterparty Name"
+        type: "text"
+        required: true
+      - name: "party_type"
+        label: "Counterparty Type"
+        type: "select"
+        required: true
+        options: ["Enterprise", "SMB", "Startup", "Government", "Individual"]
+      - name: "contract_value"
+        label: "Contract Value"
+        type: "text"
+        required: true
+      - name: "start_date"
+        label: "Start Date"
+        type: "date"
+        required: true
+      - name: "end_date"
+        label: "End Date"
+        type: "date"
+        required: true
+      - name: "auto_renewal"
+        label: "Auto-Renewal"
+        type: "select"
+        required: true
+        options: ["Yes", "No"]
+      - name: "special_terms"
+        label: "Special Terms"
+        type: "textarea"
+        required: false
+
+  - id: "contract_review"
+    name: "Contract Review"
+    description: "Review and approve contract."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Send for Signature", "Request Revisions", "Reject"]
+      - name: "legal_review"
+        label: "Legal Review Complete"
+        type: "select"
+        required: true
+        options: ["Yes - Approved", "Yes - Minor Changes", "No - Major Changes Required"]
+      - name: "risk_assessment"
+        label: "Risk Assessment"
+        type: "select"
+        required: true
+        options: ["Low Risk", "Medium Risk", "High Risk"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-legal-counsel"
+    name: "Legal Counsel & Compliance Advisor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Compliance Guardian"
+      legend: "Reviews contracts for compliance and risk."
+      traits: { compliance: 100, creativity: 10, persistence: 95 }
+    system_prompt: "file://knowledge/prompts/legal-counsel.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-legal-analyst"
+    name: "Legal Contract Review Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Contract Specialist"
+      legend: "Generates contracts and manages workflows."
+      traits: { compliance: 95, creativity: 15, speed: 70 }
+    system_prompt: "file://knowledge/prompts/legal-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-generate-contract"
+    name: "Generate Contract"
+    objective: "Generate contract from template"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger:
+      type: "manual"
+      source: "legal_workbench"
+    primary_agent: "ai-legal-analyst"
+    inputs: ["contract_intake"]
+    outputs: ["contract_draft"]
+    sequence:
+      - step_code: "GEN-1"
+        action: "select_template"
+        description: "Select appropriate contract template"
+        estimated_duration_minutes: 15
+      - step_code: "GEN-2"
+        action: "populate_terms"
+        description: "Populate contract with provided terms"
+        estimated_duration_minutes: 30
+      - step_code: "GEN-3"
+        action: "apply_clauses"
+        description: "Apply standard clauses and provisions"
+        estimated_duration_minutes: 30
+      - step_code: "GEN-4"
+        action: "custom_terms"
+        description: "Incorporate special terms if provided"
+        estimated_duration_minutes: 20
+      - step_code: "GEN-5"
+        action: "generate_draft"
+        description: "Generate final contract draft"
+        estimated_duration_minutes: 25
+        template: "contract_template"
+
+  - id: "mission-legal-review"
+    name: "Legal Review"
+    objective: "Review contract for compliance and risk"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-generate-contract)"
+    primary_agent: "ai-legal-counsel"
+    inputs: ["contract_draft"]
+    outputs: ["legal_assessment"]
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "check_compliance"
+        description: "Check compliance with legal standards"
+        estimated_duration_minutes: 30
+      - step_code: "REVIEW-2"
+        action: "assess_risk"
+        description: "Assess contract risk level"
+        estimated_duration_minutes: 20
+      - step_code: "REVIEW-3"
+        action: "check_terms"
+        description: "Review terms and conditions"
+        estimated_duration_minutes: 30
+      - step_code: "REVIEW-4"
+        action: "check_obligations"
+        description: "Check obligations and deliverables"
+        estimated_duration_minutes: 20
+      - step_code: "REVIEW-5"
+        action: "generate_assessment"
+        description: "Generate legal assessment report"
+        estimated_duration_minutes: 20
+        template: "contract_review_template"
+
+  - id: "mission-review-approval"
+    name: "Review and Approval"
+    objective: "Human review and approval of contract"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-legal-review)"
+    primary_agent: "ai-legal-counsel"
+    inputs: ["legal_assessment"]
+    outputs: ["approved_contract"]
+    requires_human: true
+    form_ref: "contract_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "APPROVE-1"
+        action: "present_contract"
+        description: "Present contract for review"
+        estimated_duration_minutes: 10
+      - step_code: "APPROVE-2"
+        action: "collect_approval"
+        description: "Collect legal director approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "APPROVE-3"
+        action: "finalize_contract"
+        description: "Finalize contract based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-send-for-signature"
+    name: "Send for Signature"
+    objective: "Send contract for electronic signature"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-review-approval)"
+    primary_agent: "ai-legal-analyst"
+    inputs: ["approved_contract"]
+    outputs: ["signature_request"]
+    sequence:
+      - step_code: "SIGN-1"
+        action: "prepare_document"
+        description: "Prepare document for signature"
+        estimated_duration_minutes: 10
+      - step_code: "SIGN-2"
+        action: "send_signature_request"
+        description: "Send signature request to counterparty"
+        estimated_duration_minutes: 10
+      - step_code: "SIGN-3"
+        action: "track_status"
+        description: "Track signature status"
+        estimated_duration_minutes: 5
+      - step_code: "SIGN-4"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+  - id: "mission-store-contract"
+    name: "Store Contract"
+    objective: "Store signed contract in Confluence"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-send-for-signature)"
+    primary_agent: "ai-legal-analyst"
+    inputs: ["signature_request"]
+    outputs: ["stored_contract"]
+    sequence:
+      - step_code: "STORE-1"
+        action: "publish_to_confluence"
+        description: "Publish contract to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "STORE-2"
+        action: "create_jira_task"
+        description: "Create JIRA task for renewal tracking"
+        estimated_duration_minutes: 10
+        tool: "jira_create_sprint"
+      - step_code: "STORE-3"
+        action: "update_registry"
+        description: "Update contract registry"
+        estimated_duration_minutes: 5
+      - step_code: "STORE-4"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+  - id: "mission-track-renewals"
+    name: "Track Renewals"
+    objective: "Monitor contract renewals and expirations"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 0.5
+    trigger:
+      type: "manual"
+      source: "legal_workbench"
+    primary_agent: "ai-legal-analyst"
+    inputs: []
+    outputs: ["renewal_report"]
+    sequence:
+      - step_code: "RENEW-1"
+        action: "query_contracts"
+        description: "Query contracts approaching expiration"
+        estimated_duration_minutes: 10
+        tool: "jira_jql_search"
+      - step_code: "RENEW-2"
+        action: "assess_renewal"
+        description: "Assess renewal requirements"
+        estimated_duration_minutes: 15
+      - step_code: "RENEW-3"
+        action: "generate_report"
+        description: "Generate renewal report"
+        estimated_duration_minutes: 10
+      - step_code: "RENEW-4"
+        action: "notify_team"
+        description: "Notify team of renewals due"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

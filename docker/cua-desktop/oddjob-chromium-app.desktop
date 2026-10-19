@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Web Browser
+GenericName=Web Browser
+Comment=Chromium, recordable by Oddjob
+Exec=/usr/local/bin/oddjob-browser %U
+Icon=chromium
+Terminal=false
+Categories=Network;WebBrowser;
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true

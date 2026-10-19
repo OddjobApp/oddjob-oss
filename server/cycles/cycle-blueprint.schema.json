@@ -1,0 +1,702 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OddjobCycleBlueprint",
+  "description": "JSON Schema for Oddjob Operational Cycle Blueprint YAML files.",
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "description"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the cycle template / application."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version identifier of the blueprint."
+    },
+    "description": {
+      "type": "string",
+      "description": "A high-level description of what the cycle orchestrates."
+    },
+    "author": {
+      "type": "string",
+      "description": "The creator or publisher of the blueprint."
+    },
+    "ui_metadata": {
+      "type": "object",
+      "properties": {
+        "display_name": { "type": "string" },
+        "icon": { "type": "string", "description": "Emoji or icon identifier." },
+        "theme_color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "display_priority": { "type": "integer" },
+        "category": { "type": "string" },
+        "show_in_gallery": { "type": "boolean" },
+        "featured": { "type": "boolean" }
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "properties": {
+        "execution_sandbox": { "type": "boolean" },
+        "max_thrashing_iterations": { "type": "integer", "minimum": 0 },
+        "enforce_read_only_prod": { "type": "boolean" },
+        "token_budget_per_ticket": { "type": "integer", "minimum": 1 },
+        "token_budget_per_launch": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "ai_provider": {
+      "type": "object",
+      "required": ["provider", "api_key"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["anthropic", "openai", "google"]
+        },
+        "api_key": {
+          "type": "string",
+          "pattern": "^\\$\\{ENV\\.[A-Z_][A-Z0-9_]*\\}$",
+          "description": "Must be an environment variable reference, e.g., ${ENV.AI_API_KEY}"
+        },
+        "default_model": { "type": "string" },
+        "fallback_model": { "type": "string" },
+        "temperature": { "type": "number", "minimum": 0.0, "maximum": 2.0 },
+        "max_tokens": { "type": "integer", "minimum": 1 },
+        "timeout_ms": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "tech_stack": {
+      "type": "object",
+      "properties": {
+        "backend_language": { "type": "string" },
+        "frontend_framework": { "type": "string" },
+        "mobile_framework": { "type": "string" }
+      }
+    },
+    "portfolio_classification": {
+      "type": "object",
+      "properties": {
+        "group_type": { "type": "string", "enum": ["project", "operations"] },
+        "capitalization_category": { "type": "string", "enum": ["CapEx", "OpEx"] },
+        "cost_center": { "type": "string" }
+      }
+    },
+    "organizational_guidelines": {
+      "type": "object",
+      "properties": {
+        "constitution": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "path": { "type": "string" }
+          }
+        },
+        "coding_standards": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "path": { "type": "string" }
+          }
+        },
+        "security_standards": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "path": { "type": "string" }
+          }
+        },
+        "compliance": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "frameworks": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "required": { "type": "boolean" },
+          "enabled": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "vsm_telemetry": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "metrics": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "jira_status_mapping": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "prediction_intelligence": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "mcp_servers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["endpoint", "tools"],
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "endpoint": { "type": "string" },
+          "tools": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "timeout_ms": { "type": "integer" }
+        }
+      }
+    },
+    "directories": {
+      "type": "object",
+      "properties": {
+        "knowledge_base": { "type": "string" },
+        "document_templates": { "type": "string" },
+        "system_prompts": { "type": "string" },
+        "backend": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "frontend": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "testing": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "knowledge_graph": {
+      "type": "object",
+      "properties": {
+        "vector_db": {
+          "type": "object",
+          "required": ["provider"],
+          "properties": {
+            "provider": { "type": "string" },
+            "url": { "type": "string" },
+            "api_key": { "type": "string" },
+            "collection_prefix": { "type": "string" }
+          }
+        },
+        "embedding": {
+          "type": "object",
+          "required": ["model"],
+          "properties": {
+            "model": { "type": "string" },
+            "dimension": { "type": "integer" },
+            "batch_size": { "type": "integer" }
+          }
+        },
+        "similarity_threshold": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "max_results": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "knowledge_datasets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "primary_key"],
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "vectorize": { "type": "boolean" },
+          "primary_key": { "type": "string" },
+          "schema": { "type": "object" },
+          "schema_inference": { "type": "boolean" }
+        }
+      }
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path"],
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    },
+    "forms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "fields"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "label", "type"],
+              "properties": {
+                "name": { "type": "string" },
+                "label": { "type": "string" },
+                "type": { "type": "string" },
+                "required": { "type": "boolean" },
+                "options": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "system_prompt"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["supervisor", "worker"] },
+          "model": { "type": "string" },
+          "temperature": { "type": "number" },
+          "soul_profile": {
+            "type": "object",
+            "properties": {
+              "archetype": { "type": "string" },
+              "legend": { "type": "string" }
+            }
+          },
+          "system_prompt": { "type": "string" },
+          "boundaries": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "allowed_delegations": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "tools": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "missions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "primary_agent", "trigger"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "objective": { "type": "string" },
+          "type": { "type": "string", "enum": ["mission", "report", "sweep"] },
+          "environment": { "type": "string", "enum": ["planning", "development", "staging", "production"] },
+          "estimated_duration_hours": { "type": "number" },
+          "trigger": {
+            "type": ["string", "object"],
+            "description": "Trigger event, e.g. on_success(mission-id), or a trigger object."
+          },
+          "primary_agent": { "type": "string" },
+          "inputs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "outputs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "ui_metadata": {
+            "type": "object",
+            "properties": {
+              "icon": { "type": "string" },
+              "color": { "type": "string" },
+              "display_order": { "type": "integer" },
+              "category": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "sequence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["action"],
+              "properties": {
+                "step_code": { "type": "string" },
+                "action": { "type": "string" },
+                "description": { "type": "string" },
+                "estimated_duration_minutes": { "type": "number" },
+                "requires_human": { "type": "boolean" },
+                "form_ref": { "type": "string" },
+                "routing_channel": { "type": "string" },
+                "agent": { "type": "string" },
+                "tool": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schedules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "cron"],
+        "properties": {
+          "id": { "type": "string" },
+          "cron": { "type": "string" },
+          "action": { "type": "string" },
+          "agent": { "type": "string" }
+        }
+      }
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["mission_ref", "alert_channels"],
+        "properties": {
+          "mission_ref": { "type": "string" },
+          "alert_channels": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "warning_threshold_minutes": { "type": "number", "minimum": 0 },
+          "critical_threshold_minutes": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "properties": {
+        "logging": {
+          "type": "object",
+          "properties": {
+            "level": { "type": "string", "enum": ["debug", "info", "warn", "error"] },
+            "format": { "type": "string" },
+            "structured": { "type": "boolean" }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpoint": { "type": "string" },
+            "interval_seconds": { "type": "integer" }
+          }
+        },
+        "tracing": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "sample_rate": { "type": "number" },
+            "endpoint": { "type": "string" }
+          }
+        }
+      }
+    },
+    "quality_gates": {
+      "type": "object",
+      "properties": {
+        "test_coverage": {
+          "type": "object",
+          "properties": {
+            "minimum": { "type": "number", "minimum": 0, "maximum": 100 },
+            "threshold": { "type": "string", "enum": ["warning", "error", "critical"] }
+          }
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "environments": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "region": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "rollback": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "automatic_on_failure": { "type": "boolean" },
+            "max_rollback_attempts": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "slack": {
+          "type": "object",
+          "properties": {
+            "default_channel": { "type": "string" },
+            "thread_responses": { "type": "boolean" }
+          }
+        },
+        "email": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "from_address": { "type": "string" }
+          }
+        }
+      }
+    },
+    "human_roles": {
+      "type": "object",
+      "properties": {
+        "team": { "type": "string" },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["user_id", "role"],
+            "properties": {
+              "user_id": { "type": "string" },
+              "role": { "type": "string" },
+              "permissions": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" },
+          "schema": { "type": ["string", "object"] },
+          "enabled": { "type": "boolean" },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "type": ["string", "object"]
+            }
+          }
+        }
+      }
+    },
+    "org_customizations": {
+      "type": "object",
+      "properties": {
+        "ui": { "type": "object" },
+        "workflow": { "type": "object" },
+        "security": { "type": "object" },
+        "notifications": { "type": "object" }
+      }
+    },
+    "behavioral_scoring": {
+      "type": "object",
+      "required": ["model"],
+      "properties": {
+        "model": {
+          "type": "object",
+          "required": ["name", "vectors"],
+          "properties": {
+            "name": { "type": "string" },
+            "entity_type": { "type": "string" },
+            "description": { "type": "string" },
+            "vectors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "decay": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": { "type": "string" },
+                      "half_life_days": { "type": "number" },
+                      "max_age_days": { "type": "number" }
+                    }
+                  },
+                  "signal_category": { "type": "string", "enum": ["behavioral", "qualification", "blended"] }
+                }
+              }
+            },
+            "blend_config": {
+              "type": "object",
+              "properties": {
+                "behavioral_weight": { "type": "number" },
+                "qualification_weight": { "type": "number" }
+              }
+            }
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["vector", "weight"],
+            "properties": {
+              "name": { "type": "string" },
+              "event_type": { "type": "string" },
+              "page": { "type": "string" },
+              "activity": { "type": "string" },
+              "vector": { "type": "string" },
+              "weight": { "type": ["number", "string"] },
+              "operation": { "type": "string", "enum": ["increment", "set", "multiply"] },
+              "signal_category": { "type": "string", "enum": ["behavioral", "qualification"] },
+              "conditions": { "type": "string" }
+            }
+          }
+        },
+        "thresholds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "condition", "actions"],
+            "properties": {
+              "name": { "type": "string" },
+              "condition": { "type": "string" },
+              "cooldown_ms": { "type": "integer" },
+              "hysteresis_percent": { "type": "number" },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["type", "config"],
+                  "properties": {
+                    "type": { "type": "string" },
+                    "config": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ceremonies": {
+      "type": "array",
+      "description": "Structured Crew discussion and decision ceremony rooms tied to cycle stages.",
+      "items": {
+        "type": "object",
+        "required": ["stage_id", "title", "topic"],
+        "properties": {
+          "stage_id": { "type": "string", "description": "Identifier of the cycle stage or blueprint that triggers this room." },
+          "title": { "type": "string", "description": "Display title of the ceremony room." },
+          "topic": { "type": "string", "description": "Initial active topic and objective for the crew deliberation." },
+          "mode": { "type": "string", "enum": ["explore", "decide", "review", "execute"], "default": "decide" },
+          "is_standing_room": { "type": "boolean", "default": false },
+          "roster_agents": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Agent identifiers or persona cards to convene in the room."
+          },
+          "required_decisions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Decision gate items that must be approved in the room before stage completion."
+          },
+          "auto_convene": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "follow_up_cycle_template_id": {
+      "type": ["integer", "string"],
+      "description": "Direct database ID of the cycle template to launch when this cycle completes successfully."
+    },
+    "follow_up_cycle": {
+      "type": "object",
+      "description": "Embedded cycle launch specification that will be instantiated when this cycle completes successfully.",
+      "required": ["name", "objective", "blueprints"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "objective": { "type": "string" },
+        "priority": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "budgetLimitUsd": { "type": "string", "description": "Decimal string format, e.g. '100.00'" },
+        "tokenLimit": { "type": "integer" },
+        "requiresApproval": { "type": "boolean" },
+        "blueprints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "objective"],
+            "properties": {
+              "name": { "type": "string" },
+              "objective": { "type": "string" },
+              "type": { "type": "string", "enum": ["mission", "milestone", "prediction"] },
+              "dependsOn": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["blueprintName", "type"],
+                  "properties": {
+                    "blueprintName": { "type": "string" },
+                    "type": { "type": "string", "enum": ["finish_to_start", "start_to_start", "finish_to_finish", "start_to_finish"] },
+                    "offset": {
+                      "type": "object",
+                      "required": ["value", "unit", "direction"],
+                      "properties": {
+                        "value": { "type": "number" },
+                        "unit": { "type": "string", "enum": ["days", "weeks", "months", "years"] },
+                        "direction": { "type": "string", "enum": ["plus", "minus"] }
+                      }
+                    }
+                  }
+                }
+              },
+              "inputs": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "outputs": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "config": { "type": "object", "additionalProperties": true }
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

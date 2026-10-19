@@ -1,0 +1,252 @@
+/* Mobile Dashboard Styles */
+
+@media (max-width: 768px) {
+
+    /* Mobile Dashboard Layout */
+    .mobile-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+    }
+
+    /* Status Cards - Swipeable */
+    .status-cards {
+        display: flex;
+        overflow-x: auto;
+        gap: var(--spacing-md);
+        scroll-snap-type: x mandatory;
+        padding-bottom: var(--spacing-sm);
+    }
+
+    .status-card {
+        flex: 0 0 280px;
+        scroll-snap-align: start;
+        background-color: var(--color-backgroundSecondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
+        padding: var(--spacing-lg);
+    }
+
+    /* Hide scrollbar but keep functionality */
+    .status-cards::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Recent Activity - Infinite Scroll */
+    .recent-activity {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+        background-color: var(--color-backgroundSecondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-md);
+        margin-bottom: var(--spacing-sm);
+        min-height: 60px;
+        /* Touch-friendly */
+    }
+
+    /* FAB Menu */
+    .fab-menu {
+        position: fixed;
+        bottom: var(--spacing-lg);
+        right: var(--spacing-lg);
+        z-index: 1000;
+    }
+
+    .fab-button {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 8px var(--color-shadow);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-fast);
+    }
+
+    .fab-button:active {
+        transform: scale(0.95);
+    }
+
+    .fab-actions {
+        position: absolute;
+        bottom: 70px;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .fab-action {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        background-color: var(--color-backgroundSecondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-xl);
+        padding: var(--spacing-sm) var(--spacing-md);
+        box-shadow: 0 2px 4px var(--color-shadow);
+        white-space: nowrap;
+        min-height: 44px;
+        /* Touch-friendly */
+    }
+
+    /* Mobile Navigation */
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--color-backgroundSecondary);
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-around;
+        padding: var(--spacing-sm);
+        z-index: 999;
+    }
+
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm);
+        color: var(--color-textSecondary);
+        text-decoration: none;
+        min-width: 60px;
+        min-height: 44px;
+        /* Touch-friendly */
+        border-radius: var(--border-radius-md);
+        transition: all var(--transition-fast);
+    }
+
+    .mobile-nav-item.active {
+        color: var(--color-primary);
+        background-color: var(--color-hover);
+    }
+
+    .mobile-nav-label {
+        font-size: 12px;
+    }
+
+    /* Swipe Gestures */
+    .swipeable {
+        position: relative;
+        touch-action: pan-y;
+    }
+
+    .swipe-action-left,
+    .swipe-action-right {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .swipe-action-left {
+        left: 0;
+        background-color: var(--color-success);
+    }
+
+    .swipe-action-right {
+        right: 0;
+        background-color: var(--color-error);
+    }
+
+    /* Pull to Refresh */
+    .pull-to-refresh {
+        display: flex;
+        justify-content: center;
+        padding: var(--spacing-md);
+        color: var(--color-textSecondary);
+    }
+
+    .pull-to-refresh.active {
+        color: var(--color-primary);
+    }
+
+    /* Mobile Forms */
+    .mobile-form input,
+    .mobile-form select,
+    .mobile-form textarea {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+    }
+
+    .mobile-form button {
+        min-height: 44px;
+        width: 100%;
+    }
+
+    /* Mobile Modals */
+    .mobile-modal {
+        position: fixed;
+        inset: 0;
+        background-color: var(--color-background);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mobile-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--color-border);
+        min-height: 56px;
+    }
+
+    .mobile-modal-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--spacing-md);
+    }
+
+    .mobile-modal-footer {
+        padding: var(--spacing-md);
+        border-top: 1px solid var(--color-border);
+    }
+}
+
+/* Tablet Responsive (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .widget-container.span-2 {
+        grid-column: span 2;
+    }
+}
+
+/* Large Screens */
+@media (min-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .widget-container.span-2 {
+        grid-column: span 2;
+    }
+
+    .widget-container.span-3 {
+        grid-column: span 3;
+    }
+}

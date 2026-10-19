@@ -1,0 +1,45 @@
+{
+  "name": "@oddjob/graphrag-engine",
+  "version": "1.0.0",
+  "description": "GraphRAG Engine - Hybrid Graph + Vector Retrieval Augmented Generation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "author": "Oddjob AI, Inc.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oddjob-ai/graphrag-engine.git"
+  },
+  "keywords": [
+    "graphrag",
+    "rag",
+    "knowledge-graph",
+    "vector-search",
+    "hybrid-search",
+    "llm",
+    "ai"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "docs": "typedoc src/index.ts"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "typedoc": "^0.25.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

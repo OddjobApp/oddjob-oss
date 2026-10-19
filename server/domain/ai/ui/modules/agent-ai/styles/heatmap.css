@@ -1,0 +1,16 @@
+
+.heatmap-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: var(--grid-cols);
+}
+
+.heatmap-cell {
+  @apply h-12 rounded-lg border transition-all cursor-crosshair relative;
+  background-color: var(--intensity);
+}
+
+.legend-swatch {
+  @apply w-8 h-3 rounded-md border border-white/5;
+  background-color: var(--legend-bg);
+}

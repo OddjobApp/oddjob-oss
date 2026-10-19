@@ -1,0 +1,296 @@
+name: "Analytics & Reporting"
+version: "1.0"
+containers: {}
+description: "Comprehensive analytics and reporting for cycle performance, agent efficiency, and business metrics. Generates dashboards, reports, and insights for data-driven decision making."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Analytics & Reporting"
+  icon: "📈"
+  theme_color: "#8b5cf6"
+  display_priority: 1
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  analytics_standards:
+    required: true
+    path: "file://knowledge/guidelines/analytics_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+  datadog:
+    required: true
+    api_key: "${ENV.DATADOG_API_KEY}"
+    app_key: "${ENV.DATADOG_APP_KEY}"
+    endpoint: "${ENV.DATADOG_ENDPOINT}"
+
+templates:
+  - id: "analytics_report_template"
+    path: "file://knowledge/document-templates/analytics_report_template.md"
+  - id: "dashboard_config_template"
+    path: "file://knowledge/document-templates/dashboard_config_template.md"
+
+forms:
+  - id: "report_request"
+    name: "Analytics Report Request"
+    description: "Request a custom analytics report."
+    fields:
+      - name: "report_type"
+        label: "Report Type"
+        type: "select"
+        required: true
+        options: ["Cycle Performance", "Agent Efficiency", "Business Metrics", "Custom"]
+      - name: "time_period"
+        label: "Time Period"
+        type: "select"
+        required: true
+        options: ["Last 7 Days", "Last 30 Days", "Last Quarter", "Year to Date", "Custom Range"]
+      - name: "metrics"
+        label: "Metrics to Include"
+        type: "multiselect"
+        required: true
+        options: ["Execution Time", "Success Rate", "Token Usage", "Agent Performance", "Business Impact"]
+      - name: "filters"
+        label: "Filters"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-data-analyst"
+    name: "Data Analyst"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Data Interpreter"
+      legend: "Analyzes data and generates actionable insights."
+      traits: { compliance: 95, creativity: 15, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/data-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-business-analyst"
+    name: "Business Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Strategic Thinker"
+      legend: "Provides business insights and recommendations."
+      traits: { compliance: 90, creativity: 25, persistence: 85 }
+    system_prompt: "file://knowledge/prompts/business-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-collect-data"
+    name: "Collect Analytics Data"
+    objective: "Collect data from all cycles and agents"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "scheduled"
+      schedule: "0 */4 * * *"
+    primary_agent: "ai-data-analyst"
+    inputs: []
+    outputs: ["analytics_data"]
+    sequence:
+      - step_code: "COLLECT-1"
+        action: "query_cycle_data"
+        description: "Query cycle execution data"
+        estimated_duration_minutes: 15
+        tool: "knowledge_graph_query"
+      - step_code: "COLLECT-2"
+        action: "query_agent_data"
+        description: "Query agent performance data"
+        estimated_duration_minutes: 15
+      - step_code: "COLLECT-3"
+        action: "query_business_data"
+        description: "Query business metrics"
+        estimated_duration_minutes: 15
+      - step_code: "COLLECT-4"
+        action: "normalize_data"
+        description: "Normalize and aggregate data"
+        estimated_duration_minutes: 15
+
+  - id: "mission-generate-dashboard"
+    name: "Generate Dashboard"
+    objective: "Generate analytics dashboard"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-collect-data)"
+    primary_agent: "ai-data-analyst"
+    inputs: ["analytics_data"]
+    outputs: ["dashboard_config"]
+    sequence:
+      - step_code: "DASH-1"
+        action: "configure_widgets"
+        description: "Configure dashboard widgets"
+        estimated_duration_minutes: 20
+      - step_code: "DASH-2"
+        action: "set_visualizations"
+        description: "Set data visualizations"
+        estimated_duration_minutes: 20
+      - step_code: "DASH-3"
+        action: "generate_config"
+        description: "Generate dashboard configuration"
+        estimated_duration_minutes: 10
+        template: "dashboard_config_template"
+      - step_code: "DASH-4"
+        action: "publish_dashboard"
+        description: "Publish dashboard"
+        estimated_duration_minutes: 10
+
+  - id: "mission-analyze-performance"
+    name: "Analyze Performance"
+    objective: "Analyze cycle and agent performance"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-collect-data)"
+    primary_agent: "ai-business-analyst"
+    inputs: ["analytics_data"]
+    outputs: ["performance_insights"]
+    sequence:
+      - step_code: "ANALYZE-1"
+        action: "analyze_cycles"
+        description: "Analyze cycle performance"
+        estimated_duration_minutes: 30
+      - step_code: "ANALYZE-2"
+        action: "analyze_agents"
+        description: "Analyze agent efficiency"
+        estimated_duration_minutes: 30
+      - step_code: "ANALYZE-3"
+        action: "identify_trends"
+        description: "Identify performance trends"
+        estimated_duration_minutes: 20
+      - step_code: "ANALYZE-4"
+        action: "recommend_improvements"
+        description: "Recommend improvements"
+        estimated_duration_minutes: 20
+      - step_code: "ANALYZE-5"
+        action: "generate_insights"
+        description: "Generate insights report"
+        estimated_duration_minutes: 20
+        template: "analytics_report_template"
+
+  - id: "mission-generate-report"
+    name: "Generate Custom Report"
+    objective: "Generate custom analytics report"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "ops_workbench"
+    primary_agent: "ai-data-analyst"
+    inputs: ["report_request"]
+    outputs: ["custom_report"]
+    sequence:
+      - step_code: "REPORT-1"
+        action: "validate_request"
+        description: "Validate report request"
+        estimated_duration_minutes: 10
+      - step_code: "REPORT-2"
+        action: "query_data"
+        description: "Query required data"
+        estimated_duration_minutes: 15
+        tool: "knowledge_graph_query"
+      - step_code: "REPORT-3"
+        action: "analyze_data"
+        description: "Analyze data for report"
+        estimated_duration_minutes: 20
+      - step_code: "REPORT-4"
+        action: "generate_report"
+        description: "Generate custom report"
+        estimated_duration_minutes: 15
+        template: "analytics_report_template"
+      - step_code: "REPORT-5"
+        action: "publish_report"
+        description: "Publish report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+
+  - id: "mission-distribute-insights"
+    name: "Distribute Insights"
+    objective: "Distribute insights to stakeholders"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-analyze-performance)"
+    primary_agent: "ai-data-analyst"
+    inputs: ["performance_insights"]
+    outputs: ["distributed_insights"]
+    sequence:
+      - step_code: "DISTRIBUTE-1"
+        action: "prepare_summary"
+        description: "Prepare executive summary"
+        estimated_duration_minutes: 10
+      - step_code: "DISTRIBUTE-2"
+        action: "notify_executives"
+        description: "Notify executives via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+      - step_code: "DISTRIBUTE-3"
+        action: "update_dashboard"
+        description: "Update analytics dashboard"
+        estimated_duration_minutes: 10

@@ -1,0 +1,79 @@
+name: Dependency Audit
+
+# Supply-chain hygiene runs on its own track rather than inside the Verify Suite.
+#
+# `audit:deps` used to be the first step of `npm run verify`, so a vulnerable
+# transitive dependency stopped the run before it reached lint, tsc, tests or
+# build — the checks that actually gate whether a change is correct. The audit
+# backlog is real and worth clearing, but it is not a per-commit signal, and
+# blocking every push on it meant nothing else was gated at all.
+#
+# This workflow reports the same information on a schedule. Fixing the backlog
+# is tracked separately: as of 2026-07-31 the tree carries 63 advisories
+# (15 high, 2 critical), and `npm audit fix` does not resolve them — it
+# re-resolves to a worse tree (86 advisories, 51 high). `jsonpath` and
+# `underscore` have no fix available at any version.
+
+on:
+  schedule:
+    # Mondays, 09:00 UTC.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+  push:
+    # Re-check whenever the dependency tree itself changes.
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'packages/*/package.json'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit (high and critical)
+        id: audit
+        continue-on-error: true
+        run: npm run audit:deps
+
+      - name: Summarise advisories
+        if: always()
+        run: |
+          npm audit --json > audit.json || true
+          node -e "
+            const a = require('./audit.json');
+            const m = (a.metadata && a.metadata.vulnerabilities) || {};
+            const rows = Object.entries(a.vulnerabilities || {})
+              .filter(([, v]) => ['high', 'critical'].includes(v.severity))
+              .map(([name, v]) => ({ name, severity: v.severity, fixAvailable: !!v.fixAvailable }));
+            const noFix = rows.filter(r => !r.fixAvailable);
+            const lines = [
+              '## Dependency audit',
+              '',
+              \`critical: \${m.critical || 0} · high: \${m.high || 0} · moderate: \${m.moderate || 0} · low: \${m.low || 0}\`,
+              '',
+              \`\${rows.length} high/critical package(s), \${noFix.length} with no fix available.\`,
+              '',
+              '| package | severity | fix available |',
+              '| --- | --- | --- |',
+              ...rows.map(r => \`| \${r.name} | \${r.severity} | \${r.fixAvailable ? 'yes' : 'no'} |\`),
+            ];
+            require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'));
+          "
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: audit.json
+          if-no-files-found: warn

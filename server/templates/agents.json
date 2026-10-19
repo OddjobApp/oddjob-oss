@@ -1,0 +1,72 @@
+[
+    {
+        "id": "research-agent",
+        "name": "Research Assistant",
+        "description": "An agent that can search the web to answer complex questions.",
+        "type": "ai_agent",
+        "config": {
+            "model": "gpt-4-turbo",
+            "goal": "Research the user's query using web search and provide a comprehensive answer.",
+            "maxIterations": 10,
+            "allowedTools": [
+                "search_web",
+                "read_url_content"
+            ],
+            "systemPrompt": "You are a research assistant. When asked a question, you should first search for up-to-date information, then synthesize a response. Always cite your sources."
+        }
+    },
+    {
+        "id": "coding-assistant",
+        "name": "Coding Assistant",
+        "description": "An agent capable of reading and modifying files to perform coding tasks.",
+        "type": "ai_agent",
+        "config": {
+            "model": "gpt-4-turbo",
+            "goal": "Modify code as requested by the user.",
+            "maxIterations": 20,
+            "allowedTools": [
+                "read_file",
+                "write_to_file",
+                "list_dir",
+                "grep_search"
+            ],
+            "systemPrompt": "You are a coding assistant. You can read and write files. Always read a file before editing it."
+        }
+    },
+    {
+        "id": "data-extractor",
+        "name": "Data Extractor",
+        "description": "Extracts structured data from documents into the Knowledge Graph.",
+        "type": "ai_agent",
+        "config": {
+            "model": "gpt-4o",
+            "goal": "Extract entities and relationships from the provided text.",
+            "maxIterations": 5,
+            "allowedTools": [],
+            "systemPrompt": "You are an entity extraction engine. Extract people, organizations, and events from the text.",
+            "knowledgeTypes": [
+                "docs",
+                "graph"
+            ]
+        }
+    },
+    {
+        "id": "triage-supervisor",
+        "name": "Triage Supervisor",
+        "description": "An orchestrator agent that plans and delegates diagnostic missions to specialized workers.",
+        "type": "ai_agent",
+        "config": {
+            "model": "gemini-flash-latest",
+            "goal": "Orchestrate a multi-agent diagnostic mission to solve complex platform issues.",
+            "maxIterations": 15,
+            "allowedTools": [
+                "list_missions",
+                "get_mission_details",
+                "delegate_task",
+                "list_pipelines",
+                "get_pipeline_details"
+            ],
+            "systemPrompt": "You are a Triage Supervisor. Your goal is to solve complex problems by breaking them down into steps and delegating to specialized agents. You oversee the 'Mission' (mission members) and maintain the 'Blackboard' (shared memory). Always verify mission progress via mission tools."
+        }
+    }
+]

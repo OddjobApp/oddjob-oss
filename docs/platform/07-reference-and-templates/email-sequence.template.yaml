@@ -1,0 +1,106 @@
+# AI Lifecycle Email Sequence Manifest Template
+# Oddjob Reference Implementation
+#
+# Declarative configuration for orchestrating AI-driven email sequences,
+# behavioral triggers, dynamic personalization, and deliverability limits.
+
+version: "1.0.0"
+sequence_id: "seq_b2b_outbound_devops_v1"
+name: "DevOps & Infrastructure Leaders Outbound Sequence"
+sequence_type: "OUTBOUND_COLD" # OUTBOUND_COLD | INBOUND_ONBOARDING | PLG_ACTIVATION | WINBACK
+
+sender_profile:
+  sender_name: "Alex Rivera"
+  sender_title: "Head of AI Architecture"
+  from_address: "alex.rivera@outreach.oddjob.io"
+  reply_to_address: "alex.rivera@oddjob.io"
+  custom_tracking_domain: "track.outreach.oddjob.io"
+
+pacing_and_deliverability:
+  max_daily_sends_per_inbox: 75
+  min_delay_between_sends_sec: 60
+  send_time_optimization:
+    enabled: true
+    target_window_local:
+      start: "09:00"
+      end: "11:30"
+    allowed_days: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"]
+  circuit_breakers:
+    max_hard_bounce_rate_percent: 1.5
+    max_spam_complaint_rate_percent: 0.08
+    action_on_trip: "HALT_SEQUENCE_AND_ALERT"
+
+targeting_and_enrichment:
+  required_enrichment_fields:
+    - "tech_stack"
+    - "company_headcount"
+    - "recent_funding_or_milestone"
+  exclusions:
+    - "EXISTING_OPPORTUNITY_IN_CRM"
+    - "SUPPRESSION_LIST_ACTIVE"
+    - "UNSUBSCRIBED_PREVIOUSLY"
+
+steps:
+  - step_number: 1
+    delay_days_from_previous: 0
+    step_type: "EMAIL"
+    framework: "BAB_BEFORE_AFTER_BRIDGE"
+    subject_lines:
+      - "Quick question regarding {{company}}'s incident triage workflow"
+      - "Scaling {{company}}'s platform engineering with governed AI"
+    body_template: |
+      Hi {{first_name}},
+
+      Noticed that {{company}} is scaling engineering across {{tech_stack_highlight}}. 
+
+      Usually, platform teams at this stage spend 12+ hours weekly triaging cascading agent timeouts and broken pipeline dependencies.
+
+      We built Oddjob to give engineering teams a 5-layer governed AI control plane with automated circuit breakers, rollback protection, and full-stack X-Ray tracing.
+
+      Would you be open to a 10-minute technical walkthrough this Thursday at 10 AM PT?
+
+      Best,
+      {{sender_name}}
+
+  - step_number: 2
+    delay_days_from_previous: 4
+    step_type: "EMAIL"
+    framework: "VALUE_ADD_CASE_STUDY"
+    subject_lines:
+      - "Re: Quick question regarding {{company}}'s incident triage workflow"
+    body_template: |
+      Hi {{first_name}},
+
+      Following up on my note earlier this week.
+
+      Thought you might find this relevant: {{peer_company_example}} used Oddjob's autonomous DAG recovery to cut their MTTR from 45 minutes to under 30 seconds while maintaining SOC2 compliance.
+
+      Here is the 2-minute architectural breakdown: {{case_study_url}}
+
+      Happy to share how your team can test this in a secure sandbox if you're exploring this quarter.
+
+      Best,
+      {{sender_name}}
+
+  - step_number: 3
+    delay_days_from_previous: 6
+    step_type: "EMAIL"
+    framework: "GRACEFUL_BREAKUP"
+    subject_lines:
+      - "Permission to close your file, {{first_name}}?"
+    body_template: |
+      Hi {{first_name}},
+
+      I realize your team is focused on hitting quarterly ship dates. I won't keep following up.
+
+      If governed AI automation and self-healing pipelines become a priority down the road, you can always spin up a local development instance here: {{sandbox_url}}
+
+      Wishing {{company}} continued growth!
+
+      Best,
+      {{sender_name}}
+
+compliance:
+  can_spam_physical_address: "548 Market St, Suite 34000, San Francisco, CA 94104"
+  rfc_8058_one_click_unsubscribe: true
+  auto_opt_out_on_reply_keyword: ["UNSUBSCRIBE", "STOP", "REMOVE", "NOT INTERESTED"]

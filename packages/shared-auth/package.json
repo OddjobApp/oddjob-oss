@@ -1,0 +1,19 @@
+{
+    "name": "@oddjob/shared-auth",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "./src/index.ts",
+    "types": "./src/index.ts",
+    "exports": {
+        ".": "./src/index.ts",
+        "./jwt": "./src/jwt.ts",
+        "./session": "./src/session.ts"
+    },
+    "dependencies": {
+        "jsonwebtoken": "^9.0.2",
+        "ioredis": "^5.8.2"
+    },
+    "peerDependencies": {
+        "express-session": "^1.18.0"
+    }
+}

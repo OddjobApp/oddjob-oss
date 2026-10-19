@@ -1,0 +1,13 @@
+{
+  "id": "cap_add_dataset_items",
+  "name": "Capability: add items to a dataset",
+  "subject": { "kind": "capability", "ref": "add_dataset_items" },
+  "prompt": "Add a single JSON item {\"source\": \"eval\", \"status\": \"ok\"} to an existing dataset.",
+  "repeats": 5,
+  "threshold": 0.8,
+  "_note": "Tool name confirmed against server/domain/tools/v1/capabilities/data.ts. This scenario previously named 'save_to_dataset', which is a job type rather than a capability — no agent can emit it, so the tool_used criterion could never be satisfied.",
+  "criteria": [
+    { "type": "tool_used", "value": "add_dataset_items", "weight": 3 },
+    { "type": "final_output_contains", "value": "dataset", "weight": 1 }
+  ]
+}

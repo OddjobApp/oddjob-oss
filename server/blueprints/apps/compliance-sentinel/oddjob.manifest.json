@@ -1,0 +1,14 @@
+{
+  "name": "Compliance Sentinel",
+  "blueprint": "compliance-sentinel",
+  "version": "1.0.0",
+  "description": "Continuous enterprise compliance auditing, Socratic GQE evidence validation, and forensic W3C JSON-LD activity receipts with What-If simulation mode.",
+  "category": "governance",
+  "capabilities": ["audit", "governance", "forensics", "datasets", "simulation", "hil"],
+  "slots": [
+    { "name": "APP_TITLE", "type": "string", "default": "Enterprise Compliance Sentinel" },
+    { "name": "FRAMEWORK_NAME", "type": "string", "default": "SOC2 Type II / ISO 27001" },
+    { "name": "COMPLIANCE_SCORE", "type": "number", "default": 98.4 },
+    { "name": "EVIDENCE_COLLECTION", "type": "string", "default": "compliance_evidence_stream" }
+  ]
+}

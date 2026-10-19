@@ -1,0 +1,357 @@
+name: "Budget Planning"
+version: "1.0"
+containers: {}
+description: "Automated annual budget planning, departmental allocation, and variance tracking. Integrates with financial systems, JIRA for budget tasks, and Confluence for budget documentation."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Budget Planning"
+  icon: "📊"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "finance"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "finance"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  financial_policies:
+    required: true
+    path: "file://knowledge/guidelines/financial_policies.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "budget_template"
+    path: "file://knowledge/document-templates/budget_template.md"
+  - id: "variance_report_template"
+    path: "file://knowledge/document-templates/variance_report_template.md"
+
+forms:
+  - id: "budget_intake"
+    name: "Budget Planning Intake"
+    description: "Provide budget planning details."
+    fields:
+      - name: "fiscal_year"
+        label: "Fiscal Year"
+        type: "select"
+        required: true
+        options: ["2026", "2027", "2028"]
+      - name: "budget_type"
+        label: "Budget Type"
+        type: "select"
+        required: true
+        options: ["Annual Budget", "Quarterly Forecast", "Mid-Year Review", "Special Request"]
+      - name: "departments"
+        label: "Departments"
+        type: "multiselect"
+        required: true
+        options: ["Engineering", "Sales", "Marketing", "Finance", "HR", "Operations", "Customer Success"]
+      - name: "total_budget"
+        label: "Total Budget Amount"
+        type: "text"
+        required: true
+      - name: "growth_target"
+        label: "Growth Target"
+        type: "select"
+        required: true
+        options: ["5%", "10%", "15%", "20%", "25%+"]
+      - name: "strategic_priorities"
+        label: "Strategic Priorities"
+        type: "textarea"
+        required: true
+
+  - id: "budget_approval"
+    name: "Budget Approval"
+    description: "Review and approve budget plan."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Finalize", "Request Revisions", "Reject"]
+      - name: "allocation_approved"
+        label: "Allocation Approved"
+        type: "select"
+        required: true
+        options: ["Yes - As Proposed", "Yes - With Adjustments", "No - Reallocate"]
+      - name: "variance_acceptable"
+        label: "Variance Acceptable"
+        type: "select"
+        required: true
+        options: ["Yes - Within Tolerance", "Yes - With Justification", "No - Exceeds Tolerance"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-finance-analyst"
+    name: "Financial Data Analyst"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Precision Accountant"
+      legend: "Analyzes financial data and creates budget plans."
+      traits: { compliance: 100, creativity: 5, persistence: 95 }
+    system_prompt: "file://knowledge/prompts/finance-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-cfo"
+    name: "Financial Strategy Director"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Financial Strategist"
+      legend: "Reviews budget plans and financial strategy."
+      traits: { compliance: 100, creativity: 10, persistence: 100 }
+    system_prompt: "file://knowledge/prompts/cfo.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-analyze-historical"
+    name: "Analyze Historical Data"
+    objective: "Analyze historical spending and revenue"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger:
+      type: "manual"
+      source: "finance_workbench"
+    primary_agent: "ai-finance-analyst"
+    inputs: ["budget_intake"]
+    outputs: ["historical_analysis"]
+    sequence:
+      - step_code: "HIST-1"
+        action: "query_historical_spending"
+        description: "Query historical spending data"
+        estimated_duration_minutes: 30
+        tool: "jira_jql_search"
+      - step_code: "HIST-2"
+        action: "analyze_trends"
+        description: "Analyze spending trends"
+        estimated_duration_minutes: 30
+      - step_code: "HIST-3"
+        action: "calculate_variance"
+        description: "Calculate year-over-year variance"
+        estimated_duration_minutes: 20
+      - step_code: "HIST-4"
+        action: "identify_patterns"
+        description: "Identify spending patterns"
+        estimated_duration_minutes: 20
+      - step_code: "HIST-5"
+        action: "generate_analysis_report"
+        description: "Generate historical analysis report"
+        estimated_duration_minutes: 20
+
+  - id: "mission-allocate-budget"
+    name: "Allocate Budget"
+    objective: "Allocate budget across departments"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-analyze-historical)"
+    primary_agent: "ai-finance-analyst"
+    inputs: ["historical_analysis", "budget_intake"]
+    outputs: ["budget_allocation"]
+    sequence:
+      - step_code: "ALLOC-1"
+        action: "calculate_base_allocation"
+        description: "Calculate base allocation from historical data"
+        estimated_duration_minutes: 30
+      - step_code: "ALLOC-2"
+        action: "apply_growth_target"
+        description: "Apply growth target to allocations"
+        estimated_duration_minutes: 20
+      - step_code: "ALLOC-3"
+        action: "align_priorities"
+        description: "Align allocations with strategic priorities"
+        estimated_duration_minutes: 30
+      - step_code: "ALLOC-4"
+        action: "adjust_for_variance"
+        description: "Adjust for variance tolerance"
+        estimated_duration_minutes: 20
+      - step_code: "ALLOC-5"
+        action: "generate_allocation_plan"
+        description: "Generate budget allocation plan"
+        estimated_duration_minutes: 20
+        template: "budget_template"
+
+  - id: "mission-create-tasks"
+    name: "Create Budget Tasks"
+    objective: "Create JIRA tasks for department heads"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-allocate-budget)"
+    primary_agent: "ai-finance-analyst"
+    inputs: ["budget_allocation"]
+    outputs: ["budget_tasks"]
+    sequence:
+      - step_code: "TASK-1"
+        action: "create_jira_tasks"
+        description: "Create JIRA tasks for each department"
+        estimated_duration_minutes: 30
+        tool: "jira_create_sprint"
+      - step_code: "TASK-2"
+        action: "assign_department_heads"
+        description: "Assign tasks to department heads"
+        estimated_duration_minutes: 20
+      - step_code: "TASK-3"
+        action: "set_deadlines"
+        description: "Set submission deadlines"
+        estimated_duration_minutes: 10
+
+  - id: "mission-review-budget"
+    name: "Review Budget Plan"
+    objective: "Human review and approval of budget plan"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-create-tasks)"
+    primary_agent: "ai-cfo"
+    inputs: ["budget_allocation"]
+    outputs: ["approved_budget"]
+    requires_human: true
+    form_ref: "budget_approval"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_budget"
+        description: "Present budget plan for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect CEO and board approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_budget"
+        description: "Finalize budget based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-finalize-budget"
+    name: "Finalize Budget"
+    objective: "Finalize and distribute approved budget"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-budget)"
+    primary_agent: "ai-finance-analyst"
+    inputs: ["approved_budget"]
+    outputs: ["finalized_budget"]
+    sequence:
+      - step_code: "FINAL-1"
+        action: "publish_to_confluence"
+        description: "Publish budget to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "FINAL-2"
+        action: "update_financial_systems"
+        description: "Update financial systems"
+        estimated_duration_minutes: 20
+      - step_code: "FINAL-3"
+        action: "notify_departments"
+        description: "Notify department heads via Slack"
+        estimated_duration_minutes: 10
+        tool: "slack_post_message"
+      - step_code: "FINAL-4"
+        action: "setup_tracking"
+        description: "Setup variance tracking"
+        estimated_duration_minutes: 10
+
+  - id: "mission-track-variance"
+    name: "Track Budget Variance"
+    objective: "Monitor budget variance throughout year"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "finance_workbench"
+    primary_agent: "ai-finance-analyst"
+    inputs: ["finalized_budget"]
+    outputs: ["variance_report"]
+    sequence:
+      - step_code: "VAR-1"
+        action: "query_actual_spending"
+        description: "Query actual spending data"
+        estimated_duration_minutes: 15
+        tool: "jira_jql_search"
+      - step_code: "VAR-2"
+        action: "calculate_variance"
+        description: "Calculate budget variance"
+        estimated_duration_minutes: 15
+      - step_code: "VAR-3"
+        action: "identify_over_under"
+        description: "Identify over/under spending"
+        estimated_duration_minutes: 10
+      - step_code: "VAR-4"
+        action: "generate_variance_report"
+        description: "Generate variance report"
+        estimated_duration_minutes: 15
+        template: "variance_report_template"
+      - step_code: "VAR-5"
+        action: "publish_report"
+        description: "Publish report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"

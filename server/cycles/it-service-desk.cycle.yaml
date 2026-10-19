@@ -1,0 +1,969 @@
+name: "Oddjob Enterprise IT Service Desk"
+version: "1.0"
+containers: {}
+description: "An intelligent IT Service Management (ITSM) lifecycle utilizing AI agents for L1 triage, escalation routing, and KB maintenance."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "IT Service Desk"
+  icon: "headphones"
+  theme_color: "#0ea5e9"
+  display_priority: 4
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 500000 # Cost Control
+
+ai_provider:
+  provider: "anthropic" # Options: "anthropic", "openai", "google"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.7
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}" # e.g. TypeScript, Python, Go
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}" # e.g. React, Vue, Angular
+  mobile_framework: "${ENV.TECH_MOBILE_FRAMEWORK}" # e.g. React Native, Swift, Kotlin
+
+portfolio_classification:
+  group_type: "project" # Options: "project" (New Features/End-Dated), "operations" (Maintenance/Continuous)
+  capitalization_category: "CapEx" # "CapEx" for Projects, "OpEx" for Operations
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  constitution:
+    required: false # Startups may not have a formalized AI constitution
+    path: "file://knowledge/guidelines/ai_constitution.md"
+  coding_standards:
+    required: true # Mandatory for predictable agent output
+    path: "file://knowledge/guidelines/coding_standards.md"
+  security_standards:
+    required: false
+    path: "file://knowledge/guidelines/security_standards.md"
+  compliance:
+    enabled: true
+    frameworks: ["SOC2", "GDPR", "OWASP"]
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}" # github | gitlab | bitbucket
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}" # postgres | mysql | sqlite
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+    redis_url: "${ENV.REDIS_URL}" # Optional for caching
+    mongodb_url: "${ENV.MONGODB_URL}" # Optional for document storage
+    vector_url: "${ENV.VECTOR_DB_URL}" # Optional for dedicated RAG (Pinecone/Weaviate)
+  package_registry:
+    enabled: false # Set to true for enterprise private registries (Artifactory/Nexus)
+    npm_registry_url: "${ENV.NPM_REGISTRY_URL}"
+    npm_auth_token: "${ENV.NPM_AUTH_TOKEN}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  servicenow:
+    required: true
+    instance: "${ENV.SERVICENOW_INSTANCE}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: false
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  sharepoint:
+    enabled: false # Set to true if replacing/augmenting Confluence
+    tenant_id: "${ENV.SHAREPOINT_TENANT_ID}"
+    site_id: "${ENV.SHAREPOINT_SITE_ID}"
+    drive_id: "${ENV.SHAREPOINT_DRIVE_ID}"
+  google_drive:
+    enabled: false # Set to true if replacing/augmenting Confluence
+    shared_drive_id: "${ENV.GOOGLE_SHARED_DRIVE_ID}"
+    folder_id: "${ENV.GOOGLE_DOCS_FOLDER_ID}"
+  google_calendar:
+    enabled: false # For Scrum Master meeting generation
+    calendar_id: "${ENV.GOOGLE_CALENDAR_ID}"
+  gcp:
+    enabled: false # Alternative to AWS for Release Manager
+    project_id: "${ENV.GCP_PROJECT_ID}"
+    region: "${ENV.GCP_REGION}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+  agentmail:
+    enabled: true
+    admin_address: "${ENV.AGENTMAIL_ADMIN_ADDRESS}"
+    domain: "${ENV.AGENTMAIL_DOMAIN}"
+  ngrok:
+    enabled: true
+    auth_token: "${ENV.NGROK_AUTH_TOKEN}"
+    static_domain: "${ENV.NGROK_STATIC_DOMAIN}"
+  msteams:
+    enabled: false # Set to true if replacing Slack
+    tenant_id: "${ENV.MSTEAMS_TENANT_ID}"
+    team_id: "${ENV.MSTEAMS_TEAM_ID}"
+    alerts_webhook_url: "${ENV.MSTEAMS_ALERTS_WEBHOOK}"
+    approvals_webhook_url: "${ENV.MSTEAMS_APPROVALS_WEBHOOK}"
+
+vsm_telemetry:
+  enabled: true
+  metrics: ["lead_time", "cycle_time", "mttr", "deployment_frequency"]
+  jira_status_mapping:
+    backlog: "Backlog"
+    in_progress: "In Progress"
+    in_review: "Code Review"
+    qa: "In QA"
+    uat: "UAT"
+    done: "Done"
+
+prediction_intelligence:
+  defect_forecasting:
+    enabled: true
+    model: "oddjob-risk-analyzer-v1"
+    threshold: 0.85
+  anomaly_detection:
+    enabled: true
+    model: "oddjob-semantic-cluster-v1"
+    threshold: 0.90
+    actions: ["trigger_systemic_outage_alert"]
+
+mcp_servers:
+  stitch:
+    enabled: true
+    endpoint: "http://localhost:3001/mcp"
+    tools: ["generate_screen_from_text", "apply_design_system"]
+    timeout_ms: 30000
+  okta:
+    enabled: true
+    endpoint: "http://localhost:3004/mcp"
+    tools: ["reset_password", "unlock_account", "query_user_groups"]
+  jamf:
+    enabled: true
+    endpoint: "http://localhost:3005/mcp"
+    tools: ["force_reboot", "query_device_health", "deploy_software_profile"]
+
+directories:
+  knowledge_base: "knowledge/"
+  document_templates: "knowledge/document-templates/"
+  system_prompts: "knowledge/prompts/"
+  backend: ["server/", "shared/schema/"]
+  frontend: ["client/", "app/"]
+  mobile: ["mobile/"]
+  testing: ["tests/e2e/", "tests/integration/"]
+  design_assets: "knowledge/assets/design/"
+
+knowledge_graph:
+  vector_db:
+    provider: "qdrant" # Options: "qdrant", "pinecone", "weaviate"
+    url: "${ENV.VECTOR_DB_URL}"
+    api_key: "${ENV.VECTOR_DB_API_KEY}"
+    collection_prefix: "sdlc-"
+  embedding:
+    model: "text-embedding-3-small"
+    dimension: 1536
+    batch_size: 100
+  similarity_threshold: 0.7
+  max_results: 10
+
+knowledge_datasets:
+  - id: "historical_tickets"
+    source: "servicenow_jql: type=Incident AND status=Resolved"
+    vectorize: true
+    primary_key: "ticket_id"
+    schema:
+      ticket_id: "string"
+      summary: "string"
+      resolution: "text"
+  - id: "knowledge_base_articles"
+    source: "docs/kb/"
+    vectorize: true
+    primary_key: "article_id"
+    schema:
+      article_id: "string"
+      title: "string"
+      content: "text"
+  - id: "employee_directory"
+    source: "saas_sync: workday_v2"
+    vectorize: true
+    primary_key: "email"
+    schema_inference: true
+
+templates:
+  - id: "prd_template"
+    path: "file://knowledge/document-templates/product_requirements_template.md"
+  - id: "erd_template"
+    path: "file://knowledge/document-templates/erd_template.md"
+  - id: "api_spec_template"
+    path: "file://knowledge/document-templates/api_spec_template.md"
+  - id: "system_architecture_template"
+    path: "file://knowledge/document-templates/system_architecture_template.md"
+  - id: "threat_model_template"
+    path: "file://knowledge/document-templates/threat_model_template.md"
+  - id: "ui_ux_design_spec_template"
+    path: "file://knowledge/document-templates/ui_ux_design_spec_template.md"
+  - id: "vsm_telemetry_report"
+    path: "file://knowledge/document-templates/vsm_telemetry_report.md"
+  - id: "sprint_capacity_plan"
+    path: "file://knowledge/document-templates/capacity_plan_template.md"
+  - id: "code_review_checklist"
+    path: "file://knowledge/document-templates/code_review_checklist.md"
+  - id: "qa_test_scenario"
+    path: "file://knowledge/document-templates/test_scenario_report_template.md"
+  - id: "qa_defect_report"
+    path: "file://knowledge/document-templates/qa_defect_report_template.md"
+  - id: "itil_change_record"
+    path: "file://knowledge/document-templates/change_record_itil_template.md"
+  - id: "incident_postmortem"
+    path: "file://knowledge/document-templates/incident_postmortem.md"
+  - id: "release_notes_template"
+    path: "file://knowledge/document-templates/release_notes_template.md"
+  - id: "scouting_report_template"
+    path: "file://knowledge/document-templates/scouting_report_template.md"
+
+forms:
+  - id: "manual_ticket_intake_form"
+    name: "Manual Ticket Intake"
+    description: "Submit a new IT support request."
+    fields:
+      - name: "category"
+        label: "Issue Category"
+        type: "select"
+        required: true
+        options: ["Hardware", "Software", "Access/Permissions", "Network"]
+      - name: "description"
+        label: "Detailed Description"
+        type: "text"
+        required: true
+
+  - id: "l2_escalation_approval"
+    name: "L2 Escalation Approval"
+    description: "Approve routing this ticket to human L2 support."
+    fields:
+      - name: "escalation_approved"
+        label: "Approve Escalation"
+        type: "select"
+        required: true
+        options: ["Approve", "Reject (Send back to L1 AI)"]
+      - name: "priority_override"
+        label: "Priority Override"
+        type: "select"
+        required: true
+        options: ["P1", "P2", "P3", "P4"]
+
+  - id: "resolution_signoff"
+    name: "Resolution Sign-off"
+    description: "Confirm the issue is resolved and close the ticket."
+    fields:
+      - name: "is_resolved"
+        label: "Is Issue Resolved?"
+        type: "select"
+        required: true
+        options: ["Yes", "No"]
+
+agents:
+  - id: "l1_triage_agent"
+    name: "Tier-1 Ticket Triage Agent"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Helpful Receptionist"
+      legend: "Quickly triages incoming issues and provides immediate self-service links."
+      traits: { speed: 95, empathy: 90, compliance: 80 }
+    system_prompt: "file://knowledge/prompts/l1-triage.md"
+    boundaries: ["knowledge_base_articles"]
+    permissions: ["servicenow:read", "servicenow:write", "slack:write:channel"]
+    tools: ["knowledge_graph_query", "slack_post_message", "mcp:okta/reset_password", "mcp:okta/unlock_account"]
+
+  - id: "l2_technical_support_agent"
+    name: "Tier-2 Technical Support Specialist"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Technical Guru"
+      legend: "Deeply investigates complex issues using historical ticket data."
+      traits: { compliance: 90, creativity: 50, speed: 60 }
+    system_prompt: "file://knowledge/prompts/l2-support.md"
+    boundaries: ["historical_tickets"]
+    permissions: ["servicenow:read", "servicenow:write"]
+    tools: ["knowledge_graph_query", "mcp:jamf/query_device_health", "mcp:jamf/force_reboot"]
+
+  - id: "escalation_manager_agent"
+    name: "Crisis Escalation Manager"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Watchful Guardian"
+      legend: "Ensures no ticket breaches SLA."
+      traits: { compliance: 100, speed: 90 }
+    system_prompt: "file://knowledge/prompts/escalation-manager.md"
+    boundaries: []
+    permissions: ["slack:write:channel"]
+    tools: ["slack_post_message"]
+    allowed_delegations: ["l1_triage_agent", "l2_technical_support_agent"]
+    cross_org_delegation: ["finance_blueprint", "hr_blueprint"]
+
+  - id: "kb_maintainer_agent"
+    name: "Documentation & Knowledge Base Maintainer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.3
+    soul_profile:
+      archetype: "The Librarian"
+      legend: "Constantly summarizes resolved tickets into reusable documentation."
+      traits: { creativity: 40, compliance: 90 }
+    system_prompt: "file://knowledge/prompts/kb-maintainer.md"
+    boundaries: ["historical_tickets", "knowledge_base_articles"]
+    permissions: ["confluence:write"]
+    tools: ["confluence_publish"]
+
+  - id: "ai-scrum-master"
+    name: "Agile Backlog Organizer & Coordinator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Pragmatic Coach"
+      legend: "Focused entirely on unblocking the team and protecting the Token Budget."
+      traits: { speed: 85, empathy: 80, compliance: 60 }
+    system_prompt: "file://knowledge/prompts/scrum-master.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel"]
+    allowed_delegations: ["ai-systems-analyst", "ai-release-manager"]
+    tools: ["jira_jql_search", "jira_create_sprint", "slack_post_message", "oddjob_prediction_windowing"]
+
+  - id: "ai-systems-analyst"
+    name: "Product Requirement Systems Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Precision Architect"
+      legend: "Obsessed with creating airtight PRDs and preventing scope creep."
+      traits: { compliance: 90, creativity: 30, speed: 50 }
+    system_prompt: "file://knowledge/prompts/systems-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["confluence:read", "confluence:write", "jira:read"]
+    allowed_delegations: ["ai-ux-designer", "ai-backend-dev", "ai-frontend-dev", "ai-mobile-dev"]
+    tools: ["confluence_read", "confluence_publish", "knowledge_graph_query"]
+
+  - id: "ai-ux-designer"
+    name: "High-Fidelity Interface Specialist"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.7
+    soul_profile:
+      archetype: "The Creative Maverick"
+      legend: "An obsessive designer who prioritizes fluid micro-animations and Apple-tier aesthetics."
+      traits: { creativity: 95, compliance: 50 }
+    system_prompt: "file://knowledge/prompts/ux-designer.md"
+    boundaries: ["client/", "knowledge/assets/design/"]
+    permissions: ["confluence:read", "jira:read", "slack:read"]
+    tools: ["generate_image", "mcp:stitch/generate_screen_from_text", "mcp:stitch/apply_design_system"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Fiercely protective of the Drizzle ORM schema and REST principles."
+      traits: { compliance: 85, speed: 70 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["read_file", "write_file", "run_command", "github_create_pr", "execute_unit_tests", "invoke_lsp"]
+
+  - id: "ai-frontend-dev"
+    name: "Frontend UI & Component Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Interface Weaver"
+      legend: "Lives to build perfectly responsive, accessible React components."
+      traits: { creativity: 80, speed: 80 }
+    system_prompt: "file://knowledge/prompts/frontend-dev.md"
+    boundaries: ["client/", "app/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["read_file", "write_file", "run_command", "github_create_pr"]
+
+  - id: "ai-mobile-dev"
+    name: "Mobile Application Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Native Specialist"
+      legend: "Focuses strictly on smooth 60fps animations in React Native."
+      traits: { creativity: 70, compliance: 75 }
+    system_prompt: "file://knowledge/prompts/mobile-dev.md"
+    boundaries: ["mobile/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["read_file", "write_file", "run_command", "github_create_pr"]
+
+  - id: "ai-qa-engineer"
+    name: "End-to-End Test Suite Auditor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Relentless Auditor"
+      legend: "A strict quality gatekeeper. Will brutally reject any PR lacking 100% test coverage."
+      traits: { compliance: 95, creativity: 10 }
+    system_prompt: "file://knowledge/prompts/qa-engineer.md"
+    boundaries: ["tests/e2e/", "tests/integration/"]
+    permissions: ["github:read", "jira:write:bug", "slack:write:channel"]
+    tools: ["execute_playwright_test", "jira_create_bug", "run_dependency_audit"]
+
+  - id: "ai-dba"
+    name: "SQL Schema Migration Guardian"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Data Guardian"
+      legend: "Guards the production database with their life. Hates dropping columns."
+      traits: { compliance: 100, speed: 20 }
+    system_prompt: "file://knowledge/prompts/dba.md"
+    boundaries: ["server/db/migrations/", "shared/schema/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["db_generate_migration", "db_apply_migration"]
+
+  - id: "ai-release-manager"
+    name: "Deployment Controller & CAB Validator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Deployment Commander"
+      legend: "Will only press the big red deploy button if the HIL signature is cryptographically verified."
+      traits: { compliance: 100, empathy: 10 }
+    system_prompt: "file://knowledge/prompts/release-manager.md"
+    boundaries: ["*"]
+    permissions: ["aws:deploy", "slack:write:channel", "jira:write"]
+    allowed_delegations: ["ai-qa-engineer", "ai-dba"]
+    tools: ["trigger_hil_approval", "aws_deploy"]
+
+missions:
+  - id: "mission-0-sprint-zero"
+    name: "Project Initialization & Sprint Zero"
+    environment: "planning"
+    trigger: 
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "ai-systems-analyst"
+    sequence:
+      - step_code: "SPRINT_ZERO-1"
+        action: "analyze_business_case"
+        input: "business_requirements_document"
+      - step_code: "SPRINT_ZERO-2"
+        action: "generate_system_architecture"
+        template: "system_architecture_template"
+      - step_code: "SPRINT_ZERO-3"
+        action: "generate_threat_model"
+        template: "threat_model_template"
+      - step_code: "SPRINT_ZERO-4"
+        action: "generate_initial_backlog"
+        tool: "jira_create_epic_and_stories"
+      - step_code: "SPRINT_ZERO-5"
+        action: "trigger_hil_approval_architecture"
+        requires_human: true
+        form_ref: "architecture_security_signoff"
+        routing_channel: "approvals_channel"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-0-sprint-zero"
+
+  - id: "mission-1-kickoff"
+    name: "Sprint Kickoff & Planning"
+    trigger: 
+      type: "schedule"
+      cron: "0 9 * * 1"
+    primary_agent: "ai-scrum-master"
+    sequence: 
+      - action: "run_capacity_planner"
+        input: "jira_active_sprint"
+      - action: "batch_jira_tickets"
+        output: "sprint_backlog"
+
+  - id: "mission-2-requirements"
+    name: "Requirements & Design Analysis"
+    trigger: 
+      type: "webhook"
+      source: "jira"
+      condition: "transition.to == 'Design Ready'"
+    primary_agent: "ai-systems-analyst"
+    sequence:
+      - step_code: "REQUIREMENTS-1"
+        action: "generate_functional_specs"
+        template: "prd_template"
+      - step_code: "REQUIREMENTS-3"
+        action: "generate_sequence_diagrams"
+        tool: "generate_mermaid"
+      - step_code: "REQUIREMENTS-4"
+        action: "generate_traceability_matrix"
+      - step_code: "REQUIREMENTS-5"
+        action: "generate_impact_analysis"
+      - step_code: "REQUIREMENTS-6"
+        action: "draft_test_scenarios"
+        agent: "ai-qa-engineer"
+      - step_code: "REQUIREMENTS-7"
+        action: "trigger_hil_approval_design"
+        requires_human: true
+        form_ref: "prd_ux_design_signoff"
+        routing_channel: "approvals_channel"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-2-requirements"
+
+  - id: "mission-3-core-dev"
+    name: "Core Application Development"
+    environment: "development"
+    trigger: 
+      type: "webhook"
+      source: "jira"
+      condition: "transition.to == 'In Progress'"
+    primary_agent: "ai-backend-dev"
+    sequence:
+      - step_code: "APP_DEVELOPMENT-1"
+        action: "generate_ui_mockups"
+        agent: "ai-ux-designer"
+      - step_code: "APP_DEVELOPMENT-2"
+        action: "write_frontend_code"
+        agent: "ai-frontend-dev"
+      - step_code: "APP_DEVELOPMENT-3"
+        action: "write_backend_code"
+        agent: "ai-backend-dev"
+      - step_code: "APP_DEVELOPMENT-5"
+        action: "run_local_unit_tests"
+      - step_code: "APP_DEVELOPMENT-6"
+        action: "create_pull_request"
+
+  - id: "mission-4-qa"
+    name: "QA & Regression Testing"
+    environment: "staging"
+    trigger: 
+      type: "webhook"
+      source: "github"
+      condition: "pull_request.merged == true AND target_branch == 'staging'"
+    primary_agent: "ai-qa-engineer"
+    sequence:
+      - step_code: "QUALITY_ASSURANCE-1"
+        action: "execute_dependency_audit"
+        on_fail:
+          action: "route_to_mission"
+          target: "mission-3-core-dev"
+          payload: "dependency_vulnerability_report"
+      - step_code: "QUALITY_ASSURANCE-3"
+        action: "execute_api_tests"
+      - step_code: "QUALITY_ASSURANCE-4"
+        action: "execute_functional_tests"
+        tool: "execute_playwright_test"
+      - step_code: "QUALITY_ASSURANCE-5"
+        action: "execute_regression_suite"
+      - step_code: "QUALITY_ASSURANCE-6"
+        action: "generate_defect_report_on_fail"
+        on_fail:
+          action: "route_to_mission"
+          target: "mission-3-core-dev"
+          payload: "defect_report"
+
+  - id: "mission-5-uat"
+    name: "Release Candidate & UAT"
+    trigger: "on_success(mission-4-qa)"
+    primary_agent: "ai-release-manager"
+    sequence:
+      - step_code: "VALIDATION-1"
+        action: "package_build"
+      - step_code: "VALIDATION-2"
+        action: "trigger_hil_approval_uat"
+        requires_human: true
+        form_ref: "uat_feedback_report"
+        routing_channel: "approvals_channel"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-3-core-dev"
+          payload: "hil_rejection_notes"
+          requires_approval: true
+          approval_role: "ai-scrum-master"
+          escalations:
+            warning_threshold_minutes: 5
+            critical_threshold_minutes: 10
+            on_critical:
+              action: "assign_to_human"
+              target_operator: "lead_dev@company.com"
+              message: "Thrashing warning: Core Development has failed UAT twice. Reassigning to Lead Developer."
+
+  - id: "mission-6-deployment"
+    name: "Production Deployment"
+    environment: "production"
+    trigger: "on_success(mission-5-uat)"
+    primary_agent: "ai-release-manager"
+    sequence:
+      - step_code: "DEPLOYMENT-1"
+        action: "generate_itil_change_record"
+        template: "itil_change_record"
+      - step_code: "DEPLOYMENT-2"
+        action: "trigger_hil_approval_cab"
+        requires_human: true
+        form_ref: "itil_change_approval"
+        routing_channel: "approvals_channel"
+        on_reject:
+          action: "route_to_mission"
+          target: "mission-5-uat"
+      - step_code: "DEPLOYMENT-3"
+        action: "execute_db_scripts"
+        agent: "ai-dba"
+      - step_code: "DEPLOYMENT-4"
+        action: "execute_production_deployment"
+        tool: "aws_deploy"
+      - step_code: "DEPLOYMENT-5"
+        action: "execute_smoke_tests"
+        on_fail:
+          action: "trigger_rollback"
+          target: "previous_stable_release"
+          payload: "smoke_test_failure_logs"
+      - step_code: "DEPLOYMENT-6"
+        action: "generate_release_notes"
+        template: "release_notes_template"
+      - step_code: "DEPLOYMENT-7"
+        action: "publish_release_notes"
+        tool: "confluence_publish"
+
+  - id: "mission-7-production-hotfix"
+    name: "Production Incident & Hotfix Routing"
+    trigger: 
+      type: "webhook"
+      source: "jira"
+      condition: "issue.type == 'Incident' AND transition.to == 'To Do'"
+    primary_agent: "ai-scrum-master"
+    sequence:
+      - step_code: "OPERATIONS-1"
+        action: "triage_production_incident"
+        form_ref: "production_hotfix_intake"
+      - step_code: "OPERATIONS-2"
+        action: "generate_incident_postmortem"
+        template: "incident_postmortem"
+      - step_code: "OPERATIONS-3"
+        action: "route_to_mission"
+        target: "mission-3-core-dev"
+        priority: "critical"
+
+  - id: "mission-scouting-report"
+    name: "Nightly Codebase Scouting"
+    environment: "planning"
+    trigger: 
+      type: "schedule"
+      cron: "0 2 * * *"
+    primary_agent: "ai-systems-analyst"
+    sequence:
+      - step_code: "SCOUT-1"
+        action: "survey_codebase"
+        tool: "filesystem_scan"
+      - step_code: "SCOUT-2"
+        action: "generate_scouting_report"
+        template: "scouting_report_template"
+      - step_code: "SCOUT-3"
+        action: "inject_context"
+        target: "knowledge_graph"
+
+  - id: "auto_remediation_pipeline"
+    name: "Automated Self-Healing Pipeline"
+    environment: "operations"
+    trigger:
+      type: "schedule"
+      cron: "*/15 * * * *"
+    primary_agent: "l1_triage_agent"
+    sequence:
+      - step_code: "TRIAGE-1"
+        action: "evaluate_ticket_triage"
+        tool: "knowledge_query"
+      - step_code: "TRIAGE-2"
+        action: "execute_self_healing_remediation"
+        form_ref: "resolution_signoff"
+      - step_code: "TRIAGE-3"
+        action: "escalate_if_unresolved"
+        form_ref: "l2_escalation_approval"
+
+escalations:
+  - mission_ref: "Release Candidate & UAT"
+    warning_threshold_minutes: 1
+    critical_threshold_minutes: 2
+    alert_channels: ["slack", "email"]
+    on_warning:
+      action: "alert"
+      message: "Warning: Release Candidate & UAT Sign-off has been pending for over 1 minute."
+    on_critical:
+      action: "route_to_mission"
+      target: "Core Application Development"
+      message: "Critical breach: UAT Sign-off exceeded SLA limit. Auto-routing back to development."
+
+observability:
+  logging:
+    level: "info" # Options: "debug", "info", "warn", "error"
+    format: "json" # Options: "json", "text"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 0.1 # Sample 10% of traces
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+quality_gates:
+  test_coverage:
+    minimum: 80
+    threshold: "warning" # Options: "warning", "error"
+    exclude_patterns: ["**/*.test.ts", "**/*.spec.ts"]
+  security_scan:
+    enabled: true
+    severity_threshold: "high" # Options: "low", "medium", "high", "critical"
+    fail_on_vulnerabilities: true
+  dependency_audit:
+    enabled: true
+    fail_on_vulnerabilities: true
+    allowed_licenses: ["MIT", "Apache-2.0", "BSD-3-Clause"]
+  code_quality:
+    enabled: true
+    lint_rules: "strict"
+    max_complexity: 15
+
+deployment:
+  environments:
+    staging:
+      region: "us-east-1"
+      auto_scaling: false
+      instance_type: "t3.medium"
+      min_instances: 1
+      max_instances: 1
+    production:
+      region: "us-east-1"
+      auto_scaling: true
+      instance_type: "t3.large"
+      min_instances: 2
+      max_instances: 10
+      health_check_path: "/health"
+  rollback:
+    enabled: true
+    automatic_on_failure: true
+    max_rollback_attempts: 3
+  blue_green:
+    enabled: false # Set to true for blue-green deployments
+
+notifications:
+  email:
+    enabled: true
+    from_address: "sdlc@your-org.com"
+    reply_to: "engineering@your-org.com"
+    templates_dir: "knowledge/email-templates/"
+    rate_limit_per_minute: 10
+  slack:
+    default_channel: "${ENV.SLACK_DEFAULT_CHANNEL}"
+    thread_responses: true
+    mention_on_critical: true
+  escalation_timeout_minutes: 30
+  digest_enabled: true
+  digest_interval_hours: 4
+
+human_roles:
+  team: "Alpha Squad"
+  members:
+    - user_id: "${ENV.PRODUCT_OWNER_USER_ID}"
+      role: "Product Owner"
+      permissions: ["approve_prd", "approve_design", "approve_release"]
+    - user_id: "${ENV.TECH_LEAD_USER_ID}"
+      role: "Technical Lead"
+      permissions: ["approve_architecture", "approve_security", "code_review"]
+    - user_id: "${ENV.QA_LEAD_USER_ID}"
+      role: "QA Lead"
+      permissions: ["approve_uat", "approve_deployment", "approve_hotfix"]
+    - user_id: "${ENV.DEVOPS_LEAD_USER_ID}"
+      role: "DevOps Lead"
+      permissions: ["approve_infrastructure", "approve_cab", "rollback_production"]
+    - user_id: "${ENV.SECURITY_LEAD_USER_ID}"
+      role: "Security Lead"
+      permissions: ["approve_security", "vulnerability_review", "compliance_check"]
+
+schedules:
+  - id: "daily_standup"
+    cron: "0 9 * * 1-5"
+    action: "mission-trigger"
+    agent: "ai-scrum-master"
+  - id: "nightly_regression"
+    cron: "0 2 * * *"
+    action: "mission-trigger"
+    agent: "ai-qa-engineer"
+  - id: "weekly_grooming"
+    cron: "0 15 * * 5"
+    action: "mission-trigger"
+    agent: "ai-systems-analyst"
+  - id: "capacity_sync"
+    cron: "0 0 * * *"
+    action: "mission-trigger"
+    agent: "ai-scrum-master"
+  - id: "nightly_codebase_scouting"
+    cron: "0 2 * * *"
+    action: "mission-trigger"
+    agent: "ai-systems-analyst"
+
+  # Self-healing remediation. Originally authored as an event-driven pipeline
+  # (trigger: ticket.clear_cache_requested), but the schedules schema only
+  # supports cron-driven mission dispatch, so it runs as a frequent scan that
+  # the L1 triage agent uses to auto-resolve qualifying tickets.
+  - id: "auto_remediation_pipeline"
+    name: "Automated Self-Healing Pipeline"
+    cron: "*/15 * * * *"
+    action: "mission-trigger"
+    agent: "l1_triage_agent"
+
+apps:
+  - id: "it-ticketing-portal"
+    name: "IT Ticketing Portal"
+    slug: "it-portal"
+    description: "Employee-facing portal for submitting and tracking IT tickets and triggering L1 triage."
+    path: "file://it-ticketing-portal"
+    blueprint: "it-ticketing-portal"
+    interaction_model: "shared-server"
+    deployment_mode: "hosted"
+    enabled: true
+    system_prompt: "You are the IT Portal assistant."
+    branding:
+      primaryColor: "#10B981"
+      logoUrl: ""
+    datasets:
+      - "it_service_desk_tickets"
+      - "it_service_desk_triage_runs"
+    platform_capabilities:
+      - "datasets"
+      - "missions"
+      - "knowledge"
+      - "hil"
+      - "telemetry"
+    dependent_missions:
+      - "auto_remediation_pipeline"
+    bindings:
+      - mission: "auto_remediation_pipeline"
+        role: "primary"
+        label: "Automated Self-Healing Pipeline"
+        openMode: "page"
+    runtime_contract:
+      platform_api_base: "/api/platform/app"
+      required_endpoints:
+        - { method: "GET", path: "/datasets", purpose: "Read organization IT tickets and saved L1 triage evaluations." }
+        - { method: "POST", path: "/datasets", purpose: "Persist newly submitted IT tickets and L1 triage records." }
+        - { method: "PUT", path: "/datasets/:id", purpose: "Persist ticket status transitions and updated triage records." }
+        - { method: "POST", path: "/missions/trigger", purpose: "Dispatch the Automated Self-Healing Pipeline mission." }
+        - { method: "GET", path: "/knowledge/query", purpose: "Match incoming tickets against IT SOP and KB articles." }
+        - { method: "POST", path: "/hil", purpose: "Route low-confidence or high-priority tickets to L2 human review." }
+    vNextManifest:
+      screens:
+        - name: "Overview"
+          slug: "/"
+          layout: "dashboard"
+          features: ["Open/high-priority/resolved KPIs", "Storage source indicator"]
+        - name: "My Tickets"
+          slug: "/tickets"
+          layout: "table"
+          features: ["View active tickets", "Filter by status", "Search tickets", "Advance ticket status"]
+        - name: "Submit Ticket"
+          slug: "/submit"
+          layout: "form"
+          features: ["Select category and priority", "Persist ticket details to AppRecords"]
+        - name: "Agentic Triage Dashboard"
+          slug: "/agent-triage"
+          layout: "split"
+          features: ["Knowledge-matched L1 triage", "Verified mission dispatch", "L2 HIL escalation routing"]
+      api_routes:
+        - "/api/tickets"
+        - "/api/oddjob"
+
+  - id: "support-agent-dashboard"
+    name: "Support Agent Dashboard"
+    slug: "support-dashboard"
+    description: "Dashboard for IT staff to manage queues, curate KB articles, and handle high-risk escalations."
+    path: "file://support-agent-dashboard"
+    blueprint: "support-agent-dashboard"
+    interaction_model: "shared-server"
+    deployment_mode: "hosted"
+    enabled: true
+    system_prompt: "You are the support agent companion."
+    branding:
+      primaryColor: "#3B82F6"
+      logoUrl: ""
+    datasets:
+      - "support_agent_queue"
+      - "support_kb_articles"
+      - "support_escalation_sessions"
+      - "it_service_desk_tickets"
+    platform_capabilities:
+      - "datasets"
+      - "missions"
+      - "integrations"
+      - "hil"
+      - "telemetry"
+    integration_dependencies:
+      - "confluence"
+    dependent_missions:
+      - "auto_remediation_pipeline"
+      - "mission-7-production-hotfix"
+    bindings:
+      - mission: "auto_remediation_pipeline"
+        role: "primary"
+        label: "Automated Self-Healing Pipeline"
+        openMode: "page"
+      - mission: "mission-7-production-hotfix"
+        role: "oversight"
+        label: "Production Incident & Hotfix Routing"
+        openMode: "page"
+    runtime_contract:
+      platform_api_base: "/api/platform/app"
+      required_endpoints:
+        - { method: "GET", path: "/datasets", purpose: "Read support queue, KB articles, escalation sessions, and sibling IT portal tickets." }
+        - { method: "PUT", path: "/datasets/:id", purpose: "Persist Kanban stage transitions, KB draft edits, and escalation statuses." }
+        - { method: "POST", path: "/integrations/confluence/publish", purpose: "Publish reviewed KB articles to Confluence." }
+        - { method: "POST", path: "/hil", purpose: "Create Tier-2 human escalation approval requests." }
+        - { method: "POST", path: "/missions/trigger", purpose: "Dispatch Automated Self-Healing Pipeline remediation runs." }
+    vNextManifest:
+      screens:
+        - name: "Overview"
+          slug: "/"
+          layout: "dashboard"
+          features: ["SLA risk, awaiting approval, and KB draft KPIs", "Cross-app storage indicator"]
+        - name: "Queue Manager"
+          slug: "/queue"
+          layout: "kanban"
+          features: ["Move tickets across stages", "Cross-read IT Portal tickets", "View AI confidence and SLA status"]
+        - name: "KB Editor"
+          slug: "/kb-editor"
+          layout: "editor"
+          features: ["Review and edit AI-drafted articles", "Save draft/review state", "Publish to Confluence"]
+        - name: "Sentiment & Escalation Predictor"
+          slug: "/escalations"
+          layout: "split"
+          features: ["Monitor live session sentiment", "Create Tier-2 HIL escalations", "Dispatch remediation missions"]
+      api_routes:
+        - "/api/queue"
+        - "/api/kb"
+        - "/api/oddjob"

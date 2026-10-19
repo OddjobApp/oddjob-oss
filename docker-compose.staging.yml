@@ -1,0 +1,173 @@
+# Staging Docker Compose Configuration for Oddjob
+# Mirrors production but with staging-sized resources and a staging database.
+
+services:
+  migrate:
+    image: ghcr.io/${GITHUB_REPOSITORY:-oddjobapp/oddjob}:${IMAGE_TAG:-latest}
+    container_name: oddjob-migrate-staging
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/oddjob_staging
+    command: ["node", "dist/migrate.js"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - oddjob-network
+
+  oddjob:
+    image: ghcr.io/${GITHUB_REPOSITORY:-oddjobapp/oddjob}:${IMAGE_TAG:-latest}
+    container_name: oddjob-staging
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      HOST: 0.0.0.0
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/oddjob_staging
+      REDIS_URL: redis://redis:6379
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      INTERNAL_RPC_KEY: ${INTERNAL_RPC_KEY:?INTERNAL_RPC_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+    volumes:
+      - oddjob_logs:/app/logs
+      - oddjob_uploads:/app/uploads
+      - oddjob_storage:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - oddjob-network
+
+  worker:
+    image: ghcr.io/${GITHUB_REPOSITORY:-oddjobapp/oddjob}:${IMAGE_TAG:-latest}
+    container_name: oddjob-worker-staging
+    restart: unless-stopped
+    command: ["node", "dist/worker-entrypoint.js"]
+    healthcheck:
+      disable: true
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/oddjob_staging
+      REDIS_URL: redis://redis:6379
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      INTERNAL_RPC_KEY: ${INTERNAL_RPC_KEY:?INTERNAL_RPC_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+    volumes:
+      - oddjob_logs:/app/logs
+      - oddjob_uploads:/app/uploads
+      - oddjob_storage:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    networks:
+      - oddjob-network
+
+  qdrant:
+    image: qdrant/qdrant:v1.8.1
+    container_name: oddjob-qdrant-staging
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    environment:
+      QDRANT__SERVICE__API_KEY: "${QDRANT_API_KEY:-}"
+      QDRANT__SERVICE__PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - oddjob-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: oddjob-redis-staging
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - oddjob-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: oddjob-db-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: oddjob_staging
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-staging.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - oddjob-network
+
+networks:
+  oddjob-network:
+    driver: bridge
+
+volumes:
+  oddjob_storage:
+    driver: local
+  oddjob_logs:
+    driver: local
+  oddjob_uploads:
+    driver: local
+  qdrant_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local

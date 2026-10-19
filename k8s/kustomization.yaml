@@ -1,0 +1,37 @@
+# Kustomization
+# 
+# Deploy with: kubectl apply -k k8s/
+# 
+# This brings together all the Kubernetes resources needed to run Oddjob
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: oddjob
+
+resources:
+  # Base resources
+  - base/namespace.yaml
+  - base/configmap.yaml
+  - base/secrets.yaml
+  - base/api-deployment.yaml
+  - base/worker-deployment.yaml
+  - base/migrate-job.yaml
+  
+  # Services
+  - services/api-service.yaml
+  - services/ingress.yaml
+  - services/auth-service.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: oddjob
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/managed-by: kustomize
+
+# Image customization (override in overlays). Matches the ci-cd.yml registry
+# convention: ghcr.io/<github.repository>, tagged with the git SHA at deploy
+# time via `kubectl set image`. `latest` is pushed on the default branch.
+images:
+  - name: oddjob
+    newName: ghcr.io/oddjobapp/oddjob
+    newTag: latest

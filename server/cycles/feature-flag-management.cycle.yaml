@@ -1,0 +1,326 @@
+name: "Feature Flag Management"
+version: "1.0"
+containers: {}
+description: "Controlled feature rollout and monitoring with gradual rollout strategies, A/B testing support, and automated rollback on failure."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Feature Flag Management"
+  icon: "🚩"
+  theme_color: "#f59e0b"
+  display_priority: 2
+  category: "development"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "feature_flag_plan"
+    path: "file://knowledge/document-templates/feature_flag_plan.md"
+  - id: "rollback_plan_template"
+    path: "file://knowledge/document-templates/rollback_plan_template.md"
+
+forms:
+  - id: "flag_request"
+    name: "Feature Flag Request"
+    description: "Provide feature flag details for rollout planning."
+    fields:
+      - name: "feature_name"
+        label: "Feature Name"
+        type: "text"
+        required: true
+      - name: "feature_description"
+        label: "Feature Description"
+        type: "textarea"
+        required: true
+      - name: "rollout_strategy"
+        label: "Rollout Strategy"
+        type: "select"
+        required: true
+        options: ["Gradual Rollout (10% → 50% → 100%)", "A/B Test", "Canary Release", "Immediate (100%)"]
+      - name: "target_audience"
+        label: "Target Audience"
+        type: "select"
+        required: true
+        options: ["All Users", "Internal Users Only", "Beta Users", "Specific Segment"]
+      - name: "success_metrics"
+        label: "Success Metrics"
+        type: "textarea"
+        required: true
+      - name: "rollback_threshold"
+        label: "Rollback Threshold (Error Rate %)"
+        type: "number"
+        required: true
+
+  - id: "flag_approval"
+    name: "Feature Flag Approval"
+    description: "Review and approve the feature flag rollout plan."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Enable Flag", "Request Revisions", "Reject"]
+      - name: "rollout_approved"
+        label: "Rollout Strategy Approved"
+        type: "select"
+        required: true
+        options: ["Yes - Proceed with Gradual Rollout", "Yes - Proceed with A/B Test", "No - Use Different Strategy"]
+      - name: "monitoring_verified"
+        label: "Monitoring Configured"
+        type: "select"
+        required: true
+        options: ["Yes - Monitoring Ready", "No - Monitoring Not Configured"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-release-manager"
+    name: "Deployment Controller & CAB Validator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Deployment Commander"
+      legend: "Manages feature flag rollouts with safety gates."
+      traits: { compliance: 100, empathy: 10 }
+    system_prompt: "file://knowledge/prompts/release-manager.md"
+    boundaries: ["*"]
+    permissions: ["aws:deploy", "slack:write:channel", "jira:write"]
+    tools: ["trigger_hil_approval", "aws_deploy", "slack_post_message", "jira_create_sprint"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Implements feature flag logic and monitoring."
+      traits: { compliance: 85, speed: 70, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/"]
+    permissions: ["github:read", "github:write:pr"]
+    tools: ["workspace_read_file", "workspace_write_file", "git_status", "git_commit", "git_push"]
+
+missions:
+  - id: "mission-plan-rollout"
+    name: "Plan Feature Flag Rollout"
+    objective: "Generate feature flag rollout plan with monitoring"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "devops_workbench"
+    primary_agent: "ai-release-manager"
+    inputs: ["flag_request"]
+    outputs: ["rollout_plan"]
+    sequence:
+      - step_code: "PLAN-1"
+        action: "define_rollout_phases"
+        description: "Define rollout phases and percentages"
+        estimated_duration_minutes: 15
+        template: "feature_flag_plan"
+      - step_code: "PLAN-2"
+        action: "configure_monitoring"
+        description: "Configure monitoring and alerting"
+        estimated_duration_minutes: 20
+      - step_code: "PLAN-3"
+        action: "define_rollback_criteria"
+        description: "Define rollback criteria and thresholds"
+        estimated_duration_minutes: 15
+      - step_code: "PLAN-4"
+        action: "generate_rollback_plan"
+        description: "Generate rollback plan"
+        estimated_duration_minutes: 10
+        template: "rollback_plan_template"
+
+  - id: "mission-implement-flag"
+    name: "Implement Feature Flag"
+    objective: "Implement feature flag logic in code"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-plan-rollout)"
+    primary_agent: "ai-backend-dev"
+    inputs: ["rollout_plan"]
+    outputs: ["flag_implementation"]
+    sequence:
+      - step_code: "IMPL-1"
+        action: "add_flag_logic"
+        description: "Add feature flag logic to code"
+        estimated_duration_minutes: 30
+        tool: "workspace_write_file"
+      - step_code: "IMPL-2"
+        action: "add_monitoring"
+        description: "Add monitoring and metrics collection"
+        estimated_duration_minutes: 30
+      - step_code: "IMPL-3"
+        action: "write_tests"
+        description: "Write tests for flag behavior"
+        estimated_duration_minutes: 30
+      - step_code: "IMPL-4"
+        action: "create_pr"
+        description: "Create PR for feature flag implementation"
+        estimated_duration_minutes: 10
+        tool: "git_status"
+
+  - id: "mission-review-flag"
+    name: "Review Feature Flag"
+    objective: "Human review and approval of feature flag"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-implement-flag)"
+    primary_agent: "ai-release-manager"
+    inputs: ["flag_implementation"]
+    outputs: ["approved_flag"]
+    requires_human: true
+    form_ref: "flag_approval"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_implementation"
+        description: "Present feature flag implementation for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect engineering and product approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_implementation"
+        description: "Finalize implementation based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-deploy-flag"
+    name: "Deploy Feature Flag"
+    objective: "Deploy feature flag to production"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-flag)"
+    primary_agent: "ai-release-manager"
+    inputs: ["approved_flag"]
+    outputs: ["deployed_flag"]
+    sequence:
+      - step_code: "DEPLOY-1"
+        action: "deploy_to_staging"
+        description: "Deploy feature flag to staging"
+        estimated_duration_minutes: 15
+        tool: "aws_deploy"
+      - step_code: "DEPLOY-2"
+        action: "enable_flag_staging"
+        description: "Enable flag at 10% on staging"
+        estimated_duration_minutes: 5
+      - step_code: "DEPLOY-3"
+        action: "monitor_staging"
+        description: "Monitor staging for 30 minutes"
+        estimated_duration_minutes: 30
+      - step_code: "DEPLOY-4"
+        action: "deploy_to_production"
+        description: "Deploy feature flag to production"
+        estimated_duration_minutes: 15
+        tool: "aws_deploy"
+      - step_code: "DEPLOY-5"
+        action: "enable_flag_production"
+        description: "Enable flag at initial percentage"
+        estimated_duration_minutes: 5
+
+  - id: "mission-monitor-rollout"
+    name: "Monitor Rollout"
+    objective: "Monitor feature flag rollout and adjust percentage"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 24
+    trigger: "on_success(mission-deploy-flag)"
+    primary_agent: "ai-release-manager"
+    inputs: ["deployed_flag"]
+    outputs: ["rollout_result"]
+    sequence:
+      - step_code: "MONITOR-1"
+        action: "monitor_metrics"
+        description: "Monitor metrics and error rates"
+        estimated_duration_minutes: 60
+      - step_code: "MONITOR-2"
+        action: "evaluate_rollout"
+        description: "Evaluate rollout success"
+        estimated_duration_minutes: 15
+      - step_code: "MONITOR-3"
+        action: "adjust_percentage"
+        description: "Adjust rollout percentage based on metrics"
+        estimated_duration_minutes: 10
+      - step_code: "MONITOR-4"
+        action: "check_rollback_criteria"
+        description: "Check if rollback criteria met"
+        estimated_duration_minutes: 5
+      - step_code: "MONITOR-5"
+        action: "execute_rollback_if_needed"
+        description: "Execute rollback if criteria met"
+        estimated_duration_minutes: 10
+      - step_code: "MONITOR-6"
+        action: "publish_rollout_report"
+        description: "Publish rollout report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"

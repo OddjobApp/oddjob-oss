@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Oddjob bowler hat (client/public/assets/branding/bowler-hat.png), inset
+     so it sits inside the adaptive icon's safe zone. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/oddjob_hat"
+    android:inset="18%" />

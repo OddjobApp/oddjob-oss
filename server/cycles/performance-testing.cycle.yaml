@@ -1,0 +1,372 @@
+name: "Performance Testing & Optimization"
+version: "1.0"
+containers: {}
+description: "Load testing, performance analysis, and optimization recommendations. Integrates with performance testing tools, monitoring systems, and JIRA for performance ticket creation."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Performance Testing & Optimization"
+  icon: "⚡"
+  theme_color: "#f59e0b"
+  display_priority: 2
+  category: "development"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+
+templates:
+  - id: "performance_test_plan"
+    path: "file://knowledge/document-templates/performance_test_plan.md"
+  - id: "performance_report"
+    path: "file://knowledge/document-templates/performance_report.md"
+  - id: "optimization_recommendations"
+    path: "file://knowledge/document-templates/optimization_recommendations.md"
+
+forms:
+  - id: "test_scope"
+    name: "Performance Test Scope"
+    description: "Define the scope of the performance test."
+    fields:
+      - name: "test_type"
+        label: "Test Type"
+        type: "select"
+        required: true
+        options: ["Load Test", "Stress Test", "Endurance Test", "Spike Test"]
+      - name: "target_url"
+        label: "Target URL"
+        type: "text"
+        required: true
+      - name: "target_endpoints"
+        label: "Target Endpoints"
+        type: "textarea"
+        required: true
+      - name: "concurrent_users"
+        label: "Concurrent Users"
+        type: "number"
+        required: true
+      - name: "duration_minutes"
+        label: "Test Duration (minutes)"
+        type: "number"
+        required: true
+      - name: "performance_thresholds"
+        label: "Performance Thresholds"
+        type: "textarea"
+        required: true
+      - name: "environment"
+        label: "Test Environment"
+        type: "select"
+        required: true
+        options: ["Staging", "Production (Read-only)", "Development"]
+
+  - id: "test_review"
+    name: "Performance Test Review"
+    description: "Review and approve the performance test results."
+    fields:
+      - name: "test_approved"
+        label: "Test Approval"
+        type: "select"
+        required: true
+        options: ["Approve & Create Optimization Tickets", "Request Additional Testing", "Reject"]
+      - name: "thresholds_met"
+        label: "Performance Thresholds Met"
+        type: "select"
+        required: true
+        options: ["Yes - All Thresholds Met", "No - Thresholds Exceeded"]
+      - name: "optimization_priority"
+        label: "Optimization Priority"
+        type: "select"
+        required: true
+        options: ["Immediate (P0)", "High Priority (P1)", "Standard Priority (P2)", "Low Priority (P3)"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-qa-engineer"
+    name: "End-to-End Test Suite Auditor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Relentless Auditor"
+      legend: "Executes performance tests and analyzes results."
+      traits: { compliance: 95, creativity: 10, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/qa-engineer.md"
+    boundaries: ["tests/e2e/", "tests/integration/", "server/", "client/"]
+    permissions: ["github:read", "jira:write:bug", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["execute_playwright_test", "workspace_read_file", "workspace_run_command", "knowledge_graph_query", "jira_create_bug", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Analyzes performance bottlenecks and recommends optimizations."
+      traits: { compliance: 85, speed: 70, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/"]
+    permissions: ["github:read", "slack:read"]
+    tools: ["workspace_read_file", "workspace_search", "knowledge_graph_query"]
+
+missions:
+  - id: "mission-prepare-test"
+    name: "Prepare Performance Test"
+    objective: "Generate performance test plan and prepare test environment"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "qa_workbench"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["test_scope"]
+    outputs: ["test_plan"]
+    sequence:
+      - step_code: "PREP-1"
+        action: "generate_test_plan"
+        description: "Generate performance test plan"
+        estimated_duration_minutes: 20
+        template: "performance_test_plan"
+      - step_code: "PREP-2"
+        action: "prepare_test_data"
+        description: "Prepare test data and scenarios"
+        estimated_duration_minutes: 20
+      - step_code: "PREP-3"
+        action: "validate_environment"
+        description: "Validate test environment is ready"
+        estimated_duration_minutes: 10
+      - step_code: "PREP-4"
+        action: "setup_monitoring"
+        description: "Setup monitoring for test execution"
+        estimated_duration_minutes: 10
+
+  - id: "mission-execute-test"
+    name: "Execute Performance Test"
+    objective: "Run performance test and collect metrics"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-prepare-test)"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["test_plan"]
+    outputs: ["test_results"]
+    sequence:
+      - step_code: "EXEC-1"
+        action: "run_load_test"
+        description: "Execute load test with specified parameters"
+        estimated_duration_minutes: 60
+        tool: "workspace_run_command"
+      - step_code: "EXEC-2"
+        action: "collect_metrics"
+        description: "Collect performance metrics"
+        estimated_duration_minutes: 30
+      - step_code: "EXEC-3"
+        action: "analyze_response_times"
+        description: "Analyze response times and latency"
+        estimated_duration_minutes: 15
+      - step_code: "EXEC-4"
+        action: "analyze_throughput"
+        description: "Analyze throughput and capacity"
+        estimated_duration_minutes: 15
+
+  - id: "mission-analyze-results"
+    name: "Analyze Performance Results"
+    objective: "Analyze test results and identify bottlenecks"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-execute-test)"
+    primary_agent: "ai-backend-dev"
+    inputs: ["test_results"]
+    outputs: ["performance_analysis"]
+    sequence:
+      - step_code: "ANALYZE-1"
+        action: "compare_thresholds"
+        description: "Compare results against performance thresholds"
+        estimated_duration_minutes: 20
+      - step_code: "ANALYZE-2"
+        action: "identify_bottlenecks"
+        description: "Identify performance bottlenecks"
+        estimated_duration_minutes: 30
+      - step_code: "ANALYZE-3"
+        action: "analyze_database_queries"
+        description: "Analyze database query performance"
+        estimated_duration_minutes: 30
+      - step_code: "ANALYZE-4"
+        action: "analyze_api_endpoints"
+        description: "Analyze API endpoint performance"
+        estimated_duration_minutes: 30
+      - step_code: "ANALYZE-5"
+        action: "identify_memory_leaks"
+        description: "Check for memory leaks or resource issues"
+        estimated_duration_minutes: 10
+
+  - id: "mission-generate-recommendations"
+    name: "Generate Optimization Recommendations"
+    objective: "Generate performance optimization recommendations"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-analyze-results)"
+    primary_agent: "ai-backend-dev"
+    inputs: ["performance_analysis"]
+    outputs: ["optimization_recommendations"]
+    sequence:
+      - step_code: "OPT-1"
+        action: "prioritize_issues"
+        description: "Prioritize performance issues by impact"
+        estimated_duration_minutes: 15
+      - step_code: "OPT-2"
+        action: "generate_recommendations"
+        description: "Generate optimization recommendations"
+        estimated_duration_minutes: 30
+        template: "optimization_recommendations"
+      - step_code: "OPT-3"
+        action: "estimate_effort"
+        description: "Estimate effort for each optimization"
+        estimated_duration_minutes: 15
+
+  - id: "mission-generate-report"
+    name: "Generate Performance Report"
+    objective: "Compile comprehensive performance report"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-recommendations)"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["test_results", "performance_analysis", "optimization_recommendations"]
+    outputs: ["performance_report"]
+    sequence:
+      - step_code: "REPORT-1"
+        action: "compile_findings"
+        description: "Compile all performance findings"
+        estimated_duration_minutes: 20
+      - step_code: "REPORT-2"
+        action: "generate_report"
+        description: "Generate comprehensive performance report"
+        estimated_duration_minutes: 20
+        template: "performance_report"
+      - step_code: "REPORT-3"
+        action: "create_visualizations"
+        description: "Create performance visualizations"
+        estimated_duration_minutes: 20
+
+  - id: "mission-review-report"
+    name: "Review Performance Report"
+    objective: "Human review and approval of performance report"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-report)"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["performance_report"]
+    outputs: ["approved_report"]
+    requires_human: true
+    form_ref: "test_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_report"
+        description: "Present performance report for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect team approval and feedback"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_report"
+        description: "Finalize report based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-create-optimization-tickets"
+    name: "Create Optimization Tickets"
+    objective: "Create JIRA tickets for performance optimizations"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-report)"
+    primary_agent: "ai-qa-engineer"
+    inputs: ["approved_report"]
+    outputs: ["optimization_tickets"]
+    sequence:
+      - step_code: "TICKETS-1"
+        action: "create_critical_tickets"
+        description: "Create P0/P1 tickets for critical performance issues"
+        estimated_duration_minutes: 20
+        tool: "jira_create_bug"
+      - step_code: "TICKETS-2"
+        action: "create_standard_tickets"
+        description: "Create P2/P3 tickets for standard optimizations"
+        estimated_duration_minutes: 15
+        tool: "jira_create_bug"
+      - step_code: "TICKETS-3"
+        action: "publish_report"
+        description: "Publish performance report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "TICKETS-4"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

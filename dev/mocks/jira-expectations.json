@@ -1,0 +1,42 @@
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/rest/api/2/search"
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": [
+                "application/json"
+            ]
+        },
+        "body": {
+            "issues": [
+                {
+                    "key": "DEV-1",
+                    "fields": {
+                        "summary": "Sample JIRA ticket",
+                        "description": "This is a mock JIRA ticket for testing",
+                        "status": {
+                            "name": "In Progress"
+                        },
+                        "assignee": {
+                            "displayName": "Test User"
+                        }
+                    }
+                },
+                {
+                    "key": "DEV-2",
+                    "fields": {
+                        "summary": "Another test ticket",
+                        "description": "Second mock ticket",
+                        "status": {
+                            "name": "To Do"
+                        }
+                    }
+                }
+            ],
+            "total": 2
+        }
+    }
+}

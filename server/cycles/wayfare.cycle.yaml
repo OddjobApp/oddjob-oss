@@ -1,0 +1,342 @@
+name: "Wayfare Long-Haul Planner"
+version: "1.0"
+containers: {}
+description: "CREW truck and EV planning with durable trips, Mapbox road legs, measured consumption, reserve-aware fuel/battery forecasts and manually verified charging plans. Charger discovery requires separate provider entitlement."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Wayfare Long-Haul Planner"
+  icon: "map"
+  theme_color: "#10b981"
+  display_priority: 7
+  category: "consumer"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 200000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.7
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+  mobile_framework: "None"
+
+portfolio_classification:
+  group_type: "project"
+  capitalization_category: "CapEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  compliance:
+    enabled: true
+    frameworks: ["OWASP"]
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "postgres"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+  agentmail:
+    enabled: true
+    admin_address: "${ENV.AGENTMAIL_ADMIN_ADDRESS}"
+    domain: "${ENV.AGENTMAIL_DOMAIN}"
+  ngrok:
+    enabled: true
+    auth_token: "${ENV.NGROK_AUTH_TOKEN}"
+    static_domain: "${ENV.NGROK_STATIC_DOMAIN}"
+
+vsm_telemetry:
+  enabled: true
+  metrics: ["lead_time", "cycle_time"]
+
+mcp_servers:
+  stitch:
+    enabled: true
+    endpoint: "http://localhost:3001/mcp"
+    tools: ["generate_screen_from_text", "apply_design_system"]
+
+directories:
+  knowledge_base: "knowledge/"
+  document_templates: "knowledge/document-templates/"
+  system_prompts: "knowledge/prompts/"
+  backend: ["server/", "shared/schema/"]
+  frontend: ["client/", "app/"]
+
+knowledge_graph:
+  vector_db:
+    provider: "qdrant"
+    url: "${ENV.VECTOR_DB_URL}"
+    collection_prefix: "wayfare-"
+  embedding:
+    model: "text-embedding-3-small"
+    dimension: 1536
+  similarity_threshold: 0.7
+
+knowledge_datasets:
+  - id: "wayfare_trips"
+    source: "local:dataset"
+    vectorize: true
+    primary_key: "trip_id"
+    schema:
+      trip_id: "string"
+      name: "string"
+      origin: "string"
+      destination: "string"
+      corridor_width_miles: "number"
+      max_daily_drive_hours: "number"
+  - id: "wayfare_discovered_pois"
+    source: "local:dataset"
+    vectorize: true
+    primary_key: "poi_id"
+    schema:
+      poi_id: "string"
+      name: "string"
+      category: "string"
+      lat: "number"
+      lng: "number"
+      detour_time_mins: "number"
+      detour_miles: "number"
+  - id: "wayfare_voting_lobby"
+    source: "local:dataset"
+    vectorize: true
+    primary_key: "proposal_id"
+    schema:
+      proposal_id: "string"
+      poi_name: "string"
+      submitted_by: "string"
+      votes_up: "number"
+      votes_down: "number"
+      status: "string"
+
+templates:
+  - id: "itinerary_template"
+    path: "file://knowledge/document-templates/wayfare_itinerary_template.md"
+
+forms:
+  - id: "trip_intake_form"
+    name: "Create Wayfare Road Trip"
+    description: "Initialize your road trip route parameters and pacing rules."
+    fields:
+      - name: "trip_name"
+        label: "Trip Name"
+        type: "text"
+        required: true
+      - name: "origin"
+        label: "Starting City/Point"
+        type: "text"
+        required: true
+      - name: "destination"
+        label: "Destination City/Point"
+        type: "text"
+        required: true
+      - name: "corridor_width"
+        label: "Discovery Corridor Width (Miles)"
+        type: "select"
+        required: true
+        options: ["5 miles", "10 miles", "25 miles", "50 miles"]
+      - name: "max_drive_hours"
+        label: "Max Daily Driving Hours"
+        type: "select"
+        required: true
+        options: ["4 hours", "6 hours", "8 hours", "10 hours"]
+
+  - id: "voting_proposal_form"
+    name: "Suggest Detour Stop"
+    description: "Propose a new roadside attraction to the group itinerary."
+    fields:
+      - name: "poi_name"
+        label: "Point of Interest Name"
+        type: "text"
+        required: true
+      - name: "poi_category"
+        label: "POI Category"
+        type: "select"
+        required: true
+        options: ["Quirky Roadside", "Nature/Hikes", "Local Eats", "Practical Stops"]
+      - name: "detour_reason"
+        label: "Why should we stop here?"
+        type: "text"
+        required: true
+
+  - id: "pacing_nudge_override"
+    name: "Driving Limit Override"
+    description: "Verify or override daily drive-time limit alerts."
+    fields:
+      - name: "action"
+        label: "Pacing Recommendation Action"
+        type: "select"
+        required: true
+        options: ["Split route at suggested campsite", "Bypass warning and drive through"]
+      - name: "notes"
+        label: "Justification/Notes"
+        type: "text"
+        required: false
+
+agents:
+  - id: "wayfare-route-architect"
+    name: "Wayfare Route Architect"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Cartographer"
+      legend: "Calculates precise routes, corridor geometries, and detour time/mileage penalties."
+      traits: { speed: 90, accuracy: 95 }
+    system_prompt: "file://knowledge/prompts/wayfare-route-architect.md"
+    boundaries: ["wayfare_trips"]
+    permissions: ["slack:write:channel"]
+    tools: ["read_file", "write_file"]
+    # Declared prerequisite manifest: mission-initialize-trip consumes this
+    # form at INIT-1, and the deployment's form manifest serves it on first
+    # contact so the trip's required fields are collected before planning.
+    intake_form: "trip_intake_form"
+    publish_as_public_agent:
+      slug: "wayfare-route-architect"
+      title: "Wayfare Route Architect"
+      access_policy: "internal_only"
+      welcome_message: "Plan a long-haul truck or EV trip — I'll start by collecting the basics."
+
+  - id: "wayfare-discovery-scout"
+    name: "Wayfare Discovery Scout"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.4
+    soul_profile:
+      archetype: "The Local Guide"
+      legend: "Queries external APIs and hidden gems, compiling unique roadside attractions and dining stops."
+      traits: { creativity: 85, accuracy: 80 }
+    system_prompt: "file://knowledge/prompts/wayfare-discovery-scout.md"
+    boundaries: ["wayfare_discovered_pois"]
+    permissions: ["slack:write:channel"]
+    tools: ["read_file", "write_file"]
+
+  - id: "wayfare-pacing-guard"
+    name: "Wayfare Pacing Guard"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Safety Officer"
+      legend: "Enforces driving safety thresholds, recommending campsites or overnight stops to break up driving exhaustion."
+      traits: { safety: 95, compliance: 90 }
+    system_prompt: "file://knowledge/prompts/wayfare-pacing-guard.md"
+    boundaries: ["wayfare_trips"]
+    permissions: ["slack:write:channel"]
+    tools: ["read_file", "write_file"]
+
+  - id: "wayfare-copilot-referee"
+    name: "Co-Pilot Group Coordinator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Diplomat"
+      legend: "Moderates the voting lobby, merges concurrent mapping additions, and updates the shared blackboard."
+      traits: { organization: 95, collaboration: 90 }
+    system_prompt: "file://knowledge/prompts/wayfare-copilot-referee.md"
+    boundaries: ["wayfare_voting_lobby"]
+    permissions: ["slack:write:channel"]
+    allowed_delegations: ["wayfare-route-architect"]
+    tools: ["trigger_hil_approval"]
+
+missions:
+  - id: "mission-initialize-trip"
+    name: "Trip Route Initialization"
+    environment: "planning"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "wayfare-route-architect"
+    sequence:
+      - step_code: "INIT-1"
+        action: "parse_trip_intake"
+        input: "trip_intake_form"
+      - step_code: "INIT-2"
+        action: "compute_initial_route"
+        output: "initial_mapbox_route"
+
+  - id: "mission-scout-pois"
+    name: "Corridor Discovery Scouting"
+    environment: "planning"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "wayfare-discovery-scout"
+    sequence:
+      - step_code: "SCOUT-1"
+        action: "query_corridor_pois"
+        input: "initial_mapbox_route"
+      - step_code: "SCOUT-2"
+        action: "filter_scouted_gems"
+        output: "wayfare_discovered_pois"
+
+  - id: "mission-pacing-audit"
+    name: "Drive Pacing & Split Audit"
+    environment: "planning"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "wayfare-pacing-guard"
+    sequence:
+      - step_code: "PACING-1"
+        action: "audit_driving_hours"
+      - step_code: "PACING-2"
+        action: "recommend_stops_and_splits"
+        output: "pacing_recommendations"
+      - step_code: "PACING-3"
+        action: "trigger_driver_approval"
+        requires_human: true
+        form_ref: "pacing_nudge_override"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-collaborative-sync"
+    name: "Co-Pilot Voting Sync"
+    environment: "planning"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "wayfare-copilot-referee"
+    sequence:
+      - step_code: "SYNC-1"
+        action: "evaluate_lobby_proposals"
+        input: "wayfare_voting_lobby"
+      - step_code: "SYNC-2"
+        action: "update_itinerary_with_accepted_stops"
+        output: "updated_itinerary"
+
+apps:
+  - id: "wayfare"
+    name: "Wayfare Long-Haul Planner"
+    blueprint: "wayfare"
+    path: "file://server/blueprints/apps/wayfare"
+    interaction_model: "shared-server"
+    enabled: true
+    integration_dependencies: ["mapbox"]
+
+

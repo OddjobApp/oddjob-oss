@@ -1,0 +1,13 @@
+{
+  "id": "cap_generate_pdf",
+  "name": "Capability: generate a PDF report",
+  "subject": { "kind": "capability", "ref": "generate_pdf" },
+  "prompt": "Create a one-page PDF report titled 'Q3 Summary' with a short paragraph on revenue growth.",
+  "repeats": 5,
+  "threshold": 0.8,
+  "_note": "Seed scaffold — confirm the tool_used value matches the live tool name; tune the prompt to reliably trigger it.",
+  "criteria": [
+    { "type": "tool_used", "value": "generate_pdf", "weight": 3 },
+    { "type": "final_output_contains", "value": "Q3 Summary", "weight": 1 }
+  ]
+}

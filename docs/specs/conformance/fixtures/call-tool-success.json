@@ -1,0 +1,19 @@
+{
+  "description": "CALL_TOOL must write last_tool_run and last_tool_status on success",
+  "assertions": ["ACT-002", "BB-001"],
+  "input": {
+    "action": "CALL_TOOL",
+    "action_details": { "tool_name": "google_search", "arguments": { "query": "AI trends 2026" } },
+    "missionRunId": 1,
+    "governanceResult": { "needsApproval": false, "approved": true }
+  },
+  "expectedBlackboardDelta": {
+    "last_tool_run": "google_search",
+    "last_tool_status": "success"
+  },
+  "expectedTraceEvents": [
+    { "type": "system", "event": "tool_invoked" },
+    { "type": "system", "event": "tool_success" }
+  ],
+  "expectedRunStatus": "active"
+}

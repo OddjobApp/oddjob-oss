@@ -1,0 +1,89 @@
+{
+  "name": "oddjob-copilot",
+  "displayName": "Oddjob Co-pilot",
+  "description": "Trigger and steer autonomous agent cycles directly from VS Code.",
+  "version": "1.0.0",
+  "publisher": "oddjob",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Oddjob Co-pilot",
+      "properties": {
+        "oddjob.apiEndpoint": {
+          "type": "string",
+          "default": "http://localhost:5000",
+          "description": "Base URL of the Oddjob server (e.g. https://app.oddjob.example.com)."
+        },
+        "oddjob.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key sent as the `x-api-key` header. Leave blank to rely on an existing session cookie (local dev)."
+        },
+        "oddjob.organizationId": {
+          "type": "string",
+          "default": "",
+          "description": "Organization id to scope requests to (super-admin only; sent as ?orgId)."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "oddjob-sidebar-container",
+          "title": "Oddjob Studio",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "oddjob-sidebar-container": [
+        {
+          "id": "oddjob.sidebar",
+          "type": "webview",
+          "name": "Active Agent Console"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "oddjob.triggerCycle",
+        "title": "Oddjob: Trigger Agent Cycle",
+        "category": "Oddjob"
+      },
+      {
+        "command": "oddjob.steerMission",
+        "title": "Oddjob: Steer Active Agent",
+        "category": "Oddjob"
+      },
+      {
+        "command": "oddjob.viewStatus",
+        "title": "Oddjob: View Status Console",
+        "category": "Oddjob"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "oddjob.triggerCycle",
+        "key": "ctrl+alt+o",
+        "mac": "cmd+alt+o"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^4.9.5"
+  }
+}

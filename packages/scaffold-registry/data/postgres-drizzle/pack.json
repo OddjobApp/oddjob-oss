@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "data-postgres-drizzle",
+  "name": "Dataset Persistence Pack",
+  "version": "1.0.0",
+  "category": "data",
+  "extends": "core-node-express",
+  "requires": [],
+  "conflicts": [],
+  "recommends": [],
+  "provides": ["dataset-store"],
+  "inject": [
+    {
+      "target": "src/app.ts",
+      "action": "AST_ADD_MIDDLEWARE",
+      "import": "import { datasetRouter } from './dataset/router.js';",
+      "use": "app.use('/api/dataset', datasetRouter);"
+    },
+    {
+      "target": "package.json",
+      "action": "MERGE_JSON",
+      "content": {
+        "scripts": {
+          "dataset:generate": "drizzle-kit generate",
+          "dataset:migrate": "node dist/dataset/migrate.js",
+          "dataset:push": "drizzle-kit push"
+        },
+        "dependencies": {
+          "drizzle-orm": "^0.30.10",
+          "pg": "^8.11.5"
+        },
+        "devDependencies": {
+          "drizzle-kit": "^0.21.4",
+          "@types/pg": "^8.11.5"
+        }
+      }
+    }
+  ],
+  "templates": [
+    {
+      "source": "client.ts.hbs",
+      "destination": "src/dataset/client.ts"
+    },
+    {
+      "source": "schema.ts.hbs",
+      "destination": "src/dataset/schema.ts"
+    },
+    {
+      "source": "router.ts.hbs",
+      "destination": "src/dataset/router.ts"
+    },
+    {
+      "source": "migrate.ts.hbs",
+      "destination": "src/dataset/migrate.ts"
+    },
+    {
+      "source": "drizzle.config.ts.hbs",
+      "destination": "drizzle.config.ts"
+    },
+    {
+      "source": "env.example.hbs",
+      "destination": ".env.example"
+    }
+  ]
+}

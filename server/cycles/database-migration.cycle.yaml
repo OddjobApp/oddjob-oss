@@ -1,0 +1,331 @@
+name: "Database Migration & Rollback"
+version: "1.0"
+containers: {}
+description: "Safe database schema migrations with rollback plans. Validates migration safety, generates rollback scripts, and applies migrations with approval gates."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Database Migration & Rollback"
+  icon: "🗄️"
+  theme_color: "#8b5cf6"
+  display_priority: 2
+  category: "development"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 300000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+    prod_url: "${ENV.PROD_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "migration_plan_template"
+    path: "file://knowledge/document-templates/migration_plan_template.md"
+  - id: "rollback_plan_template"
+    path: "file://knowledge/document-templates/rollback_plan_template.md"
+
+forms:
+  - id: "migration_request"
+    name: "Database Migration Request"
+    description: "Provide migration details for safety validation."
+    fields:
+      - name: "migration_type"
+        label: "Migration Type"
+        type: "select"
+        required: true
+        options: ["Additive (Add Column/Table)", "Destructive (Drop Column/Table)", "Data Migration", "Schema Refactor"]
+      - name: "target_database"
+        label: "Target Database"
+        type: "select"
+        required: true
+        options: ["Development", "Staging", "Production"]
+      - name: "migration_description"
+        label: "Migration Description"
+        type: "textarea"
+        required: true
+      - name: "affected_tables"
+        label: "Affected Tables"
+        type: "textarea"
+        required: true
+      - name: "estimated_downtime"
+        label: "Estimated Downtime (minutes)"
+        type: "number"
+        required: true
+      - name: "backup_required"
+        label: "Backup Required"
+        type: "select"
+        required: true
+        options: ["Yes - Full Backup", "Yes - Schema Only", "No"]
+
+  - id: "migration_approval"
+    name: "Migration Approval"
+    description: "Review and approve the migration plan."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Execute", "Request Revisions", "Reject"]
+      - name: "safety_status"
+        label: "Migration Safety"
+        type: "select"
+        required: true
+        options: ["Safe (Additive)", "Safe with Backfill", "Unsafe - Override Required"]
+      - name: "rollback_verified"
+        label: "Rollback Plan Verified"
+        type: "select"
+        required: true
+        options: ["Yes - Rollback Tested", "No - Rollback Not Tested"]
+      - name: "execution_window"
+        label: "Execution Window"
+        type: "text"
+        required: true
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-dba"
+    name: "SQL Schema Migration Guardian"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 200000
+    soul_profile:
+      archetype: "The Data Guardian"
+      legend: "Validates migration safety and generates rollback scripts."
+      traits: { compliance: 100, speed: 20, persistence: 80 }
+    system_prompt: "file://knowledge/prompts/dba.md"
+    boundaries: ["server/db/migrations/", "shared/schema/"]
+    permissions: ["github:read", "github:write:pr", "slack:read"]
+    tools: ["db_generate_migration", "db_apply_migration", "workspace_read_file", "workspace_write_file", "workspace_run_command", "git_status", "git_commit", "git_push"]
+
+  - id: "ai-backend-dev"
+    name: "Backend Integration & API Developer"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Systems Engineer"
+      legend: "Reviews migration impact on application code."
+      traits: { compliance: 85, speed: 70, persistence: 90 }
+    system_prompt: "file://knowledge/prompts/backend-dev.md"
+    boundaries: ["server/", "shared/schema/"]
+    permissions: ["github:read"]
+    tools: ["workspace_read_file", "workspace_search"]
+
+missions:
+  - id: "mission-validate-migration"
+    name: "Validate Migration Safety"
+    objective: "Analyze migration request and validate safety"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "devops_workbench"
+    primary_agent: "ai-dba"
+    inputs: ["migration_request"]
+    outputs: ["migration_validation"]
+    sequence:
+      - step_code: "VAL-1"
+        action: "analyze_migration_type"
+        description: "Analyze migration type and risk level"
+        estimated_duration_minutes: 15
+      - step_code: "VAL-2"
+        action: "check_data_integrity"
+        description: "Check data integrity impact"
+        estimated_duration_minutes: 20
+      - step_code: "VAL-3"
+        action: "assess_downtime"
+        description: "Assess downtime requirements"
+        estimated_duration_minutes: 10
+      - step_code: "VAL-4"
+        action: "validate_dependencies"
+        description: "Validate dependencies on affected tables"
+        estimated_duration_minutes: 15
+
+  - id: "mission-generate-migration"
+    name: "Generate Migration Scripts"
+    objective: "Generate migration and rollback scripts"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-validate-migration)"
+    primary_agent: "ai-dba"
+    inputs: ["migration_validation"]
+    outputs: ["migration_scripts"]
+    sequence:
+      - step_code: "GEN-1"
+        action: "generate_migration_script"
+        description: "Generate migration SQL script"
+        estimated_duration_minutes: 30
+        tool: "db_generate_migration"
+      - step_code: "GEN-2"
+        action: "generate_rollback_script"
+        description: "Generate rollback SQL script"
+        estimated_duration_minutes: 30
+        template: "rollback_plan_template"
+      - step_code: "GEN-3"
+        action: "validate_rollback"
+        description: "Validate rollback script reverses migration"
+        estimated_duration_minutes: 20
+      - step_code: "GEN-4"
+        action: "generate_migration_plan"
+        description: "Generate comprehensive migration plan"
+        estimated_duration_minutes: 20
+        template: "migration_plan_template"
+
+  - id: "mission-test-migration"
+    name: "Test Migration"
+    objective: "Test migration on staging environment"
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-migration)"
+    primary_agent: "ai-dba"
+    inputs: ["migration_scripts"]
+    outputs: ["test_results"]
+    sequence:
+      - step_code: "TEST-1"
+        action: "create_backup"
+        description: "Create database backup"
+        estimated_duration_minutes: 15
+        tool: "workspace_run_command"
+      - step_code: "TEST-2"
+        action: "apply_migration"
+        description: "Apply migration to staging"
+        estimated_duration_minutes: 10
+        tool: "db_apply_migration"
+      - step_code: "TEST-3"
+        action: "verify_schema"
+        description: "Verify schema changes"
+        estimated_duration_minutes: 15
+      - step_code: "TEST-4"
+        action: "test_rollback"
+        description: "Test rollback script"
+        estimated_duration_minutes: 10
+        tool: "db_apply_migration"
+      - step_code: "TEST-5"
+        action: "restore_backup"
+        description: "Restore from backup"
+        estimated_duration_minutes: 10
+
+  - id: "mission-review-migration"
+    name: "Review Migration Plan"
+    objective: "Human review and approval of migration"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-test-migration)"
+    primary_agent: "ai-dba"
+    inputs: ["migration_scripts", "test_results"]
+    outputs: ["approved_migration"]
+    requires_human: true
+    form_ref: "migration_approval"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_migration_plan"
+        description: "Present migration plan for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect DBA and engineering approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_plan"
+        description: "Finalize migration plan based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-execute-migration"
+    name: "Execute Migration"
+    objective: "Execute approved migration on target database"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-review-migration)"
+    primary_agent: "ai-dba"
+    inputs: ["approved_migration"]
+    outputs: ["migration_result"]
+    sequence:
+      - step_code: "EXEC-1"
+        action: "create_production_backup"
+        description: "Create production database backup"
+        estimated_duration_minutes: 30
+        tool: "workspace_run_command"
+      - step_code: "EXEC-2"
+        action: "apply_migration"
+        description: "Apply migration to production"
+        estimated_duration_minutes: 15
+        tool: "db_apply_migration"
+      - step_code: "EXEC-3"
+        action: "verify_migration"
+        description: "Verify migration success"
+        estimated_duration_minutes: 20
+      - step_code: "EXEC-4"
+        action: "publish_migration_report"
+        description: "Publish migration report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "EXEC-5"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

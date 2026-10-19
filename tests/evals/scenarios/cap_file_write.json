@@ -1,0 +1,13 @@
+{
+  "id": "cap_file_write",
+  "name": "Capability: write a file to storage",
+  "subject": { "kind": "capability", "ref": "file_write" },
+  "prompt": "Write a file named notes.txt to storage containing the single line: hello from eval.",
+  "repeats": 5,
+  "threshold": 0.8,
+  "_note": "Tool name confirmed against server/domain/tools/v1/capabilities/files.ts. This scenario previously named 'write_file', which is not a registered capability — the tool_used criterion could never be satisfied, so the subject scored a flat 0.25 with zero variance on every run.",
+  "criteria": [
+    { "type": "tool_used", "value": "file_write", "weight": 3 },
+    { "type": "final_output_contains", "value": "notes.txt", "weight": 1 }
+  ]
+}

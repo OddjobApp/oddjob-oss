@@ -1,0 +1,353 @@
+name: "Procurement Management"
+version: "1.0"
+containers: {}
+description: "Automated procurement workflows including purchase request processing, vendor selection, approval chains, and order tracking. Integrates with ERP systems, JIRA for procurement tasks, and Confluence for documentation."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Procurement Management"
+  icon: "📦"
+  theme_color: "#6366f1"
+  display_priority: 2
+  category: "operations"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  procurement_policies:
+    required: true
+    path: "file://knowledge/guidelines/procurement_policies.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "purchase_request_template"
+    path: "file://knowledge/document-templates/purchase_request_template.md"
+  - id: "vendor_evaluation_template"
+    path: "file://knowledge/document-templates/vendor_evaluation_template.md"
+
+forms:
+  - id: "purchase_request"
+    name: "Purchase Request"
+    description: "Submit a purchase request for approval."
+    fields:
+      - name: "requester_name"
+        label: "Requester Name"
+        type: "text"
+        required: true
+      - name: "department"
+        label: "Department"
+        type: "select"
+        required: true
+        options: ["Engineering", "Sales", "Marketing", "Finance", "HR", "Operations"]
+      - name: "item_description"
+        label: "Item Description"
+        type: "textarea"
+        required: true
+      - name: "quantity"
+        label: "Quantity"
+        type: "number"
+        required: true
+      - name: "estimated_cost"
+        label: "Estimated Cost"
+        type: "text"
+        required: true
+      - name: "urgency"
+        label: "Urgency"
+        type: "select"
+        required: true
+        options: ["Standard", "High", "Critical"]
+      - name: "justification"
+        label: "Business Justification"
+        type: "textarea"
+        required: true
+
+  - id: "procurement_approval"
+    name: "Procurement Approval"
+    description: "Review and approve purchase request."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Proceed", "Request Revisions", "Reject"]
+      - name: "budget_approved"
+        label: "Budget Approved"
+        type: "select"
+        required: true
+        options: ["Yes - Within Budget", "Yes - Budget Adjustment Needed", "No - Exceeds Budget"]
+      - name: "vendor_selected"
+        label: "Vendor Selection"
+        type: "select"
+        required: true
+        options: ["Vendor Approved", "Vendor Selection Needed", "New Vendor Required"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-procurement-specialist"
+    name: "Procurement Specialist"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Supply Chain Optimizer"
+      legend: "Manages procurement workflows and vendor relationships."
+      traits: { compliance: 90, creativity: 20, speed: 70 }
+    system_prompt: "file://knowledge/prompts/procurement-specialist.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-finance-analyst"
+    name: "Finance Analyst"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Budget Guardian"
+      legend: "Reviews procurement requests for budget compliance."
+      traits: { compliance: 100, creativity: 5, persistence: 95 }
+    system_prompt: "file://knowledge/prompts/finance-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-process-request"
+    name: "Process Purchase Request"
+    objective: "Process and validate purchase request"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "procurement_workbench"
+    primary_agent: "ai-procurement-specialist"
+    inputs: ["purchase_request"]
+    outputs: ["validated_request"]
+    sequence:
+      - step_code: "PROCESS-1"
+        action: "validate_request"
+        description: "Validate purchase request details"
+        estimated_duration_minutes: 15
+      - step_code: "PROCESS-2"
+        action: "check_budget"
+        description: "Check department budget availability"
+        estimated_duration_minutes: 15
+        tool: "knowledge_graph_query"
+      - step_code: "PROCESS-3"
+        action: "identify_vendors"
+        description: "Identify potential vendors"
+        estimated_duration_minutes: 20
+      - step_code: "PROCESS-4"
+        action: "generate_request_document"
+        description: "Generate purchase request document"
+        estimated_duration_minutes: 10
+        template: "purchase_request_template"
+
+  - id: "mission-vendor-evaluation"
+    name: "Evaluate Vendors"
+    objective: "Evaluate and select vendors"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-process-request)"
+    primary_agent: "ai-procurement-specialist"
+    inputs: ["validated_request"]
+    outputs: ["vendor_evaluation"]
+    sequence:
+      - step_code: "VENDOR-1"
+        action: "research_vendors"
+        description: "Research potential vendors"
+        estimated_duration_minutes: 20
+      - step_code: "VENDOR-2"
+        action: "compare_pricing"
+        description: "Compare vendor pricing"
+        estimated_duration_minutes: 15
+      - step_code: "VENDOR-3"
+        action: "assess_quality"
+        description: "Assess vendor quality ratings"
+        estimated_duration_minutes: 15
+      - step_code: "VENDOR-4"
+        action: "generate_evaluation_report"
+        description: "Generate vendor evaluation report"
+        estimated_duration_minutes: 10
+        template: "vendor_evaluation_template"
+
+  - id: "mission-budget-review"
+    name: "Budget Review"
+    objective: "Review budget compliance"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-vendor-evaluation)"
+    primary_agent: "ai-finance-analyst"
+    inputs: ["vendor_evaluation"]
+    outputs: ["budget_assessment"]
+    sequence:
+      - step_code: "BUDGET-1"
+        action: "check_compliance"
+        description: "Check budget compliance"
+        estimated_duration_minutes: 20
+      - step_code: "BUDGET-2"
+        action: "assess_impact"
+        description: "Assess budget impact"
+        estimated_duration_minutes: 15
+      - step_code: "BUDGET-3"
+        action: "recommend_approval"
+        description: "Recommend approval or rejection"
+        estimated_duration_minutes: 15
+      - step_code: "BUDGET-4"
+        action: "generate_assessment"
+        description: "Generate budget assessment"
+        estimated_duration_minutes: 10
+
+  - id: "mission-approval-review"
+    name: "Approval Review"
+    objective: "Human review and approval of purchase request"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-budget-review)"
+    primary_agent: "ai-procurement-specialist"
+    inputs: ["budget_assessment"]
+    outputs: ["approved_request"]
+    requires_human: true
+    form_ref: "procurement_approval"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "APPROVE-1"
+        action: "present_request"
+        description: "Present purchase request for review"
+        estimated_duration_minutes: 10
+      - step_code: "APPROVE-2"
+        action: "collect_approval"
+        description: "Collect manager approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "APPROVE-3"
+        action: "finalize_request"
+        description: "Finalize request based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-place-order"
+    name: "Place Order"
+    objective: "Place order with selected vendor"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-approval-review)"
+    primary_agent: "ai-procurement-specialist"
+    inputs: ["approved_request"]
+    outputs: ["order_confirmation"]
+    sequence:
+      - step_code: "ORDER-1"
+        action: "create_purchase_order"
+        description: "Create purchase order"
+        estimated_duration_minutes: 20
+      - step_code: "ORDER-2"
+        action: "send_to_vendor"
+        description: "Send order to vendor"
+        estimated_duration_minutes: 15
+      - step_code: "ORDER-3"
+        action: "create_tracking_task"
+        description: "Create JIRA task for order tracking"
+        estimated_duration_minutes: 10
+        tool: "jira_create_sprint"
+      - step_code: "ORDER-4"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+  - id: "mission-track-order"
+    name: "Track Order"
+    objective: "Track order status and delivery"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger:
+      type: "manual"
+      source: "procurement_workbench"
+    primary_agent: "ai-procurement-specialist"
+    inputs: ["order_confirmation"]
+    outputs: ["order_status"]
+    sequence:
+      - step_code: "TRACK-1"
+        action: "query_order_status"
+        description: "Query order status from vendor"
+        estimated_duration_minutes: 10
+      - step_code: "TRACK-2"
+        action: "update_tracking"
+        description: "Update tracking information"
+        estimated_duration_minutes: 10
+      - step_code: "TRACK-3"
+        action: "notify_requester"
+        description: "Notify requester of status"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+apps:
+  - id: "procurement-workbench"
+    name: "Procurement Management Portal"
+    description: "Purchase request processing, vendor selection, approval chains, and order tracking."
+    path: "file://procurement-workbench"
+    blueprint: "procurement-management"
+    interaction_model: "shared-server"

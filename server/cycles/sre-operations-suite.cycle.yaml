@@ -1,0 +1,546 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "SRE Operations Suite"
+version: "1.0"
+containers: {}
+description: "Unified SRE operations cycle combining proactive chaos engineering drills with reactive incident response. Supports two trigger modes: scheduled chaos drills to test resilience, and real-time incident response for production events."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "SRE Operations Suite"
+  icon: "🛡️"
+  theme_color: "#f59e0b"
+  display_priority: 1
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    structured: true
+  metrics:
+    enabled: true
+    endpoint: "${ENV.METRICS_ENDPOINT}"
+    interval_seconds: 60
+  tracing:
+    enabled: true
+    sample_rate: 1.0
+    endpoint: "${ENV.TRACING_ENDPOINT}"
+
+forms:
+  - id: "chaos_abort_approval"
+    name: "Chaos Abort & Recovery Sign-off"
+    description: "Verify service has recovered or force-abort the chaos drill."
+    fields:
+      - name: "abort_drill"
+        label: "Force-abort and recover?"
+        type: "select"
+        required: true
+        options: ["Let Auto-Healer Recover", "Force Abort & Rollback Latency"]
+      - name: "comments"
+        label: "Rationale"
+        type: "text"
+        required: true
+
+  - id: "incident_triage_decision"
+    name: "Incident Triage Sign-off"
+    description: "Verify triage diagnosis and approve follow-up mitigation strategy."
+    fields:
+      - name: "incident_severity"
+        label: "Severity Level"
+        type: "select"
+        required: true
+        options: ["P1 - Critical", "P2 - High", "P3 - Moderate", "P4 - Low"]
+      - name: "action_plan"
+        label: "Approved Action Plan"
+        type: "select"
+        required: true
+        options: ["Deploy Hotfix", "Rollback Last Release", "Database Revert", "False Alarm / Close"]
+      - name: "comments"
+        label: "Triage & Rationale Comments"
+        type: "text"
+        required: true
+
+  - id: "mitigation_deployment_approval"
+    name: "Mitigation Deployment Approval"
+    description: "Approve deployment of hotfix code/mitigation to production (CAB Approval Gate)."
+    fields:
+      - name: "approve_deployment"
+        label: "Approve Production Deployment?"
+        type: "select"
+        required: true
+        options: ["Approve & Deploy", "Reject / Requires Rework"]
+      - name: "cab_comments"
+        label: "Change Advisory Board Comments"
+        type: "text"
+        required: true
+
+agents:
+  - id: "ai-chaos-monkey"
+    name: "Chaos Monkey"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.2
+    soul_profile:
+      archetype: "The Controlled Disrupter"
+      legend: "Injects failures, latencies, and state corruptions safely."
+    system_prompt: "file://knowledge/prompts/chaos-engineer.md"
+    boundaries: ["*"]
+    permissions: ["slack:write:channel"]
+    tools: ["slack_post_message"]
+
+  - id: "ai-incident-commander"
+    name: "Incident Resolution Lead"
+    role: "supervisor"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Calm Commander"
+      legend: "Maintains operational composure, directing tasks under high pressure."
+    system_prompt: "file://knowledge/prompts/incident-commander.md"
+    boundaries: ["*"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel"]
+    allowed_delegations: ["ai-sre-agent", "ai-postmortem-writer"]
+    tools: ["slack_post_message", "jira_jql_search"]
+
+  - id: "ai-sre-agent"
+    name: "SRE Debugging & Diagnosis Agent"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Systems Sentry"
+      legend: "Deep logs scanner and system reliability auditor."
+    system_prompt: "file://knowledge/prompts/sre-agent.md"
+    boundaries: ["*"]
+    permissions: ["github:read", "slack:write:channel"]
+    tools: ["slack_post_message"]
+
+  - id: "ai-postmortem-writer"
+    name: "Incident Post-Mortem Documentation Writer"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    temperature: 0.1
+    soul_profile:
+      archetype: "The Historian & Analyst"
+      legend: "Deep systems chronicler and root-cause investigator."
+    system_prompt: "file://knowledge/prompts/post-mortem-writer.md"
+    boundaries: ["*"]
+    permissions: ["jira:write", "slack:write:channel"]
+    tools: ["slack_post_message"]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE A — Chaos Drill (proactive, manual trigger)
+# ═══════════════════════════════════════════════════════════════════════════════
+missions:
+  - id: "mission-chaos-1"
+    name: "Inject Latency Simulator"
+    objective: "Inject database latency/slowdown parameters in the staging environment."
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-chaos-monkey"
+    inputs: []
+    outputs: ["chaos_simulation_status"]
+    sequence:
+      - step_code: "CHAOS-1"
+        action: "set_latency_flag"
+        description: "Modify staging environment database config to inject 3000ms delay."
+        estimated_duration_minutes: 15
+        agent: "ai-chaos-monkey"
+
+  - id: "mission-chaos-2"
+    name: "Trigger PagerDuty Alert"
+    objective: "Fire simulated incident routing alert in PagerDuty."
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-chaos-1)"
+    primary_agent: "ai-chaos-monkey"
+    inputs: ["chaos_simulation_status"]
+    outputs: ["pagerduty_incident_id"]
+    sequence:
+      - step_code: "ALERT-1"
+        action: "trigger_monitoring_incident"
+        description: "Trigger incident event in Datadog/PagerDuty via integrations."
+        estimated_duration_minutes: 15
+        agent: "ai-chaos-monkey"
+
+  - id: "mission-chaos-3"
+    name: "Analyze & Diagnose Outage"
+    objective: "Query monitoring metrics, inspect stack traces, and isolate failure vector."
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 2
+    trigger: "manual"
+    primary_agent: "ai-sre-agent"
+    inputs: ["pagerduty_incident_id"]
+    outputs: ["diagnostic_report"]
+    sequence:
+      - step_code: "DIAGNOSE-1"
+        action: "query_metrics"
+        description: "Scrape Datadog metrics to confirm staging CPU/latency anomalies."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+      - step_code: "DIAGNOSE-2"
+        action: "locate_error_vector"
+        description: "Identify configuration flags causing query slowdowns."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+
+  - id: "mission-chaos-4"
+    name: "Execute Auto-Recovery Playbook"
+    objective: "Apply database config remediation and request safety check abort approval."
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-chaos-3)"
+    primary_agent: "ai-sre-agent"
+    inputs: ["diagnostic_report"]
+    outputs: ["remediation_status"]
+    sequence:
+      - step_code: "HEAL-1"
+        action: "reset_latency_flag"
+        description: "Clear staging database slowdown configuration parameter."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+      - step_code: "HEAL-2"
+        action: "request_abort_verification"
+        description: "Route the abort/recovery form to the team approvals channel."
+        estimated_duration_minutes: 45
+        requires_human: true
+        form_ref: "Chaos Abort & Recovery Sign-off"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-chaos-5"
+    name: "Verify Staging Health"
+    objective: "Query staging endpoints and resolve monitoring alerts."
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-sre-agent"
+    inputs: ["remediation_status"]
+    outputs: ["health_check_report"]
+    sequence:
+      - step_code: "VERIFY-1"
+        action: "run_http_latency_checks"
+        description: "Verify staging API latency drops to < 100ms."
+        estimated_duration_minutes: 15
+        agent: "ai-sre-agent"
+      - step_code: "VERIFY-2"
+        action: "resolve_pagerduty_alert"
+        description: "Resolve active incidents in PagerDuty monitoring system."
+        estimated_duration_minutes: 15
+        agent: "ai-sre-agent"
+
+  - id: "mission-chaos-6"
+    name: "Draft Resiliency Report"
+    objective: "Compile RTO parameters and format post-mortem markdown document."
+    type: "mission"
+    environment: "staging"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-chaos-5)"
+    primary_agent: "ai-postmortem-writer"
+    inputs: ["health_check_report"]
+    outputs: ["completed_resiliency_report"]
+    sequence:
+      - step_code: "REPORT-1"
+        action: "write_resiliency_document"
+        description: "Draft recovery report and outline preventative recommendations."
+        estimated_duration_minutes: 60
+        agent: "ai-postmortem-writer"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE B — Incident Response (reactive, webhook trigger)
+# ═══════════════════════════════════════════════════════════════════════════════
+  - id: "mission-incident-1"
+    name: "Analyze Telemetry & Logs"
+    objective: "Scrape system logs, trace traceIds, and map the incident error vectors."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger:
+      type: "webhook"
+      source: "slack"
+      condition: "text.contains('incident')"
+    primary_agent: "ai-incident-commander"
+    inputs: ["alert_payload"]
+    outputs: ["incident_diagnosis_report"]
+    sequence:
+      - step_code: "TRIAGE-1"
+        action: "fetch_recent_logs"
+        description: "Scrape stack traces and log segments."
+        estimated_duration_minutes: 20
+        agent: "ai-sre-agent"
+      - step_code: "TRIAGE-2"
+        action: "query_knowledge_base"
+        description: "Check if similar issues were resolved in past incident reports."
+        estimated_duration_minutes: 15
+        agent: "ai-sre-agent"
+      - step_code: "TRIAGE-3"
+        action: "compile_diagnosis_report"
+        description: "Formulate containment and mitigation recommendations."
+        estimated_duration_minutes: 25
+        agent: "ai-sre-agent"
+
+  - id: "mission-incident-2"
+    name: "Incident Triage Sign-off"
+    objective: "Gather human validation of the logs analysis and select the containment path."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-incident-1)"
+    primary_agent: "ai-incident-commander"
+    inputs: ["incident_diagnosis_report"]
+    outputs: ["containment_strategy"]
+    sequence:
+      - step_code: "TRIAGE_SIGNOFF-1"
+        action: "request_human_triage"
+        description: "Route the triage sign-off form to approvals channel."
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "Incident Triage Sign-off"
+        routing_channel: "approvals_channel"
+
+  - id: "mission-incident-3"
+    name: "Hotfix Code Mitigation"
+    objective: "Prepare the required hotfix code modifications or execute database/configuration rollback."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 4
+    trigger: "manual"
+    primary_agent: "ai-incident-commander"
+    inputs: ["containment_strategy"]
+    outputs: ["hotfix_pull_request"]
+    sequence:
+      - step_code: "HOTFIX-1"
+        action: "develop_code_fix"
+        description: "Write the code or configuration fix based on the triage containment strategy."
+        estimated_duration_minutes: 120
+        agent: "ai-sre-agent"
+      - step_code: "HOTFIX-2"
+        action: "create_pull_request"
+        description: "Open a pull request on the repository targeting the release branch."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+
+  - id: "mission-incident-4"
+    name: "Verify & Run Deployment Gates"
+    objective: "Trigger tests in staging environment and roll out containment fixes to production."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 3
+    trigger: "on_success(mission-incident-3)"
+    primary_agent: "ai-incident-commander"
+    inputs: ["hotfix_pull_request"]
+    outputs: ["mitigation_deployment_report"]
+    sequence:
+      - step_code: "DEPLOY_GATE-1"
+        action: "run_regression_tests"
+        description: "Run automated regression tests and check build status on the hotfix branch."
+        estimated_duration_minutes: 30
+        agent: "ai-sre-agent"
+      - step_code: "DEPLOY_GATE-2"
+        action: "request_cab_approval"
+        description: "Route the production deployment promotion request to the Change Advisory Board (CAB)."
+        estimated_duration_minutes: 60
+        requires_human: true
+        form_ref: "Mitigation Deployment Approval"
+        routing_channel: "approvals_channel"
+      - step_code: "DEPLOY_GATE-3"
+        action: "merge_and_deploy"
+        description: "Merge the pull request and deploy the verified hotfix to production."
+        estimated_duration_minutes: 45
+        agent: "ai-sre-agent"
+
+  - id: "mission-incident-5"
+    name: "Synthesize Timeline & RCA"
+    objective: "Compile incident logs and run a blameless 5-Whys query to isolate root cause."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 2
+    trigger: "manual"
+    primary_agent: "ai-incident-commander"
+    inputs: ["mitigation_deployment_report"]
+    outputs: ["timeline_and_root_cause"]
+    sequence:
+      - step_code: "RCA-1"
+        action: "retrieve_incident_logs"
+        description: "Collect timestamps and coordinator traces to build the initial incident timeline."
+        estimated_duration_minutes: 45
+        agent: "ai-postmortem-writer"
+      - step_code: "RCA-2"
+        action: "perform_5_whys_rca"
+        description: "Analyze timeline anomalies and execute a 5-Whys root cause discovery."
+        estimated_duration_minutes: 60
+        agent: "ai-postmortem-writer"
+
+  - id: "mission-incident-6"
+    name: "Generate Post-Mortem Document"
+    objective: "Draft the post-mortem report using the standard markdown template and file JIRA remediation tickets."
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 3
+    trigger: "on_success(mission-incident-5)"
+    primary_agent: "ai-incident-commander"
+    inputs: ["timeline_and_root_cause"]
+    outputs: ["completed_postmortem_report", "jira_followup_tickets"]
+    sequence:
+      - step_code: "POSTMORTEM-1"
+        action: "write_postmortem_report"
+        description: "Synthesize the timeline, 5-Whys RCA, and draft the blameless post-mortem report."
+        estimated_duration_minutes: 90
+        agent: "ai-postmortem-writer"
+      - step_code: "POSTMORTEM-2"
+        action: "file_remediation_tickets"
+        description: "File preventive maintenance items in JIRA tracking system."
+        estimated_duration_minutes: 45
+        agent: "ai-postmortem-writer"
+
+# Chaining metadata for Phase A (chaos drill flow)
+follow_up_cycle:
+  name: "Chaos Failure Analysis & Healing"
+  description: "Phase 2 of the Chaos Drill: Focuses on error triage, log diagnostics, and auto-healing containment playbooks."
+  objective: "Diagnose latency source, apply auto-healing settings, and verify system status via safety checks."
+  priority: 4
+  budgetLimitUsd: "150.00"
+  requiresApproval: false
+  blueprints:
+    - name: "Analyze & Diagnose Outage"
+      objective: "Query metrics and logs to isolate the exact cause of system degradation."
+      type: "mission"
+      estimatedDays: 1
+      inputs: ["pagerduty_incident_id"]
+      outputs: ["diagnostic_report"]
+    - name: "Execute Auto-Recovery Playbook"
+      objective: "Run automated restoration parameters and verify recovery status."
+      type: "mission"
+      estimatedDays: 1
+      dependsOn: ["Analyze & Diagnose Outage"]
+      inputs: ["diagnostic_report"]
+      outputs: ["remediation_status"]
+  metadata:
+    follow_up_cycle:
+      name: "SRE Operations Audit & Close"
+      description: "Phase 3: Reviews health benchmarks, resolves upstream alerts, logs resiliency reports, and finalizes post-mortem documentation."
+      objective: "Verify end-to-end service response times, file post-drill retrospectives, and close incident tickets."
+      priority: 5
+      budgetLimitUsd: "75.00"
+      requiresApproval: false
+      blueprints:
+        - name: "Verify Staging Health"
+          objective: "Check staging service metrics and resolve PagerDuty alert tickets."
+          type: "mission"
+          estimatedDays: 1
+          inputs: ["remediation_status"]
+          outputs: ["health_check_report"]
+        - name: "Draft Resiliency Report"
+          objective: "Draft the resiliency review markdown and document recommendations."
+          type: "mission"
+          estimatedDays: 1
+          dependsOn: ["Verify Staging Health"]
+          inputs: ["health_check_report"]
+          outputs: ["completed_resiliency_report"]
+        - name: "Synthesize Timeline & RCA"
+          objective: "Compile incident logs and run a blameless 5-Whys query to isolate root cause."
+          type: "mission"
+          estimatedDays: 1
+          inputs: ["mitigation_deployment_report"]
+          outputs: ["timeline_and_root_cause"]
+        - name: "Generate Post-Mortem Document"
+          objective: "Draft the post-mortem report and file JIRA remediation tickets."
+          type: "mission"
+          estimatedDays: 1
+          dependsOn: ["Synthesize Timeline & RCA"]
+          inputs: ["timeline_and_root_cause"]
+          outputs: ["completed_postmortem_report", "jira_followup_tickets"]
+
+# Multi-Agent Ceremony & Deliberation Rooms
+ceremonies:
+  - stage_id: "incident-war-room"
+    title: "SRE Incident Triage War Room"
+    topic: "Live outage diagnostics, auto-recovery execution, and blast radius mitigation"
+    mode: "execute"
+    is_standing_room: false
+    roster_agents:
+      - "ai-sre-agent"
+      - "ai-incident-commander"
+      - "ai-chaos-monkey"
+    required_decisions:
+      - "Authorize Auto-Recovery Playbook Execution"
+      - "Approve Mitigation Deployment"
+    auto_convene: true
+
+  - stage_id: "resiliency-postmortem"
+    title: "Blameless Post-Mortem & Resiliency Council"
+    topic: "Review 5-Whys timeline, verify SLO degradation metrics, and file remediation epics"
+    mode: "review"
+    is_standing_room: false
+    roster_agents:
+      - "ai-postmortem-writer"
+      - "ai-incident-commander"
+      - "ai-sre-agent"
+    required_decisions:
+      - "Publish Incident RCA & Post-Mortem Document"
+      - "Approve Remediation JIRA Tickets"
+    auto_convene: true
+
+
+apps:
+  - id: incident-response-workbench
+    name: Incident Response
+    blueprint: incident-response-workbench
+    path: file://incident-response-workbench
+    interaction_model: shared-server
+    enabled: true
+    integration_dependencies: []
+    description: Durable CREW incident coordination. External remediation requires separately connected provider tools and approvals.

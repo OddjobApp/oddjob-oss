@@ -1,0 +1,355 @@
+name: "Marketing Campaign Management"
+version: "1.0"
+containers: {}
+description: "Automated marketing campaign planning, execution, and performance tracking. Integrates with marketing automation tools, JIRA for task management, and Confluence for reporting."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Marketing Campaign Management"
+  icon: "📢"
+  theme_color: "#f59e0b"
+  display_priority: 2
+  category: "marketing"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "marketing"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "campaign_plan_template"
+    path: "file://knowledge/document-templates/campaign_plan_template.md"
+  - id: "campaign_report_template"
+    path: "file://knowledge/document-templates/campaign_report_template.md"
+
+forms:
+  - id: "campaign_intake"
+    name: "Campaign Intake"
+    description: "Provide campaign details for planning."
+    fields:
+      - name: "campaign_name"
+        label: "Campaign Name"
+        type: "text"
+        required: true
+      - name: "campaign_type"
+        label: "Campaign Type"
+        type: "select"
+        required: true
+        options: ["Product Launch", "Brand Awareness", "Lead Generation", "Content Marketing", "Event Promotion"]
+      - name: "channels"
+        label: "Marketing Channels"
+        type: "multiselect"
+        required: true
+        options: ["Email", "Social Media", "Paid Search", "SEO", "Content", "Events"]
+      - name: "target_audience"
+        label: "Target Audience"
+        type: "textarea"
+        required: true
+      - name: "budget"
+        label: "Campaign Budget"
+        type: "text"
+        required: true
+      - name: "start_date"
+        label: "Start Date"
+        type: "date"
+        required: true
+      - name: "end_date"
+        label: "End Date"
+        type: "date"
+        required: true
+      - name: "success_metrics"
+        label: "Success Metrics"
+        type: "textarea"
+        required: true
+
+  - id: "campaign_review"
+    name: "Campaign Review"
+    description: "Review and approve campaign plan."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Launch", "Request Revisions", "Reject"]
+      - name: "budget_approved"
+        label: "Budget Approved"
+        type: "select"
+        required: true
+        options: ["Yes - Full Budget", "Yes - Reduced Budget", "No - Budget Not Approved"]
+      - name: "timeline_approved"
+        label: "Timeline Approved"
+        type: "select"
+        required: true
+        options: ["Yes - As Planned", "Yes - Adjusted", "No - Timeline Not Approved"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-marketing-manager"
+    name: "Marketing Campaign Manager"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Campaign Strategist"
+      legend: "Plans, executes, and tracks marketing campaigns."
+      traits: { compliance: 85, creativity: 50, speed: 70 }
+    system_prompt: "file://knowledge/prompts/marketing-manager.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-content-strategist"
+    name: "Content Marketing Planner"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Storyteller"
+      legend: "Develops content strategy and messaging."
+      traits: { compliance: 80, creativity: 70, speed: 60 }
+    system_prompt: "file://knowledge/prompts/content-strategist.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-plan-campaign"
+    name: "Plan Campaign"
+    objective: "Generate comprehensive campaign plan"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger:
+      type: "manual"
+      source: "marketing_workbench"
+    primary_agent: "ai-marketing-manager"
+    inputs: ["campaign_intake"]
+    outputs: ["campaign_plan"]
+    sequence:
+      - step_code: "PLAN-1"
+        action: "analyze_audience"
+        description: "Analyze target audience and segments"
+        estimated_duration_minutes: 20
+        tool: "knowledge_graph_query"
+      - step_code: "PLAN-2"
+        action: "define_channels"
+        description: "Define channel strategy and mix"
+        estimated_duration_minutes: 20
+      - step_code: "PLAN-3"
+        action: "create_timeline"
+        description: "Create campaign timeline and milestones"
+        estimated_duration_minutes: 20
+      - step_code: "PLAN-4"
+        action: "allocate_budget"
+        description: "Allocate budget across channels"
+        estimated_duration_minutes: 15
+      - step_code: "PLAN-5"
+        action: "define_kpis"
+        description: "Define KPIs and success metrics"
+        estimated_duration_minutes: 15
+      - step_code: "PLAN-6"
+        action: "generate_plan_document"
+        description: "Generate campaign plan document"
+        estimated_duration_minutes: 30
+        template: "campaign_plan_template"
+
+  - id: "mission-create-tasks"
+    name: "Create Campaign Tasks"
+    objective: "Create JIRA tasks for campaign execution"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-plan-campaign)"
+    primary_agent: "ai-marketing-manager"
+    inputs: ["campaign_plan"]
+    outputs: ["campaign_tasks"]
+    sequence:
+      - step_code: "TASK-1"
+        action: "create_jira_tasks"
+        description: "Create JIRA tasks for campaign activities"
+        estimated_duration_minutes: 30
+        tool: "jira_create_sprint"
+      - step_code: "TASK-2"
+        action: "assign_owners"
+        description: "Assign task owners and due dates"
+        estimated_duration_minutes: 20
+      - step_code: "TASK-3"
+        action: "set_dependencies"
+        description: "Set task dependencies"
+        estimated_duration_minutes: 10
+
+  - id: "mission-develop-content"
+    name: "Develop Content"
+    objective: "Generate campaign content and assets"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-create-tasks)"
+    primary_agent: "ai-content-strategist"
+    inputs: ["campaign_plan"]
+    outputs: ["campaign_content"]
+    sequence:
+      - step_code: "CONTENT-1"
+        action: "develop_messaging"
+        description: "Develop campaign messaging and copy"
+        estimated_duration_minutes: 30
+      - step_code: "CONTENT-2"
+        action: "create_assets"
+        description: "Create content assets list"
+        estimated_duration_minutes: 30
+      - step_code: "CONTENT-3"
+        action: "generate_calendar"
+        description: "Generate content calendar"
+        estimated_duration_minutes: 30
+      - step_code: "CONTENT-4"
+        action: "publish_content_brief"
+        description: "Publish content brief to Confluence"
+        estimated_duration_minutes: 30
+        tool: "confluence_publish"
+
+  - id: "mission-review-campaign"
+    name: "Review Campaign Plan"
+    objective: "Human review and approval of campaign plan"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-develop-content)"
+    primary_agent: "ai-marketing-manager"
+    inputs: ["campaign_plan", "campaign_content"]
+    outputs: ["approved_campaign"]
+    requires_human: true
+    form_ref: "campaign_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_campaign_plan"
+        description: "Present campaign plan for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect marketing director approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_campaign"
+        description: "Finalize campaign based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-launch-campaign"
+    name: "Launch Campaign"
+    objective: "Execute campaign launch"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-campaign)"
+    primary_agent: "ai-marketing-manager"
+    inputs: ["approved_campaign"]
+    outputs: ["launched_campaign"]
+    sequence:
+      - step_code: "LAUNCH-1"
+        action: "activate_channels"
+        description: "Activate marketing channels"
+        estimated_duration_minutes: 30
+      - step_code: "LAUNCH-2"
+        action: "publish_content"
+        description: "Publish campaign content"
+        estimated_duration_minutes: 15
+      - step_code: "LAUNCH-3"
+        action: "notify_team"
+        description: "Notify marketing team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+  - id: "mission-track-performance"
+    name: "Track Campaign Performance"
+    objective: "Monitor and report on campaign performance"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "marketing_workbench"
+    primary_agent: "ai-marketing-manager"
+    inputs: ["launched_campaign"]
+    outputs: ["performance_report"]
+    sequence:
+      - step_code: "TRACK-1"
+        action: "collect_metrics"
+        description: "Collect campaign metrics from channels"
+        estimated_duration_minutes: 20
+      - step_code: "TRACK-2"
+        action: "analyze_performance"
+        description: "Analyze performance against KPIs"
+        estimated_duration_minutes: 15
+      - step_code: "TRACK-3"
+        action: "calculate_roi"
+        description: "Calculate campaign ROI"
+        estimated_duration_minutes: 10
+      - step_code: "TRACK-4"
+        action: "generate_report"
+        description: "Generate performance report"
+        estimated_duration_minutes: 15
+        template: "campaign_report_template"
+      - step_code: "TRACK-5"
+        action: "publish_report"
+        description: "Publish report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"

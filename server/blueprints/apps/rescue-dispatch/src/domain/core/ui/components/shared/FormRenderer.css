@@ -1,0 +1,15 @@
+.form-renderer-root {
+  --primary-color: #4F46E5; /* Default fallback */
+}
+
+.form-renderer-radio-button.selected {
+  border-color: var(--primary-color) !important;
+}
+
+.form-renderer-radio-button .check-circle-icon {
+  color: var(--primary-color) !important;
+}
+
+.form-renderer-submit-button:not(:disabled) {
+  background-color: var(--primary-color) !important;
+}

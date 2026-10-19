@@ -1,0 +1,13 @@
+Oddjob
+Copyright 2026 Oddjob AI, Inc.
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It depends on third-party packages under their own licenses, recorded in
+package-lock.json and each package's own LICENSE file. Two are worth knowing
+before you redistribute a build:
+
+- mapbox-gl (v2 and later) is distributed under the Mapbox Terms of Service,
+  not an open-source license, and needs a Mapbox access token to render maps.
+- ffmpeg-static ships an FFmpeg binary under the GPL-3.0-or-later. Images or
+  installers that bundle it carry that binary's GPL obligations.

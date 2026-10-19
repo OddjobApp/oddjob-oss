@@ -1,0 +1,68 @@
+@media print {
+  /* Hide interactive, platform, and navigation elements */
+  aside,
+  header,
+  nav,
+  button,
+  .glass-sidebar,
+  .print-hidden,
+  [data-collapsible] {
+    display: none !important;
+  }
+
+  /* Force print-friendly base layouts */
+  body,
+  html,
+  main,
+  #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Expand flex container grids to simple stacks */
+  .grid {
+    display: block !important;
+  }
+
+  .max-w-7xl,
+  .max-w-5xl,
+  .max-w-6xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Clean print borders and spacing for dashboard elements */
+  .border,
+  .border-slate-800\/60,
+  .border-slate-800\/40,
+  .border-slate-900 {
+    border-color: #e2e8f0 !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+  }
+
+  /* Force print colors for charts and status values */
+  svg path {
+    stroke-opacity: 1 !important;
+  }
+
+  /* Avoid page breaking in the middle of data cards */
+  .p-4,
+  .p-5,
+  .p-6,
+  section,
+  .grid-cols-1,
+  .flex-col {
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure text wrapping is readable */
+  p, span, h1, h2, h3, h4 {
+    color: #0f172a !important;
+  }
+}

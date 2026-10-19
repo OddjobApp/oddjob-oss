@@ -1,0 +1,1091 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1784324270575,
+      "tag": "20260717213750_baseline",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784325413457,
+      "tag": "0001_capability_proposals",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785259320000,
+      "tag": "0002_cycle_builder_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785353100000,
+      "tag": "0003_xray_documentation_topic_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785355200000,
+      "tag": "0004_xray_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785441600000,
+      "tag": "0005_cycle_lineage_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785700000000,
+      "tag": "0006_project_spaces",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785700100000,
+      "tag": "0007_project_name_namespace",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785700200000,
+      "tag": "0008_fix_reviewed_by_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785700300000,
+      "tag": "0009_agent_fallback_manifest",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785700400000,
+      "tag": "0010_temporal_versioning",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785700500000,
+      "tag": "0011_link_predictions",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785700600000,
+      "tag": "0012_ontology_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785700700000,
+      "tag": "0013_hat_menu_intent_router",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1785700800000,
+      "tag": "0014_crew_group_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1785700900000,
+      "tag": "0015_crew_session_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1785701000000,
+      "tag": "0016_crew_learning_loop",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1785701100000,
+      "tag": "0017_crew_project_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1785701200000,
+      "tag": "0018_crew_turn_tools",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1785701300000,
+      "tag": "0019_crew_turn_artifacts",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1785701400000,
+      "tag": "0020_crew_participants",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1785701500000,
+      "tag": "0021_cycle_signal_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1785701600000,
+      "tag": "0022_agent_beliefs",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1785701700000,
+      "tag": "0025_crew_session_interrupting_cooldown",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1785701650000,
+      "tag": "0023_kafka_event_backbone",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1785701660000,
+      "tag": "0024_kafka_tenant_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1785701800000,
+      "tag": "0026_kafka_outbox_sequence",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1785768000000,
+      "tag": "0027_project_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1785768600000,
+      "tag": "0028_project_event_recurrence",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1785855000000,
+      "tag": "0029_theory_of_mind",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1785769000000,
+      "tag": "0030_tom_access_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1785769300000,
+      "tag": "0031_tom_consent_session",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1785795000000,
+      "tag": "0032_mission_learned_patterns",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1786100000000,
+      "tag": "0033_calculation_nodes",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1786100100000,
+      "tag": "0034_hybrid_calculation_model",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1786100200000,
+      "tag": "0035_temporal_calculations",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1786100300000,
+      "tag": "0036_probabilistic_calculations",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1786100400000,
+      "tag": "0037_constraint_validation",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1786100500000,
+      "tag": "0038_graph_algorithms",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1786100600000,
+      "tag": "0039_ml_inference",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1786190000000,
+      "tag": "0040_calculation_dependency_variable_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1786300000000,
+      "tag": "0041_event_primitive_spatial_telemetry",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1786300100000,
+      "tag": "0042_event_primitive_spatial_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1786300200000,
+      "tag": "0043_grie_rule_suites",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1786300300000,
+      "tag": "0044_event_primitives_uuid_rebuild",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1786300400000,
+      "tag": "0045_spatial_condition_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1786300500000,
+      "tag": "0046_rule_audit_outcomes",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1786300600000,
+      "tag": "0047_autonomous_action_artifacts",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1786300700000,
+      "tag": "0048_enterprise_rbac",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1786300800000,
+      "tag": "0049_project_scoping_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1786300900000,
+      "tag": "0050_component_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1786301000000,
+      "tag": "0051_transference_engine",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1786301100000,
+      "tag": "0052_signal_actions",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1786301200000,
+      "tag": "0053_eval_measurement_spine",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1786301300000,
+      "tag": "0054_drift_backlog_live_consumers",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1786301400000,
+      "tag": "0055_evo_devo_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1786301500000,
+      "tag": "0056_evo_devo_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1786301600000,
+      "tag": "0057_component_verification_runs",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1786301700000,
+      "tag": "0058_scoring_events_prospect_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1786301800000,
+      "tag": "0059_concept_topic_project_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1786301900000,
+      "tag": "0060_prospect_page_concepts",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1786302000000,
+      "tag": "0061_event_primitive_hdop",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1786302100000,
+      "tag": "0062_org_timezone",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1786302200000,
+      "tag": "0063_spatial_rule_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1786302300000,
+      "tag": "0064_rule_suite_scope_constraint_compat",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1786302400000,
+      "tag": "0063_agent_deployment_project_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1786302500000,
+      "tag": "0065_pin_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1786302600000,
+      "tag": "0066_user_graph_and_transference_distillation",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786302700000,
+      "tag": "0067_worker_spine",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1786302800000,
+      "tag": "0068_heartbeat_triggers_cost_ledger_user_memory",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1786302900000,
+      "tag": "0069_ontology_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1786303000000,
+      "tag": "0070_app_distribution_and_licensing",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1786303100000,
+      "tag": "0071_ontology_link_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1786303200000,
+      "tag": "0072_ontology_link_path",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1786303300000,
+      "tag": "0073_crew_durable_room_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1786303400000,
+      "tag": "0074_crew_claim_consensus",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1786303500000,
+      "tag": "0075_ontology_link_path_backing",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1786815300000,
+      "tag": "0076_backfill_app_project_resources",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1786846900000,
+      "tag": "0077_drift_repair_baselined_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1786847500000,
+      "tag": "0078_spatial_regions",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1786848100000,
+      "tag": "0079_spatial_concept_evidence",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1786848700000,
+      "tag": "0080_saas_connector_project_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1786849300000,
+      "tag": "0081_project_saas_bindings",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1786849900000,
+      "tag": "0082_attachments",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1786850500000,
+      "tag": "0083_hybrid_squad_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1786851100000,
+      "tag": "0084_blueprint_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1786851700000,
+      "tag": "0085_crew_project_query_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1786852300000,
+      "tag": "0086_capability_similarity_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1786852900000,
+      "tag": "0087_harness_telemetry_tenant_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1786853500000,
+      "tag": "0088_harness_proposals_tenant_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1786854100000,
+      "tag": "0089_capability_gap_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1786854700000,
+      "tag": "0090_improvement_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1786855300000,
+      "tag": "0091_improvement_experiments",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1786855900000,
+      "tag": "0092_workflow_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1786856500000,
+      "tag": "0093_capability_gap_actor",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1786857100000,
+      "tag": "0094_improvement_change_sets",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1786857700000,
+      "tag": "0095_improvement_target_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1786860000000,
+      "tag": "0096_knowledge_pack_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1786861000000,
+      "tag": "0097_skill_integration_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1786861600000,
+      "tag": "0098_synthetic_finance_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1786862200000,
+      "tag": "0099_knowledge_pack_supply_chain",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1786862800000,
+      "tag": "0100_knowledge_pack_change_detection",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1786863400000,
+      "tag": "0101_knowledge_pack_monitor_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1786864000000,
+      "tag": "0102_scribe_studio",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1786864600000,
+      "tag": "0103_cycle_run_events_run_id_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1786865200000,
+      "tag": "0104_territories_baseline_gap",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1786865800000,
+      "tag": "0105_mission_trigger_credential",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1786866400000,
+      "tag": "0106_competencies",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1786867000000,
+      "tag": "0107_crew_breakouts_and_meetings",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1786867600000,
+      "tag": "0108_cost_ledger_provider_default",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1786868200000,
+      "tag": "0109_knowledge_node_trigram_search",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1786868800000,
+      "tag": "0110_scribe_page_tree_and_labels",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1786869400000,
+      "tag": "0111_scribe_authoring_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1786870000000,
+      "tag": "0112_hil_form_kind",
+      "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1786870600000,
+      "tag": "0113_form_studio_revisions",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1786871200000,
+      "tag": "0114_hil_form_project",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1786871800000,
+      "tag": "0115_media_studio",
+      "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1786872400000,
+      "tag": "0116_media_studio_story",
+      "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1786873000000,
+      "tag": "0117_media_studio_takes",
+      "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1786873600000,
+      "tag": "0118_media_studio_assembly",
+      "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1786874200000,
+      "tag": "0119_media_studio_look",
+      "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1786874800000,
+      "tag": "0120_media_studio_comfyui",
+      "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1786875400000,
+      "tag": "0121_media_studio_decisions",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1786876000000,
+      "tag": "0122_media_scene_station_digest",
+      "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1786876600000,
+      "tag": "0123_media_shot_timeline_edits",
+      "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1786877200000,
+      "tag": "0124_scribe_vault_records",
+      "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1786877800000,
+      "tag": "0125_media_shot_cutaway_anchor",
+      "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1786878400000,
+      "tag": "0126_computer_use_skills",
+      "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1786879000000,
+      "tag": "0127_push_and_app_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1786879600000,
+      "tag": "0128_marketplace_listings",
+      "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1786880200000,
+      "tag": "0129_trycua_step_number_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1786880800000,
+      "tag": "0130_omnichannel_identities",
+      "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1786881400000,
+      "tag": "0131_computer_use_reflexion_buffer",
+      "breakpoints": true
+    },
+    {
+      "idx": 133,
+      "version": "7",
+      "when": 1786882000000,
+      "tag": "0132_workflow_releases",
+      "breakpoints": true
+    },
+    {
+      "idx": 134,
+      "version": "7",
+      "when": 1786882600000,
+      "tag": "0133_workflow_signal_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 135,
+      "version": "7",
+      "when": 1786882660000,
+      "tag": "0134_crew_turn_served_model",
+      "breakpoints": true
+    },
+    {
+      "idx": 136,
+      "version": "7",
+      "when": 1791100000000,
+      "tag": "0135_push_devices",
+      "breakpoints": true
+    },
+    {
+      "idx": 137,
+      "version": "7",
+      "when": 1791200000000,
+      "tag": "0136_omnichannel_one_verified_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 138,
+      "version": "7",
+      "when": 1791300000000,
+      "tag": "0137_agent_card_approval_boundary",
+      "breakpoints": true
+    },
+    {
+      "idx": 139,
+      "version": "7",
+      "when": 1791400000000,
+      "tag": "0138_crew_turn_work_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 140,
+      "version": "7",
+      "when": 1791500000000,
+      "tag": "0139_agent_deployment_approval_boundary",
+      "breakpoints": true
+    },
+    {
+      "idx": 141,
+      "version": "7",
+      "when": 1791600000000,
+      "tag": "0140_studio_entitlements",
+      "breakpoints": true
+    },
+    {
+      "idx": 142,
+      "version": "7",
+      "when": 1791700000000,
+      "tag": "0141_organization_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 143,
+      "version": "7",
+      "when": 1791800000000,
+      "tag": "0142_forge_releases",
+      "breakpoints": true
+    },
+    {
+      "idx": 144,
+      "version": "7",
+      "when": 1791900000000,
+      "tag": "0143_drift_repair_missing_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 145,
+      "version": "7",
+      "when": 1792000000000,
+      "tag": "0144_scribe_ai_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 146,
+      "version": "7",
+      "when": 1793000000000,
+      "tag": "0145_saas_sync_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1793000000001,
+      "tag": "0146_financial_source_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 148,
+      "version": "7",
+      "when": 1793000000002,
+      "tag": "0147_crew_financial_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 149,
+      "version": "7",
+      "when": 1793000000003,
+      "tag": "0148_crew_topic_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 150,
+      "version": "7",
+      "when": 1793000000004,
+      "tag": "0149_project_finance_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1793000000005,
+      "tag": "0150_declared_topic_learning",
+      "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1793000000006,
+      "tag": "0151_topic_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1793000000007,
+      "tag": "0152_user_saas_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 154,
+      "version": "7",
+      "when": 1793000000008,
+      "tag": "0153_system_super_admin_executive",
+      "breakpoints": true
+    }
+  ]
+}

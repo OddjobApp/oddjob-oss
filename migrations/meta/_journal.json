@@ -1,0 +1,503 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1768794507159,
+      "tag": "0000_thick_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768922770941,
+      "tag": "0001_young_proudstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768953509817,
+      "tag": "0002_bumpy_unus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770576416782,
+      "tag": "0003_marvelous_tattoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770576500000,
+      "tag": "0004_tool_analytics",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770576600000,
+      "tag": "0005_transaction_rollback",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770576700000,
+      "tag": "0006_missions",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770576800000,
+      "tag": "0007_mission_step_assignments",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1770576900000,
+      "tag": "0008_workgroup_fk_set_null",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770577000000,
+      "tag": "0009_agent_run_steps_confidence",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1770577100000,
+      "tag": "0010_pipeline_executions_context_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1771961418486,
+      "tag": "0011_next_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1771969354562,
+      "tag": "0012_dark_hellion",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1772039632241,
+      "tag": "0013_bizarre_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1772120074990,
+      "tag": "0014_furry_sister_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1772464000423,
+      "tag": "0015_brainy_leo",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1772731133773,
+      "tag": "0016_abnormal_king_bedlam",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1772731191620,
+      "tag": "0017_young_otto_octavius",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1773333133734,
+      "tag": "0018_careful_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1773421575403,
+      "tag": "0019_uneven_archangel",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774145526595,
+      "tag": "0020_lean_purple_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1774152675773,
+      "tag": "0021_giant_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1774284562395,
+      "tag": "0022_closed_stephen_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1774448518555,
+      "tag": "0023_hesitant_praxagora",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774448542213,
+      "tag": "0024_friendly_nehzno",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1774448766540,
+      "tag": "0025_outgoing_nighthawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1774449209675,
+      "tag": "0026_clear_beyonder",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1776574081849,
+      "tag": "0027_big_starbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1776719875518,
+      "tag": "0028_great_whistler",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1776877160371,
+      "tag": "0029_add_app_telemetry",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1777736898857,
+      "tag": "0030_manual_add_scaling_cols",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1777736898858,
+      "tag": "0031_add_app_instances",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1777736898859,
+      "tag": "0032_intervention_agent",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1777736898860,
+      "tag": "0033_app_deployment_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1777736898861,
+      "tag": "0034_slack_integration_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1777736898862,
+      "tag": "0035_add_slack_handle_to_users",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1777736898863,
+      "tag": "0036_shortlinks_and_qr_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1777736898864,
+      "tag": "0037_governance_performance_analytics",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1777736898865,
+      "tag": "0038_pipeline_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1777938105903,
+      "tag": "0039_gifted_the_hand",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1777938105904,
+      "tag": "0039_add_hermes_traces",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1777938106000,
+      "tag": "0040_knowledge_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1777938107000,
+      "tag": "0041_add_app_launched_notification",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1777938108000,
+      "tag": "0042_relax_forensic_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1777938109000,
+      "tag": "0043_payout_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1777938110000,
+      "tag": "0044_extract_ensure_schema_patches",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1777938111000,
+      "tag": "0045_operational_cycles_and_cycle_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1777938112000,
+      "tag": "0046_soft_delete_cycles",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1777938113000,
+      "tag": "0047_cycle_webhooks",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1777938114000,
+      "tag": "0048_cycle_dependency_gates",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1778789548557,
+      "tag": "0050_curvy_gravity",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1778789680066,
+      "tag": "0051_lucky_scarlet_spider",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1778946448149,
+      "tag": "0052_amused_blacklash",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1778949184528,
+      "tag": "0053_soft_justice",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1779063767906,
+      "tag": "0054_melodic_winter_soldier",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1779213072379,
+      "tag": "0055_yielding_siren",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1779368649749,
+      "tag": "0056_damp_jane_foster",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1779408685246,
+      "tag": "0057_parallel_mephisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1779409170553,
+      "tag": "0058_free_brother_voodoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1780506927609,
+      "tag": "0059_smiling_susan_delgado",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1780514875751,
+      "tag": "0060_early_maddog",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1781289600000,
+      "tag": "0061_add_resource_catalog_edges",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1783135463435,
+      "tag": "0062_schema_relationship_gaps",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1783138690114,
+      "tag": "0063_sdlc_code_generation_pipeline",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1783175591941,
+      "tag": "0064_secret_klaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1783391023073,
+      "tag": "0065_slow_stephen_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1784038731649,
+      "tag": "0066_funny_puppet_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1784300000000,
+      "tag": "0067_copilot_observability",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1784300001000,
+      "tag": "0068_advanced_relationships",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1784300002000,
+      "tag": "0069_embedding_contract",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1784300003000,
+      "tag": "0070_capability_sync_state",
+      "breakpoints": true
+    }
+  ]
+}

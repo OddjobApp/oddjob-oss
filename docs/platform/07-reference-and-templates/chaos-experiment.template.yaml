@@ -1,0 +1,44 @@
+# Agent Chaos Engineering Experiment Manifest Template
+# Oddjob Reference Implementation
+#
+# Declarative definition for synthetic fault injection against AI agent pipelines.
+
+version: "1.0.0"
+experiment_id: "chaos_exp_tool_outage_and_jitter_v1"
+name: "Tool Degradation & Rate Limit Resilience Test"
+description: "Simulates intermittent 503 errors and latency spikes on upstream SaaS tools to evaluate agent self-healing and fallback routing."
+
+scope:
+  environment: "STAGING"
+  target_agent_id: "agent_incident_triage_copilot"
+  max_duration_seconds: 120
+  max_cost_limit_usd: 1.00
+
+fault_vectors:
+  - vector_type: "TOOL_ERROR_INJECTION"
+    target_tool: "jira_jql_search"
+    injection_rate: 0.50 # 50% of requests fail
+    injected_status_code: 503
+    injected_error_message: "Service Unavailable: Rate limit exceeded"
+
+  - vector_type: "LATENCY_JITTER"
+    target_tool: "salesforce_query"
+    injection_rate: 0.80 # 80% of requests delayed
+    added_delay_ms: 3500
+
+  - vector_type: "TOKEN_STARVATION"
+    target_provider: "openai"
+    injected_status_code: 429
+    retry_after_seconds: 30
+
+success_criteria:
+  minimum_agent_resilience_score: 85.0
+  max_unhandled_exceptions: 0
+  required_fallback_activation:
+    - "dynamic_router_downgrades_to_tier_1"
+    - "emits_degraded_status_warning_to_user"
+
+emergency_abort:
+  kill_switch_enabled: true
+  abort_if_error_rate_exceeds: 0.95
+  abort_if_cost_exceeds_usd: 1.25

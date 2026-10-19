@@ -1,0 +1,630 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap');
+@import "./styles/print.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 22.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 35%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 5%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --font-sans: 'Inter', sans-serif;
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-mono: 'Geist Mono', monospace;
+
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-width: 19.2rem;
+    --sidebar-width-icon: 3rem;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 85%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --sidebar: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
+    font-weight: 700;
+  }
+}
+@layer base {
+  .glass-card {
+    @apply backdrop-blur-xl border border-white/20 dark:border-white/5 bg-white/40 dark:bg-black/40 shadow-soft;
+  }
+
+  .glass-sidebar {
+    @apply backdrop-blur-xl border-r border-white/10 bg-sidebar-tan/40 dark:bg-black/40;
+  }
+
+  .glass-panel {
+    @apply backdrop-blur-md bg-white/60 dark:bg-slate-900/60 border border-white/20 dark:border-white/10;
+  }
+
+  .neon-glow-red {
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+  }
+
+  /* Premium Holographic & Liquid Effects */
+  .holographic-card {
+    @apply relative overflow-hidden backdrop-blur-xl border border-white/10 bg-white/5 dark:bg-slate-900/40 shadow-2xl transition-all duration-500;
+  }
+
+  .holographic-card::before {
+    content: "";
+    @apply absolute -inset-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent -rotate-45 transition-transform duration-1000 pointer-events-none;
+  }
+
+  .holographic-card:hover::before {
+    @apply translate-x-full;
+  }
+
+  .liquid-border {
+    @apply border-transparent bg-clip-padding relative;
+  }
+
+  .liquid-border::after {
+    content: "";
+    @apply absolute -inset-[1px] -z-10 rounded-[inherit] bg-gradient-to-r from-primary/50 via-accent/30 to-primary/50 opacity-40;
+  }
+
+  .glass-panel-deep {
+    @apply backdrop-blur-2xl bg-white/40 dark:bg-slate-950/60 border border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)];
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2.5s linear infinite;
+  }
+
+  .delay-2s {
+    animation-delay: 2s;
+  }
+
+  /* Cinematic Utilitarian Utilities */
+  .cinematic-grid {
+    background-image: radial-gradient(circle, rgba(217, 119, 6, 0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .scanline-overlay {
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.1) 50%),
+      linear-gradient(90deg,
+        rgba(255, 0, 0, 0.02),
+        rgba(0, 255, 0, 0.01),
+        rgba(0, 0, 255, 0.02));
+    background-size: 100% 4px, 3px 100%;
+    pointer-events: none;
+  }
+
+  .text-glow-bronze {
+    text-shadow: 0 0 10px hsl(var(--primary) / 0.4);
+  }
+
+  .border-glow-bronze {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.2);
+  }
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-page-in {
+    animation: page-in 0.2s ease-out both;
+  }
+
+  @keyframes pip-move {
+    from {
+      stroke-dashoffset: 100;
+    }
+
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .animate-pip-flow {
+    stroke-dasharray: 4 12;
+    animation: pip-move 2s linear infinite;
+  }
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      opacity: 0.6;
+      filter: brightness(1);
+    }
+
+    50% {
+      opacity: 1;
+      filter: brightness(1.3);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  .progress-fill {
+    width: var(--progress-width, 0%);
+    @apply h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500;
+  }
+
+  .dynamic-height {
+    height: var(--dynamic-height, auto);
+  }
+
+  .dynamic-width {
+    width: var(--dynamic-width, auto);
+  }
+
+  .dynamic-animation-delay {
+    animation-delay: var(--dynamic-animation-delay, 0s);
+  }
+
+  .delay-150 { animation-delay: 150ms; }
+  .delay-300 { animation-delay: 300ms; }
+
+  .dynamic-padding-left {
+    padding-left: var(--dynamic-padding-left, 0);
+  }
+
+  .tactical-grid {
+    background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .dynamic-left { left: var(--dynamic-left, auto); }
+  .dynamic-top { top: var(--dynamic-top, auto); }
+
+  .dynamic-bg { background-color: var(--dynamic-bg); }
+
+/* Node Type Classes to replace inline styles */
+.node-type-trigger { --dynamic-color: #10b981; --dynamic-bg: rgba(16, 185, 129, 0.2); }
+.node-type-llm { --dynamic-color: #8b5cf6; --dynamic-bg: rgba(139, 92, 246, 0.2); }
+.node-type-condition { --dynamic-color: #f59e0b; --dynamic-bg: rgba(245, 158, 11, 0.2); }
+.node-type-action { --dynamic-color: #3b82f6; --dynamic-bg: rgba(59, 130, 246, 0.2); }
+.node-type-knowledge { --dynamic-color: #06b6d4; --dynamic-bg: rgba(6, 182, 212, 0.2); }
+.node-type-integration { --dynamic-color: #ec4899; --dynamic-bg: rgba(236, 72, 153, 0.2); }
+.node-type-output { --dynamic-color: #22c55e; --dynamic-bg: rgba(34, 197, 94, 0.2); }
+.node-type-loop { --dynamic-color: #f97316; --dynamic-bg: rgba(249, 115, 22, 0.2); }
+.node-type-parallel { --dynamic-color: #6366f1; --dynamic-bg: rgba(99, 102, 241, 0.2); }
+.node-type-delay { --dynamic-color: #64748b; --dynamic-bg: rgba(100, 116, 139, 0.2); }
+.node-type-webhook { --dynamic-color: #14b8a6; --dynamic-bg: rgba(20, 184, 166, 0.2); }
+
+/* Knowledge Graph Node Types */
+.node-bg-person { background-color: #3b82f6; }
+.node-bg-organization { background-color: #10b981; }
+.node-bg-location { background-color: #f59e0b; }
+.node-bg-event { background-color: #ef4444; }
+.node-bg-document { background-color: #8b5cf6; }
+.node-bg-topic { background-color: #ec4899; }
+.node-bg-technology { background-color: #06b6d4; }
+.node-bg-concept { background-color: #64748b; }
+
+.node-border-person { border-color: #2563eb; }
+.node-border-organization { border-color: #059669; }
+.node-border-location { border-color: #d97706; }
+.node-border-event { border-color: #dc2626; }
+.node-border-document { border-color: #7c3aed; }
+.node-border-topic { border-color: #db2777; }
+.node-border-technology { border-color: #0891b2; }
+.node-border-concept { border-color: #475569; }
+
+.node-color-person { color: #3b82f6; }
+.node-color-organization { color: #10b981; }
+.node-color-location { color: #f59e0b; }
+.node-color-event { color: #ef4444; }
+.node-color-document { color: #8b5cf6; }
+.node-color-topic { color: #ec4899; }
+.node-color-technology { color: #06b6d4; }
+.node-color-concept { color: #64748b; }
+
+.agent-node.selected {
+  box-shadow: 0 0 0 2px rgba(var(--dynamic-color-rgb), 0.25);
+}
+
+.agent-node.idle { --status-color: #6b7280; }
+.agent-node.running { --status-color: #3b82f6; }
+.agent-node.success { --status-color: #22c55e; }
+.agent-node.error { --status-color: #ef4444; }
+
+.agent-node.running .node-status { --dynamic-color: var(--status-color); }
+.agent-node.success .node-status { --dynamic-color: var(--status-color); }
+.agent-node.error .node-status { --dynamic-color: var(--status-color); }
+
+.handle-top-30 { top: 30%; }
+.handle-top-50 { top: 50%; }
+.handle-top-70 { top: 70%; }
+
+
+
+  .dynamic-color {
+    color: var(--dynamic-color, inherit);
+  }
+
+  .dynamic-border-color {
+    border-color: var(--dynamic-border-color, transparent);
+  }
+
+  .dynamic-shadow {
+    box-shadow: var(--dynamic-shadow, none);
+  }
+
+
+  .type-dot {
+    background-color: var(--dot-color, #94a3b8);
+  }
+
+  .concept-dot {
+    @apply w-3 h-3 rounded-full transition-transform duration-200;
+  }
+
+  .concept-dot:hover {
+    @apply scale-125;
+  }
+
+  .concept-dot-0 {
+    background-color: #3b82f6;
+  }
+
+  .concept-dot-1 {
+    background-color: #ef4444;
+  }
+
+  .concept-dot-2 {
+    background-color: #10b981;
+  }
+
+  .concept-dot-3 {
+    background-color: #f59e0b;
+  }
+
+  .concept-dot-4 {
+    background-color: #8b5cf6;
+  }
+
+  .concept-dot-5 {
+    background-color: #06b6d4;
+  }
+
+  .concept-dot-6 {
+    background-color: #ec4899;
+  }
+
+  .concept-dot-7 {
+    background-color: #f97316;
+  }
+
+  .concept-dot-8 {
+    background-color: #6366f1;
+  }
+
+  .concept-dot-9 {
+    background-color: #14b8a6;
+  }
+
+  /* Creation & App Utilities */
+  .neon-glow-cyan {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+  }
+
+  .app-glass-card {
+    @apply bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/20 shadow-xl transition-all duration-300;
+  }
+
+  .assemble-track {
+    @apply relative h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden;
+  }
+
+  .assemble-track-fill {
+    @apply absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_10px_rgba(6,182,212,0.4)] transition-all duration-700;
+  }
+}
+
+.loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: 'Outfit', sans-serif;
+  color: #666;
+  background-color: #fff;
+}
+
+.dark .loading-overlay {
+  background-color: #0c0c0e;
+  color: #999;
+}
+
+/* ── Custom Scrollbars ── */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/10 rounded-full transition-colors hover:bg-muted-foreground/20;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-white/5 hover:bg-white/10;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+  }
+
+  @supports (scrollbar-width: none) {
+    .no-scrollbar {
+      scrollbar-width: none;  /* Firefox */
+    }
+  }
+
+}
+
+.glass-sidebar {
+  @apply backdrop-blur-3xl bg-white/40 dark:bg-black/60 border-r border-white/10 dark:border-white/5 shadow-2xl;
+}
+
+.transition-layout {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Body/html track the active theme token. The SPA HTML shells set an anti-flash
+   `body, html { background: #09090b }` inline style (unlayered) to avoid a boot
+   flash; without this, body stays that hardcoded dark even in light mode, so
+   overscroll reveals a dark band. This unlayered rule loads after the shell's
+   inline style and wins on source order, retheming body once the theme class is
+   applied. The #boot-loader overlay masks the transition, so the dark default
+   sees no flash. */
+html,
+body {
+  background-color: hsl(var(--background));
+}
+
+/* ── Light-mode accent-text contrast ──────────────────────────────────────
+   The app is dark-first: bright accent text utilities (text-{color}-400/500)
+   pop on near-black but fail WCAG contrast on white. Remap them to AA-friendly
+   -700 shades in LIGHT mode only (scoped to :root:not(.dark)), so dark mode is
+   untouched. Centralizes the fix instead of editing ~2.3k call sites.
+   Also pulls stray slate greys onto the muted-foreground token. */
+:root:not(.dark) .text-emerald-400, :root:not(.dark) .text-emerald-500 { color: #047857; }
+:root:not(.dark) .text-green-400,   :root:not(.dark) .text-green-500   { color: #15803d; }
+:root:not(.dark) .text-teal-400,    :root:not(.dark) .text-teal-500    { color: #0f766e; }
+:root:not(.dark) .text-lime-400,    :root:not(.dark) .text-lime-500    { color: #4d7c0f; }
+:root:not(.dark) .text-cyan-400,    :root:not(.dark) .text-cyan-500    { color: #0e7490; }
+:root:not(.dark) .text-sky-400,     :root:not(.dark) .text-sky-500     { color: #0369a1; }
+:root:not(.dark) .text-blue-400,    :root:not(.dark) .text-blue-500    { color: #1d4ed8; }
+:root:not(.dark) .text-indigo-400,  :root:not(.dark) .text-indigo-500  { color: #4338ca; }
+:root:not(.dark) .text-violet-400,  :root:not(.dark) .text-violet-500  { color: #6d28d9; }
+:root:not(.dark) .text-purple-400,  :root:not(.dark) .text-purple-500  { color: #7e22ce; }
+:root:not(.dark) .text-fuchsia-400, :root:not(.dark) .text-fuchsia-500 { color: #a21caf; }
+:root:not(.dark) .text-pink-400,    :root:not(.dark) .text-pink-500    { color: #be185d; }
+:root:not(.dark) .text-rose-400,    :root:not(.dark) .text-rose-500    { color: #be123c; }
+:root:not(.dark) .text-red-400,     :root:not(.dark) .text-red-500     { color: #b91c1c; }
+:root:not(.dark) .text-orange-400,  :root:not(.dark) .text-orange-500  { color: #c2410c; }
+:root:not(.dark) .text-amber-400,   :root:not(.dark) .text-amber-500   { color: #b45309; }
+:root:not(.dark) .text-yellow-400,  :root:not(.dark) .text-yellow-500  { color: #a16207; }
+:root:not(.dark) .text-slate-300,   :root:not(.dark) .text-slate-400,
+:root:not(.dark) .text-slate-500 { color: hsl(var(--muted-foreground)); }
+
+/* ── Tactical Map Markers, Toolbars & High-Contrast Popups ──────────────── */
+.tactical-map { position: relative; width: 100%; height: 100%; overflow: hidden; background: #07110f; }
+.tactical-map .mapboxgl-map { font-family: inherit; }
+.tactical-map .mapboxgl-canvas { outline: none; }
+.tactical-map .mapboxgl-ctrl-group { overflow: hidden; background: #10171d; border: 1px solid #304047; border-radius: 9px; box-shadow: 0 8px 28px rgba(0,0,0,.34); }
+.tactical-map .mapboxgl-ctrl button { width: 30px; height: 30px; filter: invert(1); opacity: .78; }
+.tactical-map .mapboxgl-ctrl-scale { color: #d9e5e1; background: rgba(7,9,13,.82); border-color: #52605f; }
+.tactical-map .mapboxgl-ctrl-attrib { color: #91a19f; background: rgba(7,9,13,.8); }
+.tactical-map .mapboxgl-ctrl-attrib a { color: #a9b9b5; }
+
+.map-loading, .map-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #94a3b8;
+  background: #08100f;
+  font-size: 12px;
+  font-weight: 700;
+}
+.map-loading svg { width: 16px; height: 16px; color: #10b981; }
+
+.map-toolbar { position: absolute; z-index: 4; top: 12px; left: 12px; display: flex; align-items: center; gap: 5px; padding: 5px; background: rgba(8, 15, 17, .92); border: 1px solid #304047; border-radius: 11px; box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+.map-tool { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 31px; height: 31px; padding: 0 8px; color: #9eafac; background: transparent; border: 0; border-radius: 7px; font-size: 10px; font-weight: 750; }
+.map-tool:hover, .map-tool:focus-visible { color: #fff; background: #172329; outline: none; }
+.map-tool[aria-pressed="true"] { color: #10b981; background: #102a25; }
+.map-tool.rescue[aria-pressed="true"] { color: #f43f5e; background: #30151d; }
+.map-tool.provider[aria-pressed="true"] { color: #67e8f9; background: #10313a; }
+.map-tool svg { width: 14px; height: 14px; }
+.map-toolbar-divider { width: 1px; height: 20px; margin: 0 2px; background: #304047; }
+.map-status { position: absolute; z-index: 3; bottom: 24px; left: 12px; display: flex; align-items: center; gap: 7px; padding: 7px 9px; color: #c7d6d2; background: rgba(8,15,17,.9); border: 1px solid #304047; border-radius: 8px; font-size: 10px; font-weight: 700; }
+.map-status svg { width: 12px; height: 12px; color: #10b981; }
+
+.map-marker { --marker-color: #34d399; display: grid; place-items: center; width: 32px; height: 32px; color: #07100e; background: var(--marker-color); border: 2px solid rgba(255,255,255,.95); border-radius: 10px; box-shadow: 0 0 0 5px color-mix(in srgb, var(--marker-color) 22%, transparent), 0 8px 18px rgba(0,0,0,.45); transition: transform .16s ease; }
+.map-marker:hover, .map-marker:focus-visible { transform: scale(1.12); outline: 2px solid #fff; outline-offset: 3px; }
+.map-marker svg { width: 16px; height: 16px; stroke-width: 2.5; }
+.map-marker-rescue { width: 36px; height: 36px; color: #fff; border-radius: 999px; }
+.map-marker-provider { --marker-color: #67e8f9; color: #06202a; border-radius: 999px 999px 999px 5px; transform: rotate(-45deg); }
+.map-marker-provider:hover, .map-marker-provider:focus-visible { transform: rotate(-45deg) scale(1.12); }
+.map-marker-provider svg { transform: rotate(45deg); }
+
+/* High-contrast dark popups for Mapbox */
+.mapboxgl-popup-content,
+.tactical-popup .mapboxgl-popup-content {
+  min-width: 240px;
+  max-width: 320px;
+  padding: 14px 16px !important;
+  color: #f1f5f9 !important;
+  background: #0b1115 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.mapboxgl-popup-tip,
+.tactical-popup .mapboxgl-popup-tip {
+  border-top-color: #0b1115 !important;
+  border-bottom-color: #0b1115 !important;
+}
+
+.mapboxgl-popup-close-button,
+.tactical-popup .mapboxgl-popup-close-button {
+  width: 26px !important;
+  height: 26px !important;
+  color: #94a3b8 !important;
+  font-size: 18px !important;
+  padding: 2px !important;
+  top: 8px !important;
+  right: 8px !important;
+  border-radius: 6px !important;
+}
+.mapboxgl-popup-close-button:hover,
+.tactical-popup .mapboxgl-popup-close-button:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
+}
+
+.tactical-popup .popup-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #38bdf8 !important;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.tactical-popup .popup-heading.rescue { color: #fb7185 !important; }
+.tactical-popup .popup-heading.provider { color: #34d399 !important; }
+.tactical-popup .popup-heading.h3-sector { color: #22d3ee !important; }
+.tactical-popup .popup-heading svg { width: 14px; height: 14px; }
+
+.tactical-popup .popup-target {
+  display: block;
+  margin: 6px 0 8px;
+  color: #ffffff !important;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.tactical-popup dl {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid #1e293b;
+}
+
+.tactical-popup dl div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.tactical-popup dt {
+  color: #94a3b8 !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+
+.tactical-popup dd {
+  margin: 0;
+  color: #f8fafc !important;
+  font-weight: 700;
+  text-align: right;
+}
+.tactical-popup dd svg { width: 12px; height: 12px; vertical-align: -2px; display: inline-block; margin-right: 4px; }
+
+/* Scribe Confidential Safe Mode */
+.scribe-safe-mode .scribe-sandbox .scribe-sandbox-body {
+  filter: blur(6px);
+  -webkit-user-select: none;
+  user-select: none;
+  transition: filter 0.25s ease;
+}
+.scribe-safe-mode .scribe-sandbox:hover .scribe-sandbox-body,
+.scribe-safe-mode .scribe-sandbox:focus-within .scribe-sandbox-body {
+  filter: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.scribe-safe-mode .scribe-sandbox {
+  border-style: dashed;
+}
+

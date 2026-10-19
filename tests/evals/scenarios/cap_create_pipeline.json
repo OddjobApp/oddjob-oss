@@ -1,0 +1,13 @@
+{
+  "id": "cap_create_pipeline",
+  "name": "Capability: create a pipeline",
+  "subject": { "kind": "capability", "ref": "create_pipeline" },
+  "prompt": "Design and create a two-step pipeline that fetches a web page and summarizes it.",
+  "repeats": 5,
+  "threshold": 0.75,
+  "_note": "Seed scaffold — high-risk (creates platform objects); confirm tool name.",
+  "criteria": [
+    { "type": "tool_used", "value": "create_pipeline", "weight": 3 },
+    { "type": "final_output_contains", "value": "pipeline", "weight": 1 }
+  ]
+}

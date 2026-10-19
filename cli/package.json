@@ -1,0 +1,46 @@
+{
+    "name": "@oddjob/cli",
+    "version": "1.0.0",
+    "description": "Command-line interface for Oddjob workflow automation platform",
+    "main": "dist/index.js",
+    "bin": {
+        "oddjob": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "ts-node index.ts",
+        "watch": "tsc --watch",
+        "test": "jest",
+        "lint": "eslint . --ext .ts",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "oddjob",
+        "cli",
+        "workflow",
+        "automation",
+        "pipeline"
+    ],
+    "author": "Oddjob Team",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^1.6.0",
+        "chalk": "^4.1.2",
+        "commander": "^11.1.0",
+        "js-yaml": "^4.1.0"
+    },
+    "devDependencies": {
+        "@types/js-yaml": "^4.0.9",
+        "@types/node": "^20.10.0",
+        "@typescript-eslint/eslint-plugin": "^6.13.0",
+        "@typescript-eslint/parser": "^6.13.0",
+        "eslint": "^8.54.0",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.1",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.3.2"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

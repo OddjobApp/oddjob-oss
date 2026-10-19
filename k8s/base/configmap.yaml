@@ -1,0 +1,25 @@
+# Oddjob ConfigMap
+# Contains non-sensitive configuration values.
+# Override in overlays for environment-specific endpoints.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oddjob-config
+  namespace: oddjob
+  labels:
+    app.kubernetes.io/name: oddjob
+data:
+  NODE_ENV: "production"
+
+  # Redis (use managed service in production)
+  REDIS_URL: "redis://redis-service:6379"
+
+  # Qdrant Vector Database
+  QDRANT_URL: "http://qdrant-service:6333"
+
+  # MCP HTTP Server
+  MCP_HTTP_ENABLED: "true"
+  MCP_HTTP_PORT: "3001"
+
+  # Session settings
+  SESSION_TTL: "86400"

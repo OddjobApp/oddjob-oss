@@ -1,0 +1,48 @@
+
+import "dotenv/config";
+import { db } from "./server/db";
+import { credentials, users } from "@shared/schema";
+import { eq } from "drizzle-orm";
+
+async function addCreds() {
+    console.log("Checking for missing AI credentials...");
+
+    // Get admin user for 'createdBy' field
+    const [adminUser] = await db.select().from(users).where(eq(users.username, "admin")).limit(1);
+    if (!adminUser) {
+        console.error("Admin user not found, cannot create credentials.");
+        process.exit(1);
+    }
+
+    // Helper to add if missing
+    const addIfMissing = async (name: string, type: string, envVar: string, metadata: any) => {
+        const existing = await db.select().from(credentials).where(eq(credentials.name, name));
+        if (existing.length === 0) {
+            await db.insert(credentials).values({
+                name,
+                type,
+                envVarName: envVar,
+                metadata,
+                createdBy: adminUser.username,
+                organizationId: null, // Global cred or specific? Seed used NULL for S3 but NULL is usually not allowed for orgId unless optional.
+                // Wait, seed.ts line 123 doesn't specify orgId for OpenAI? 
+                // Ah, schema definition might allow null or seed defaultOrg.
+                // checking seed.ts... OpenAI doesn't have an orgId in the insert.
+                // Let's check schema/credentials.ts to be safe.
+                // Assuming nullable for now based on seed.ts.
+            });
+            console.log(`✅ Added ${name}`);
+        } else {
+            console.log(`ℹ️ ${name} already exists`);
+        }
+    };
+
+    await addIfMissing("Gemini Production", "ai_provider", "GEMINI_API_KEY", { provider: "google" });
+    await addIfMissing("Ollama Local", "ai_provider", "OLLAMA_BASE_URL", { provider: "ollama", baseUrl: "http://localhost:11434" });
+    await addIfMissing("Anthropic Production", "ai_provider", "ANTHROPIC_API_KEY", { provider: "anthropic" });
+
+    console.log("Done.");
+    process.exit(0);
+}
+
+addCreds().catch(console.error);

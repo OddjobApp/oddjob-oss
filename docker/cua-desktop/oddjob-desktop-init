@@ -1,0 +1,13 @@
+#!/bin/sh
+# Runs as root at container start, before supervisord. /home/cua is a persisted volume
+# seeded by the base image with WebBrowser=firefox, so the image-level default alone does
+# not stick; point the user's preferred browser at the recordable Chromium.
+set -e
+CONF=/home/cua/.config/xfce4
+mkdir -p "$CONF"
+if [ -f "$CONF/helpers.rc" ] && grep -q '^WebBrowser=' "$CONF/helpers.rc"; then
+    sed -i 's/^WebBrowser=.*/WebBrowser=oddjob-chromium/' "$CONF/helpers.rc"
+else
+    echo 'WebBrowser=oddjob-chromium' >> "$CONF/helpers.rc"
+fi
+chown -R cua:cua /home/cua/.config

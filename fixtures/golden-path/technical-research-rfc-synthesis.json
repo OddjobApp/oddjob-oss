@@ -1,0 +1,437 @@
+{
+  "id": "technical-research-rfc-synthesis",
+  "title": "Technical Research & RFC Synthesis — GraphRAG Integration",
+  "buyerQuestion": "Can Oddjob automate end-to-end technical research into a published RFC and engineering backlog, with human governance at critical decision points?",
+  "researchTopic": {
+    "title": "Integrating GraphRAG into Oddjob's Qdrant-based RAG Pipeline",
+    "description": "GraphRAG extends traditional vector-similarity retrieval by layering a knowledge graph over chunked embeddings, enabling multi-hop reasoning and relationship-aware context assembly. This research investigates how GraphRAG techniques can augment Oddjob's existing Qdrant-backed retrieval pipeline to improve answer grounding, reduce hallucination, and surface cross-document relationships that flat semantic search misses.",
+    "rationale": "This topic is ideal for the golden demo because it is self-referential — Oddjob researching how to improve its own RAG pipeline — which exercises every mission naturally: literature discovery surfaces real papers, technology triage forces an architecture decision between hybrid approaches, feasibility audits inspect existing Qdrant service code, PoC sign-off evaluates a working prototype, RFC synthesis compiles findings into an actionable document, and backlog hydration decomposes implementation into trackable engineering tasks."
+  },
+  "missions": [
+    {
+      "id": "mission-research-1",
+      "name": "Academic & Paper Discovery",
+      "objective": "Search academic archives and engineering blogs for research papers on the target topic.",
+      "phase": "research",
+      "type": "agent",
+      "dependsOn": null,
+      "inputs": ["research_topic"],
+      "outputs": ["literature_summary_report"],
+      "expectedArtifacts": [
+        "Literature summary with trade-off matrix covering at least 3 architectural approaches",
+        "Annotated bibliography of relevant academic papers and engineering blog posts"
+      ]
+    },
+    {
+      "id": "mission-research-2",
+      "name": "Technology Triage Sign-off",
+      "objective": "Review extracted architectural tradeoffs and select the design direction.",
+      "phase": "research",
+      "type": "hil",
+      "dependsOn": "mission-research-1",
+      "inputs": ["literature_summary_report"],
+      "outputs": ["selected_architecture_path"],
+      "expectedArtifacts": [
+        "Approved architecture selection with documented rationale",
+        "Constraints and guardrails for the chosen design path"
+      ],
+      "hilGate": {
+        "formRef": "technology_triage",
+        "expectedDecision": "Option C - Hybrid Approach"
+      }
+    },
+    {
+      "id": "mission-feasibility-1",
+      "name": "Codebase Feasibility Audit",
+      "objective": "Scan the codebase files and packages to check for compatibility and draft integration PoCs.",
+      "phase": "feasibility",
+      "type": "agent",
+      "dependsOn": "mission-research-2",
+      "inputs": ["selected_architecture_path"],
+      "outputs": ["poc_integration_snippet"],
+      "expectedArtifacts": [
+        "Dependency compatibility report for existing Qdrant pipeline",
+        "Draft integration code snippet demonstrating the hybrid approach"
+      ]
+    },
+    {
+      "id": "mission-feasibility-2",
+      "name": "Proof of Concept Sign-off",
+      "objective": "Approve the draft integration snippet and dependency audit.",
+      "phase": "feasibility",
+      "type": "hil",
+      "dependsOn": "mission-feasibility-1",
+      "inputs": ["poc_integration_snippet"],
+      "outputs": ["poc_signoff_decision"],
+      "expectedArtifacts": [
+        "Signed-off PoC integration with developer review comments",
+        "Go/no-go decision for RFC generation"
+      ],
+      "hilGate": {
+        "formRef": "poc_signoff",
+        "expectedDecision": "Approve & Generate RFC"
+      }
+    },
+    {
+      "id": "mission-synthesis-1",
+      "name": "Compile & Publish RFC",
+      "objective": "Compile research and PoC into a formal RFC and publish to Wiki.",
+      "phase": "synthesis",
+      "type": "agent",
+      "dependsOn": "mission-feasibility-2",
+      "inputs": ["poc_signoff_decision"],
+      "outputs": ["published_rfc_status"],
+      "expectedArtifacts": [
+        "Complete RFC document with problem statement, proposed solution, alternatives considered, and migration plan",
+        "Published wiki article in the Organizational Memory knowledge base"
+      ]
+    },
+    {
+      "id": "mission-synthesis-2",
+      "name": "Hydrate Engineering Backlog",
+      "objective": "Create implementation tickets in Jira based on RFC specifications.",
+      "phase": "synthesis",
+      "type": "agent",
+      "dependsOn": "mission-synthesis-1",
+      "inputs": ["published_rfc_status"],
+      "outputs": ["backlog_creation_report"],
+      "expectedArtifacts": [
+        "Decomposed engineering tasks with story points and acceptance criteria",
+        "Jira backlog populated with linked issues referencing the published RFC"
+      ]
+    }
+  ],
+  "technologyTriageDecision": {
+    "formRef": "technology_triage",
+    "selectedOption": "Option C - Hybrid Approach",
+    "constraints": "Must maintain backward compatibility with existing Qdrant vector queries. Graph traversal must not add more than 500ms latency to retrieval. Implementation should be opt-in per knowledge topic.",
+    "approver": "alex.chen@oddjob.io",
+    "timestamp": "2026-06-12T14:35:00Z"
+  },
+  "pocSignoffDecision": {
+    "formRef": "poc_signoff",
+    "decision": "Approve & Generate RFC",
+    "reviewComments": "PoC demonstrates viable hybrid retrieval with acceptable latency. Graph traversal adds ~200ms which is within budget. Recommend proceeding with RFC. Note: community detection should run asynchronously to avoid blocking document ingestion.",
+    "approver": "sarah.martinez@oddjob.io",
+    "timestamp": "2026-06-13T11:20:00Z"
+  },
+  "knowledge": [
+    {
+      "id": "knowledge-graphrag-paper",
+      "title": "From Local to Global: A Graph RAG Approach to Query-Focused Summarization",
+      "sourceType": "academic_paper",
+      "sourceConfidence": 0.91,
+      "content": "This paper introduces GraphRAG, a method that extends retrieval-augmented generation by constructing a knowledge graph over the source corpus using LLM-generated entity and relationship extractions. The key innovation is a two-stage pipeline: first, community detection algorithms (Leiden) partition the graph into hierarchical clusters, then each community is pre-summarized into natural-language descriptions. At query time, the system performs either local retrieval (entity-neighborhood traversal for specific questions) or global retrieval (community-summary map-reduce for broad sensemaking queries), significantly outperforming naive vector-similarity RAG on comprehensiveness and diversity metrics."
+    },
+    {
+      "id": "knowledge-oddjob-rag-architecture",
+      "title": "Oddjob RAG Architecture: Qdrant Vector Retrieval Pipeline",
+      "sourceType": "architecture_doc",
+      "sourceConfidence": 0.95,
+      "content": "Oddjob's current RAG pipeline ingests documents by chunking them into overlapping segments (512 tokens, 64-token overlap), generating embeddings via the configured AI provider, and upserting vectors into a Qdrant collection partitioned by organization. At query time, the rag-service performs top-K similarity search (k=5 default) against the organization's collection, retrieves matching chunks with metadata, and injects them as context into the LLM system prompt. The pipeline supports filtering by knowledge topic and document recency but lacks any relationship-aware traversal or multi-hop reasoning capability."
+    },
+    {
+      "id": "knowledge-rag-service-codebase",
+      "title": "RAG Service Integration Points — Current Implementation",
+      "sourceType": "codebase_context",
+      "sourceConfidence": 0.97,
+      "content": "The RAG subsystem is implemented across three key files: `server/services/rag-service.ts` handles embedding generation, Qdrant upsert/query, and context assembly; `server/services/knowledge-service.ts` manages CRUD operations for knowledge documents and topics; and the shared schema defines `knowledgeNodes` and `knowledgeEdges` tables in `shared/schema/knowledge.ts` which already store entity-relationship data extracted during pipeline executions. The knowledge-service exposes graph traversal methods (`getConnectedNodes`, `getEdgesByType`) that are currently used only for UI visualization but could serve as the foundation for graph-enhanced retrieval."
+    },
+    {
+      "id": "knowledge-hybrid-retrieval-pattern",
+      "title": "Hybrid Retrieval Pattern: Vector Similarity + Graph Traversal",
+      "sourceType": "integration_pattern",
+      "sourceConfidence": 0.89,
+      "content": "The hybrid retrieval pattern combines dense vector search with structured graph traversal to produce context that captures both semantic similarity and relational proximity. The approach works in three stages: first, vector similarity search identifies seed entities from the query embedding; second, graph traversal follows typed relationships outward from seed nodes for N hops (typically 2–3), collecting connected entities and their attributes; third, results from both paths are merged using reciprocal rank fusion (RRF) which normalizes rankings across heterogeneous retrieval signals. This pattern requires maintaining a synchronized knowledge graph alongside the vector index but delivers measurably better recall on multi-hop questions."
+    }
+  ],
+  "workbenchData": {
+    "ingestionHub": {
+      "researchSources": [
+        {
+          "id": "source-graphrag-arxiv",
+          "title": "From Local to Global: A Graph RAG Approach to Query-Focused Summarization",
+          "url": "https://arxiv.org/abs/2404.16130",
+          "sourceType": "academic_paper",
+          "addedAt": "2025-01-15T09:30:00Z"
+        },
+        {
+          "id": "source-hybrid-retrieval-blog",
+          "title": "Hybrid Retrieval Patterns: Combining Vector Search with Knowledge Graphs",
+          "url": "https://blog.langchain.dev/hybrid-retrieval-patterns-vector-search-knowledge-graphs",
+          "sourceType": "blog_post",
+          "addedAt": "2025-01-15T10:15:00Z"
+        },
+        {
+          "id": "source-qdrant-filtered-search",
+          "title": "Qdrant Documentation: Filtered Search with Payload",
+          "url": "https://qdrant.tech/documentation/concepts/filtering/",
+          "sourceType": "documentation",
+          "addedAt": "2025-01-15T11:00:00Z"
+        }
+      ],
+      "synthesisMatrix": [
+        {
+          "criterion": "Query Latency",
+          "optionA": "~50ms — pure vector similarity with pre-built HNSW index",
+          "optionB": "~120ms — graph traversal adds 2-hop BFS overhead",
+          "optionC": "~80ms — parallel vector + 1-hop graph with RRF merge"
+        },
+        {
+          "criterion": "Implementation Complexity",
+          "optionA": "Low — extends existing Qdrant pipeline with no new dependencies",
+          "optionB": "High — requires Neo4j or equivalent graph DB, new ETL pipeline, schema migration",
+          "optionC": "Medium — reuses existing knowledgeEdges table, adds RRF scoring layer"
+        },
+        {
+          "criterion": "Multi-hop Reasoning",
+          "optionA": "None — flat retrieval cannot follow entity relationships",
+          "optionB": "Excellent — full graph traversal with configurable depth and relationship typing",
+          "optionC": "Good — 1-2 hop traversal from seed entities covers most use cases"
+        },
+        {
+          "criterion": "Backward Compatibility",
+          "optionA": "Full — no changes to existing retrieval interface",
+          "optionB": "Breaking — requires new query API shape and response format",
+          "optionC": "Full — extends existing interface with optional graph_depth parameter"
+        },
+        {
+          "criterion": "Maintenance Overhead",
+          "optionA": "Minimal — no additional data stores or sync jobs",
+          "optionB": "Significant — graph DB requires separate backup, scaling, and index maintenance",
+          "optionC": "Low — leverages existing Postgres-backed knowledge graph, no new infra"
+        }
+      ]
+    },
+    "decisionPanel": {
+      "formSubmissions": [
+        {
+          "formRef": "technology_triage",
+          "submittedBy": "architect@oddjob.io",
+          "submittedAt": "2025-01-16T14:30:00Z",
+          "decision": "Option C - Hybrid Approach"
+        },
+        {
+          "formRef": "poc_signoff",
+          "submittedBy": "tech-lead@oddjob.io",
+          "submittedAt": "2025-01-18T11:00:00Z",
+          "decision": "Approve & Generate RFC"
+        }
+      ],
+      "decisionHistory": [
+        {
+          "missionId": "mission-research-2",
+          "decision": "Selected Option C (Hybrid Approach) — balances latency, multi-hop reasoning, and backward compatibility without introducing new infrastructure dependencies",
+          "timestamp": "2025-01-16T14:30:00Z"
+        },
+        {
+          "missionId": "mission-feasibility-2",
+          "decision": "Approved PoC integration snippet — dependency audit confirms no breaking changes, graph traversal reuses existing knowledgeEdges schema",
+          "timestamp": "2025-01-18T11:00:00Z"
+        }
+      ]
+    },
+    "draftSandbox": {
+      "artifacts": [
+        {
+          "id": "artifact-poc-hybrid-retrieval",
+          "type": "poc_snippet",
+          "title": "Hybrid Retrieval Service — GraphRAG Integration PoC",
+          "content": "// GraphRAG Hybrid Retrieval PoC\nimport { qdrantClient } from './qdrant-client';\nimport { db } from '../database_service';\nimport { knowledgeNodes, knowledgeEdges } from '@shared/schema';\nimport { eq, inArray } from 'drizzle-orm';\n\nexport async function hybridRetrieve(query: string, topicId: number, options: { maxHops?: number; topK?: number } = {}) {\n  const { maxHops = 2, topK = 10 } = options;\n  \n  // Stage 1: Vector similarity search for seed entities\n  const vectorResults = await qdrantClient.search(topicId, query, { limit: topK });\n  const seedNodeIds = vectorResults.map(r => r.payload.nodeId).filter(Boolean);\n  \n  // Stage 2: Graph traversal from seed entities\n  const graphResults = await traverseGraph(seedNodeIds, maxHops);\n  \n  // Stage 3: Reciprocal Rank Fusion merge\n  return reciprocalRankFusion(vectorResults, graphResults, topK);\n}\n\nasync function traverseGraph(seedIds: number[], maxHops: number) {\n  let currentLayer = seedIds;\n  const visited = new Set(seedIds);\n  const results: any[] = [];\n  \n  for (let hop = 0; hop < maxHops; hop++) {\n    const edges = await db.select().from(knowledgeEdges)\n      .where(inArray(knowledgeEdges.sourceId, currentLayer));\n    const nextLayer: number[] = [];\n    for (const edge of edges) {\n      if (!visited.has(edge.targetId)) {\n        visited.add(edge.targetId);\n        nextLayer.push(edge.targetId);\n        results.push({ nodeId: edge.targetId, hop: hop + 1, relation: edge.relationType });\n      }\n    }\n    currentLayer = nextLayer;\n  }\n  return results;\n}",
+          "missionId": "mission-feasibility-1",
+          "status": "approved"
+        },
+        {
+          "id": "artifact-rfc-graphrag",
+          "type": "rfc_draft",
+          "title": "RFC-2024-007: GraphRAG Integration into Oddjob Knowledge Pipeline",
+          "content": "# RFC-2024-007: GraphRAG Integration\n\n## Problem Statement\nOddjob's current RAG pipeline relies solely on vector similarity search, which cannot follow entity relationships or answer multi-hop questions spanning multiple documents.\n\n## Proposed Solution\nIntegrate a hybrid retrieval layer that combines Qdrant vector search with graph traversal over the existing knowledgeNodes/knowledgeEdges tables. The system will:\n1. Extract entities during document indexing\n2. Perform parallel vector + graph retrieval at query time\n3. Merge results using Reciprocal Rank Fusion\n4. Optionally generate community summaries for global queries\n\n## Alternatives Considered\n- Option A (Pure Vector): No graph traversal — insufficient for multi-hop queries\n- Option B (Full Graph DB): Neo4j-backed — too much infrastructure overhead\n- Option C (Hybrid — SELECTED): Reuse existing Postgres graph + Qdrant vectors\n\n## Migration Plan\n1. Add graphRagEnabled flag to knowledge_topics table\n2. Implement entity extraction during document indexing\n3. Build HybridRetrievalEngine service\n4. Integrate with existing rag-service.ts as opt-in mode\n5. Add community detection background job (async)\n\n## Risks\n- Graph traversal adds ~200ms latency (mitigated by caching hot paths)\n- Entity extraction quality depends on LLM accuracy (mitigated by confidence thresholds)",
+          "missionId": "mission-synthesis-1",
+          "status": "approved"
+        }
+      ]
+    },
+    "memoryLibrary": {
+      "documents": [
+        {
+          "id": "doc-rfc-graphrag-published",
+          "title": "RFC-2024-007: GraphRAG Integration into Oddjob Knowledge Pipeline",
+          "type": "rfc",
+          "publishedAt": "2026-06-14T16:00:00Z",
+          "metadata": {
+            "author": "Technical Documentation Writer Agent",
+            "version": "1.0",
+            "status": "published",
+            "reviewedBy": "sarah.martinez@oddjob.io"
+          },
+          "knowledgeGraphEdges": [
+            { "from": "GraphRAG", "to": "Qdrant", "relationship": "integrates_with" },
+            { "from": "GraphRAG", "to": "KnowledgeNodes", "relationship": "traverses" },
+            { "from": "HybridRetrieval", "to": "RRF", "relationship": "uses_algorithm" },
+            { "from": "CommunityDetection", "to": "LabelPropagation", "relationship": "implemented_by" }
+          ]
+        }
+      ]
+    },
+    "backlogProvisioner": {
+      "tasks": [
+        {
+          "id": "task-graphrag-schema-flag",
+          "summary": "Add graphRagEnabled flag to knowledge_topics schema",
+          "description": "Add a boolean column `graphRagEnabled` (default: false) to the knowledge_topics table. This flag controls whether a topic uses hybrid GraphRAG retrieval or falls back to standard vector-only search. Includes schema migration and shared type updates.",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": ["graphrag", "schema", "migration"],
+          "storyPoints": 3,
+          "acceptanceCriteria": "- [ ] New `graphRagEnabled` boolean column added to knowledge_topics table\n- [ ] Default value is `false` for backward compatibility\n- [ ] Drizzle migration generated and tested\n- [ ] Shared TypeScript types updated to reflect new column\n- [ ] Existing topics unaffected (all default to false)",
+          "rfcReference": "RFC-2024-007"
+        },
+        {
+          "id": "task-hybrid-retrieval-engine",
+          "summary": "Implement HybridRetrievalEngine service with graph traversal",
+          "description": "Build the core HybridRetrievalEngine that performs parallel vector similarity search (via Qdrant) and graph traversal (via knowledgeEdges table), then merges results using Reciprocal Rank Fusion. The service is invoked when a topic has graphRagEnabled=true.",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": ["graphrag", "retrieval", "core"],
+          "storyPoints": 8,
+          "acceptanceCriteria": "- [ ] HybridRetrievalEngine class created in server/services/\n- [ ] Vector search stage queries Qdrant for top-K seed entities\n- [ ] Graph traversal stage follows knowledgeEdges up to configurable maxHops\n- [ ] RRF merge combines both result sets with normalized scoring\n- [ ] Latency < 500ms for 2-hop traversal on typical topic graphs\n- [ ] Unit tests cover each retrieval stage independently\n- [ ] Integration test validates end-to-end hybrid retrieval",
+          "rfcReference": "RFC-2024-007"
+        },
+        {
+          "id": "task-community-detection-job",
+          "summary": "Add community detection background job for GraphRAG topics",
+          "description": "Implement an asynchronous background job that runs community detection (Label Propagation algorithm) over the knowledge graph for topics with graphRagEnabled=true. Communities are pre-summarized using LLM and stored for global query retrieval.",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": ["graphrag", "background-job", "community-detection"],
+          "storyPoints": 5,
+          "acceptanceCriteria": "- [ ] Background job registered in the job scheduler\n- [ ] Label Propagation algorithm groups knowledge nodes into communities\n- [ ] Each community receives an LLM-generated natural language summary\n- [ ] Summaries stored in knowledge_communities table (new migration)\n- [ ] Job runs asynchronously after document indexing completes\n- [ ] Job is idempotent and can be safely re-run",
+          "rfcReference": "RFC-2024-007"
+        },
+        {
+          "id": "task-integrate-graphrag-rag-service",
+          "summary": "Integrate GraphRAG with existing rag-service.ts",
+          "description": "Wire the HybridRetrievalEngine into the existing rag-service.ts as an opt-in retrieval mode. When a knowledge topic has graphRagEnabled=true, the rag-service delegates to HybridRetrievalEngine instead of performing direct Qdrant vector search.",
+          "issueType": "Task",
+          "priority": "High",
+          "labels": ["graphrag", "integration", "rag-service"],
+          "storyPoints": 5,
+          "acceptanceCriteria": "- [ ] rag-service.ts checks graphRagEnabled flag before retrieval\n- [ ] If enabled, delegates to HybridRetrievalEngine\n- [ ] If disabled, falls back to existing vector-only path (no behavior change)\n- [ ] Response format remains compatible with existing consumers\n- [ ] Feature flag can be toggled per-topic without restart\n- [ ] Integration test validates both code paths",
+          "rfcReference": "RFC-2024-007"
+        }
+      ]
+    }
+  },
+  "phaseBoundaries": [
+    {
+      "fromMission": "mission-research-1",
+      "toMission": "mission-research-2",
+      "expectedArtifact": "Literature summary report with trade-off comparison matrix",
+      "contractShape": {
+        "summary": "string - overview of findings",
+        "papers": "array - annotated paper references",
+        "tradeoffMatrix": "object - criteria vs options comparison"
+      }
+    },
+    {
+      "fromMission": "mission-research-2",
+      "toMission": "mission-feasibility-1",
+      "expectedArtifact": "Selected architecture path with constraints",
+      "contractShape": {
+        "selectedOption": "string - chosen design pattern",
+        "constraints": "string - implementation guardrails",
+        "rationale": "string - decision justification"
+      },
+      "hilDecisionRef": "technologyTriageDecision"
+    },
+    {
+      "fromMission": "mission-feasibility-1",
+      "toMission": "mission-feasibility-2",
+      "expectedArtifact": "PoC integration code snippet with dependency audit",
+      "contractShape": {
+        "codeSnippet": "string - working integration code",
+        "dependencies": "array - required packages",
+        "compatibilityReport": "string - audit results"
+      }
+    },
+    {
+      "fromMission": "mission-feasibility-2",
+      "toMission": "mission-synthesis-1",
+      "expectedArtifact": "PoC approval decision with review comments",
+      "contractShape": {
+        "decision": "string - approve or reject",
+        "reviewComments": "string - reviewer feedback",
+        "approver": "string - decision maker"
+      },
+      "hilDecisionRef": "pocSignoffDecision"
+    },
+    {
+      "fromMission": "mission-synthesis-1",
+      "toMission": "mission-synthesis-2",
+      "expectedArtifact": "Published RFC document with wiki article status",
+      "contractShape": {
+        "rfcTitle": "string - document title",
+        "publishedUrl": "string - wiki location",
+        "status": "string - publication status"
+      }
+    }
+  ],
+  "successCriteria": [
+    {
+      "id": "sc-1",
+      "description": "The research mission produces a literature summary covering at least 3 architectural approaches with trade-off comparisons.",
+      "missionRef": "mission-research-1",
+      "phase": "research"
+    },
+    {
+      "id": "sc-2",
+      "description": "The Technology Triage HIL gate is exercised with a valid architecture selection from the predefined options.",
+      "missionRef": "mission-research-2",
+      "phase": "research"
+    },
+    {
+      "id": "sc-3",
+      "description": "The feasibility audit produces a working PoC code snippet that compiles against existing project dependencies.",
+      "missionRef": "mission-feasibility-1",
+      "phase": "feasibility"
+    },
+    {
+      "id": "sc-4",
+      "description": "The PoC Sign-off HIL gate is exercised with an approval decision that unblocks RFC synthesis.",
+      "missionRef": "mission-feasibility-2",
+      "phase": "feasibility"
+    },
+    {
+      "id": "sc-5",
+      "description": "A complete RFC document is generated and published to the Organizational Memory Wiki with problem statement, proposed solution, and migration plan.",
+      "missionRef": "mission-synthesis-1",
+      "phase": "synthesis"
+    },
+    {
+      "id": "sc-6",
+      "description": "At least 3 engineering backlog tasks are decomposed from the RFC with story points, acceptance criteria, and Jira-compatible fields.",
+      "missionRef": "mission-synthesis-2",
+      "phase": "synthesis"
+    },
+    {
+      "id": "sc-7",
+      "description": "All mission-to-mission data handoffs satisfy their declared contract shapes at each phase boundary.",
+      "phase": "synthesis"
+    },
+    {
+      "id": "sc-8",
+      "description": "All 5 workbench apps contain populated seed data demonstrating realistic UI states.",
+      "phase": "synthesis"
+    }
+  ],
+  "expectedEvidence": [
+    "literature_summary_report from mission-research-1",
+    "technology_triage form submission with 'Option C - Hybrid Approach' selection",
+    "poc_integration_snippet from mission-feasibility-1",
+    "poc_signoff form submission with 'Approve & Generate RFC' decision",
+    "published_rfc_status from mission-synthesis-1 with wiki URL",
+    "backlog_creation_report from mission-synthesis-2 with 3+ Jira task IDs",
+    "All 5 phaseBoundary contracts satisfied",
+    "Decision audit trail visible in decisionPanel history"
+  ]
+}

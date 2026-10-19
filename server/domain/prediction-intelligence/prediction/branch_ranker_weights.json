@@ -1,0 +1,9 @@
+{
+    "confidence": 2.0,
+    "probability": 1.5,
+    "realmSupport": 1.0,
+    "hiddenAlignment": 1.0,
+    "evWeight": 0.5,
+    "entropy": -1.5,
+    "bias": -1.0
+}

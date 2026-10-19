@@ -1,0 +1,25 @@
+# Describes what the tree already does rather than imposing something new.
+# Indentation is genuinely mixed (a sample of 60 files per tree: server 43x
+# 2-space vs 7x 4-space, client/src 22 vs 15, packages 11 vs 12), so 2 is set
+# as the default because it is the plurality everywhere — not as a mandate to
+# reformat existing files. Leave a file's existing indentation alone unless you
+# are rewriting it anyway.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+# Markdown uses trailing double-space for hard line breaks.
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

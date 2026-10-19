@@ -1,0 +1,550 @@
+# yaml-language-server: $schema=./cycle-blueprint.schema.json
+name: "Agent Performance & Training"
+version: "1.0"
+containers: {}
+description: "Evaluate AI agents against benchmarks, identify failure patterns, generate synthetic training data, validate improvements via shadow runs, and promote enhanced agents to production."
+author: "Oddjob Operations"
+
+ui_metadata:
+  display_name: "Agent Performance & Training"
+  icon: "🧠"
+  theme_color: "#f97316"
+  display_priority: 2
+  category: "operations"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 200000
+
+ai_provider:
+  provider: "google"
+  api_key: "${ENV.GEMINI_API_KEY}"
+  default_model: "gemini-2.0-flash"
+  fallback_model: "gemini-2.0-flash"
+  temperature: 0.1
+  max_tokens: 4096
+  timeout_ms: 120000
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+tech_stack:
+  backend_language: "TypeScript"
+  frontend_framework: "React"
+
+knowledge_datasets:
+  - id: "hf_swe_bench_verified"
+    source: "hf://datasets/princeton-nlp/SWE-bench_Verified"
+    vectorize: true
+    primary_key: "instance_id"
+    schema:
+      instance_id: "string"
+      repo: "string"
+      problem_statement: "text"
+      patch: "text"
+      test_patch: "text"
+      fail_to_pass: "array[string]"
+      pass_to_pass: "array[string]"
+  - id: "hf_bfcl"
+    source: "hf://datasets/gorilla-llm/Berkeley-Function-Calling-Leaderboard"
+    vectorize: true
+    primary_key: "id"
+    schema:
+      id: "string"
+      category: "string"
+      question: "text"
+      function_docs: "json"
+      possible_answer: "json"
+  - id: "hf_toolbench_v1"
+    source: "hf://datasets/tuandunghcmut/toolbench-v1"
+    vectorize: true
+    primary_key: "id"
+    schema:
+      id: "string"
+      conversations: "array[object]"
+      query: "text"
+      api_list: "json"
+      relevant_apis: "json"
+  - id: "hf_agentinstruct"
+    source: "hf://datasets/zai-org/AgentInstruct"
+    vectorize: true
+    primary_key: "id"
+    schema:
+      id: "string"
+      domain: "string"
+      conversations: "array[object]"
+      trajectory_turns: "number"
+  - id: "hf_agent_flan"
+    source: "hf://datasets/internlm/Agent-FLAN"
+    vectorize: true
+    primary_key: "id"
+    schema:
+      id: "string"
+      split: "string"
+      conversation: "array[object]"
+      source_dataset: "string"
+      negative_sample: "boolean"
+  - id: "hf_st_webagentbench"
+    source: "hf://datasets/ST-WebAgentBench/st-webagentbench"
+    vectorize: true
+    primary_key: "task_id"
+    schema:
+      task_id: "string"
+      site: "string"
+      task: "text"
+      policy: "text"
+      safety_category: "string"
+      expected_outcome: "text"
+  - id: "hf_trustllm"
+    source: "hf://datasets/TrustLLM/TrustLLM-dataset"
+    vectorize: true
+    primary_key: "sample_id"
+    schema:
+      sample_id: "string"
+      aspect: "string"
+      prompt: "text"
+      expected_behavior: "text"
+      risk_label: "string"
+  - id: "hf_tau_usi"
+    source: "hf://datasets/cmu-lti/tau-usi"
+    vectorize: true
+    primary_key: "annotation_id"
+    schema:
+      annotation_id: "string"
+      domain: "string"
+      task_id: "string"
+      conversation: "array[object]"
+      human_feedback: "json"
+      simulator_gap_notes: "text"
+  - id: "hf_mcp_toolbenchpp"
+    source: "hf://datasets/MCPToolBench/MCPToolBenchPP"
+    vectorize: true
+    primary_key: "task_id"
+    schema:
+      task_id: "string"
+      server_category: "string"
+      user_query: "text"
+      tool_schema: "json"
+      expected_tool_calls: "array[object]"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+    staging_url: "${ENV.STAGING_DATABASE_URL}"
+  jira:
+    required: false
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  slack:
+    required: false
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+  confluence:
+    required: false
+    base_url: "${ENV.CONFLUENCE_BASE_URL}"
+    space_key: "${ENV.CONFLUENCE_ENG_SPACE}"
+
+forms:
+  - id: "training_direction_approval"
+    name: "Training Direction Approval"
+    description: "Review failure patterns and approve the training approach before synthetic data generation begins."
+    stage: "training"
+    sla_hours: 24
+    fields:
+      - name: "approved_direction"
+        label: "Training Direction"
+        type: "select"
+        required: true
+        options:
+          - "Approve — Generate synthetic training pairs as proposed"
+          - "Revise — Adjust prompt before generating data"
+          - "Reject — Failure pattern does not warrant retraining"
+      - name: "scope_adjustments"
+        label: "Scope Adjustments (if revising)"
+        type: "textarea"
+        required: false
+      - name: "priority_categories"
+        label: "Priority Failure Categories"
+        type: "multiselect"
+        required: false
+        options:
+          - "Reasoning errors"
+          - "Hallucination"
+          - "Tool selection"
+          - "Format non-compliance"
+          - "Context window misuse"
+          - "Safety boundary violations"
+      - name: "target_improvement"
+        label: "Target Score Improvement (%)"
+        type: "slider"
+        required: true
+        min: 5
+        max: 50
+        default: 15
+
+  - id: "promotion_sign_off"
+    name: "Agent Promotion Sign-off"
+    description: "Approve the retrained agent for production deployment based on validation results."
+    stage: "training"
+    sla_hours: 48
+    fields:
+      - name: "promotion_decision"
+        label: "Promotion Decision"
+        type: "select"
+        required: true
+        options:
+          - "Promote — Deploy to 10% traffic (canary)"
+          - "Promote — Deploy to 50% traffic (staged)"
+          - "Promote — Full deployment (100%)"
+          - "Hold — Validation results inconclusive"
+          - "Reject — Candidate underperforms baseline"
+      - name: "rollback_trigger"
+        label: "Auto-Rollback Threshold (% error rate)"
+        type: "slider"
+        required: true
+        min: 1
+        max: 20
+        default: 5
+      - name: "sign_off_notes"
+        label: "Sign-off Notes"
+        type: "textarea"
+        required: true
+
+agents:
+  - id: "ai-evaluator"
+    name: "AI Evaluator"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    credential_id: 419
+    temperature: 0.0
+    soul_profile:
+      archetype: "The Impartial Judge"
+      legend: "Runs systematic evaluations against benchmark datasets, scores outputs, and categorises failures with precision."
+    system_prompt: "file://knowledge/prompts/ai-evaluator.md"
+    boundaries: ["*"]
+    permissions: ["slack:write:channel"]
+    tools: ["slack_post_message"]
+
+  - id: "ai-trainer"
+    name: "AI Trainer"
+    role: "worker"
+    model: "gemini-2.0-flash"
+    credential_id: 419
+    temperature: 0.3
+    soul_profile:
+      archetype: "The Coach"
+      legend: "Analyses failure clusters, engineers prompt improvements, generates synthetic training pairs, and validates retrained agents."
+    system_prompt: "file://knowledge/prompts/ai-trainer.md"
+    boundaries: ["*"]
+    permissions: ["slack:write:channel"]
+    tools: ["slack_post_message"]
+
+missions:
+  - id: "mission-eval-1"
+    name: "Evaluation Run"
+    objective: "Execute the target agent against the full evaluation dataset and record per-case pass/fail scores, failure categories, and latency metrics."
+    type: "mission"
+    environment: "evaluation"
+    estimated_duration_hours: 1
+    trigger: "manual"
+    primary_agent: "ai-evaluator"
+    inputs: ["eval_dataset_id", "agent_version", "eval_dataset_source", "dataset_split", "dataset_revision"]
+    outputs: ["eval_results", "score_summary", "dataset_source_summary"]
+    sequence:
+      - step_code: "EVAL-1"
+        action: "load_eval_dataset"
+        description: "Load test cases from the selected evaluation dataset, preserving source, split, license, and revision metadata when cases come from Hugging Face."
+        estimated_duration_minutes: 5
+        agent: "ai-evaluator"
+      - step_code: "EVAL-2"
+        action: "run_agent_against_cases"
+        description: "Execute each test case against the agent and record actual outputs."
+        estimated_duration_minutes: 40
+        agent: "ai-evaluator"
+      - step_code: "EVAL-3"
+        action: "score_and_categorise"
+        description: "Score each output, classify failures by category, compute aggregate metrics, and report slice-level regressions by source dataset."
+        estimated_duration_minutes: 15
+        agent: "ai-evaluator"
+
+  - id: "mission-eval-2"
+    name: "Failure Analysis"
+    objective: "Identify systematic failure patterns from evaluation results, cluster them by root cause, and propose targeted prompt improvements."
+    type: "mission"
+    environment: "evaluation"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-eval-1)"
+    primary_agent: "ai-trainer"
+    inputs: ["eval_results"]
+    outputs: ["failure_patterns", "proposed_prompt_changes"]
+    sequence:
+      - step_code: "FAIL-1"
+        action: "cluster_failures"
+        description: "Group failed cases by category, severity, and shared input characteristics."
+        estimated_duration_minutes: 20
+        agent: "ai-trainer"
+      - step_code: "FAIL-2"
+        action: "root_cause_analysis"
+        description: "Identify root causes and propose targeted prompt edits or training data additions."
+        estimated_duration_minutes: 30
+        agent: "ai-trainer"
+
+  - id: "mission-eval-3"
+    name: "Training Direction Sign-off"
+    objective: "Route failure analysis findings and proposed changes to the operator for approval before synthetic data generation begins."
+    type: "mission"
+    environment: "evaluation"
+    estimated_duration_hours: 24
+    trigger: "on_success(mission-eval-2)"
+    primary_agent: "ai-trainer"
+    inputs: ["failure_patterns", "proposed_prompt_changes"]
+    outputs: ["approved_training_direction"]
+    sequence:
+      - step_code: "SIGNOFF-1"
+        action: "request_training_direction"
+        description: "Present failure analysis and proposed changes to the operator for sign-off."
+        estimated_duration_minutes: 1440
+        requires_human: true
+        form_ref: "training_direction_approval"
+
+  - id: "mission-eval-4"
+    name: "Synthetic Data Generation"
+    objective: "Generate high-quality synthetic training pairs targeting the approved failure categories using the accepted prompt direction."
+    type: "mission"
+    environment: "evaluation"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-eval-3)"
+    primary_agent: "ai-trainer"
+    inputs: ["approved_training_direction"]
+    outputs: ["training_pairs", "updated_prompt"]
+    sequence:
+      - step_code: "SYNTH-1"
+        action: "generate_training_pairs"
+        description: "Create input/output training pairs for each approved failure category."
+        estimated_duration_minutes: 60
+        agent: "ai-trainer"
+      - step_code: "SYNTH-2"
+        action: "quality_filter_pairs"
+        description: "Score each generated pair for quality and remove low-confidence examples."
+        estimated_duration_minutes: 30
+        agent: "ai-trainer"
+
+  - id: "mission-eval-5"
+    name: "Shadow Run Validation"
+    objective: "Run the candidate agent (with updated prompt) against a held-out validation set and compare its performance against the baseline."
+    type: "mission"
+    environment: "evaluation"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-eval-4)"
+    primary_agent: "ai-evaluator"
+    inputs: ["training_pairs", "updated_prompt", "holdout_dataset_id", "holdout_dataset_source", "dataset_revision"]
+    outputs: ["validation_results", "improvement_delta"]
+    sequence:
+      - step_code: "SHADOW-1"
+        action: "run_shadow_evaluation"
+        description: "Execute the candidate agent against the validation holdout set."
+        estimated_duration_minutes: 30
+        agent: "ai-evaluator"
+      - step_code: "SHADOW-2"
+        action: "compare_to_baseline"
+        description: "Compute improvement delta, regression flags, and confidence intervals."
+        estimated_duration_minutes: 15
+        agent: "ai-evaluator"
+
+  - id: "mission-eval-6"
+    name: "Training Promotion"
+    objective: "Route validation results to the operator for final promotion sign-off and deploy the improved agent at the approved traffic percentage."
+    type: "mission"
+    environment: "evaluation"
+    estimated_duration_hours: 48
+    trigger: "on_success(mission-eval-5)"
+    primary_agent: "ai-evaluator"
+    inputs: ["validation_results", "improvement_delta"]
+    outputs: ["deployment_status"]
+    sequence:
+      - step_code: "PROMOTE-1"
+        action: "request_promotion_approval"
+        description: "Present validation results and promotion options to the operator."
+        estimated_duration_minutes: 2880
+        requires_human: true
+        form_ref: "promotion_sign_off"
+      - step_code: "PROMOTE-2"
+        action: "deploy_agent_update"
+        description: "Apply the approved prompt update and set the rollout traffic percentage."
+        estimated_duration_minutes: 10
+        agent: "ai-evaluator"
+
+apps:
+  - id: "agent-training-workbench"
+    name: "Agent Performance & Training Portal"
+    description: "Five portals for evaluation, failure analysis, training governance, corpus management, and deployment promotion."
+    path: "file://agent-training-workbench"
+    blueprint: "agent-training-workbench"
+    interaction_model: "shared-server"
+    enabled: true
+    dependent_missions:
+      - "mission-eval-1"
+      - "mission-eval-2"
+      - "mission-eval-3"
+      - "mission-eval-4"
+      - "mission-eval-5"
+      - "mission-eval-6"
+    required_roles: ["ML Engineer", "AI Safety Lead", "Product Owner", "Technical Lead"]
+    workbench_modules:
+
+      - id: "eval-dashboard"
+        name: "Eval Dashboard"
+        purpose: "Load evaluation datasets, trigger agent evaluation runs, and visualize pass/fail scores across versions and categories."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/eval-dashboard"
+        dependent_missions: ["mission-eval-1"]
+        datasets:
+          - "eval_datasets"
+          - "eval_results"
+          - "eval_cases"
+        primary_actions:
+          - "load_eval_dataset"
+          - "trigger_evaluation_run"
+          - "view_score_breakdown"
+          - "add_test_case"
+        mission_handoffs:
+          - target_mission: "mission-eval-1"
+            trigger_name: "Evaluation Run"
+            when: "dataset_selected_and_run_triggered"
+        cycle_manager:
+          launch_contexts: ["mission-eval-1"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "failure-analysis"
+        name: "Failure Analysis"
+        purpose: "Identify and annotate systematic agent failure patterns, view case-level diffs, and trigger synthetic data generation for targeted categories."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/failure-analysis"
+        dependent_missions: ["mission-eval-2", "mission-eval-4"]
+        datasets:
+          - "failure_patterns"
+          - "failure_annotations"
+        primary_actions:
+          - "view_pattern_clusters"
+          - "annotate_root_cause"
+          - "view_case_diff"
+          - "trigger_synthetic_generation"
+        mission_handoffs:
+          - target_mission: "mission-eval-4"
+            trigger_name: "Synthetic Data Generation"
+            when: "patterns_annotated"
+        cycle_manager:
+          launch_contexts: ["mission-eval-2", "mission-eval-4"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "training-sign-off"
+        name: "Training Sign-off"
+        purpose: "HIL gateway for approving training direction and final promotion decisions. Dynamically renders forms defined in the cycle YAML."
+        interaction_model: "hil-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/training-sign-off"
+        dependent_missions: ["mission-eval-3", "mission-eval-6"]
+        datasets:
+          - "training_decisions"
+          - "prompt_diffs"
+        primary_actions:
+          - "render_training_direction_form"
+          - "render_promotion_sign_off_form"
+          - "approve_prompt_diff"
+          - "view_decision_history"
+        hil_forms:
+          - "training_direction_approval"
+          - "promotion_sign_off"
+        mission_handoffs:
+          - target_mission: "mission-eval-4"
+            trigger_name: "Synthetic Data Generation"
+            when: "training_direction_approved"
+          - target_mission: "mission-eval-6"
+            trigger_name: "Training Promotion"
+            when: "promotion_approved"
+        cycle_manager:
+          launch_contexts: ["mission-eval-3", "mission-eval-6"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "training-corpus"
+        name: "Training Corpus"
+        purpose: "Manage synthetic training pairs, version prompt history, track benchmark trajectory, and export approved pairs as JSONL for fine-tuning."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/training-corpus"
+        dependent_missions: ["mission-eval-4", "mission-eval-5"]
+        datasets:
+          - "training_pairs"
+          - "prompt_versions"
+        primary_actions:
+          - "view_training_pairs"
+          - "approve_training_pair"
+          - "export_jsonl"
+          - "add_prompt_version"
+          - "set_active_prompt"
+          - "view_benchmark_trajectory"
+        mission_handoffs:
+          - target_mission: "mission-eval-5"
+            trigger_name: "Shadow Run Validation"
+            when: "training_pairs_approved"
+        cycle_manager:
+          launch_contexts: ["mission-eval-4", "mission-eval-5"]
+          surface: "modal"
+          app_builder_editable: true
+
+      - id: "promotion-gate"
+        name: "Promotion Gate"
+        purpose: "Review validation results, control rollout percentage, stage/promote/rollback agent updates, and monitor deployment health."
+        interaction_model: "form-workbench"
+        embed_mode: "cycle-modal"
+        external_mode: "secure-page"
+        route: "/promotion-gate"
+        dependent_missions: ["mission-eval-5", "mission-eval-6"]
+        datasets:
+          - "agent_updates"
+          - "deployment_log"
+        primary_actions:
+          - "stage_agent_update"
+          - "adjust_rollout_percentage"
+          - "promote_to_production"
+          - "rollback_agent"
+          - "view_deployment_log"
+        integration_actions:
+          - id: "promote_to_production"
+            providers: ["internal"]
+            source_dataset: "agent_updates"
+            writes_back:
+              - "status"
+              - "trafficPercent"
+              - "promotedAt"
+        mission_handoffs:
+          - target_mission: "mission-eval-6"
+            trigger_name: "Training Promotion"
+            when: "promotion_approved"
+        cycle_manager:
+          launch_contexts: ["mission-eval-5", "mission-eval-6"]
+          surface: "modal"
+          app_builder_editable: true

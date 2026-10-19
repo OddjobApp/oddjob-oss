@@ -1,0 +1,331 @@
+name: "Compliance Audit"
+version: "1.0"
+containers: {}
+description: "Automated compliance checking for SOC2, GDPR, HIPAA, and other frameworks. Generates compliance reports and remediation tickets."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Compliance Audit"
+  icon: "⚖️"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "operations"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 350000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+  security_standards:
+    required: true
+    path: "file://knowledge/guidelines/security_standards.md"
+
+integrations:
+  source_control:
+    required: true
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
+
+templates:
+  - id: "compliance_report_template"
+    path: "file://knowledge/document-templates/compliance_report_template.md"
+  - id: "remediation_plan_template"
+    path: "file://knowledge/document-templates/remediation_plan_template.md"
+
+forms:
+  - id: "compliance_scope"
+    name: "Compliance Audit Scope"
+    description: "Define the scope of the compliance audit."
+    fields:
+      - name: "compliance_frameworks"
+        label: "Compliance Frameworks"
+        type: "multiselect"
+        required: true
+        options: ["SOC2", "GDPR", "HIPAA", "PCI-DSS", "OWASP", "ISO27001"]
+      - name: "audit_type"
+        label: "Audit Type"
+        type: "select"
+        required: true
+        options: ["Full Audit", "Focused Audit", "Pre-Audit Assessment"]
+      - name: "target_environment"
+        label: "Target Environment"
+        type: "select"
+        required: true
+        options: ["Production", "Staging", "Development", "All Environments"]
+      - name: "audit_period"
+        label: "Audit Period"
+        type: "select"
+        required: true
+        options: ["Last 30 Days", "Last 90 Days", "Last 6 Months", "Last 12 Months"]
+      - name: "focus_areas"
+        label: "Focus Areas"
+        type: "multiselect"
+        required: false
+        options: ["Data Privacy", "Access Control", "Encryption", "Logging & Monitoring", "Incident Response", "Vendor Management"]
+
+  - id: "compliance_review"
+    name: "Compliance Audit Review"
+    description: "Review and approve the compliance audit findings."
+    fields:
+      - name: "audit_approved"
+        label: "Audit Approval"
+        type: "select"
+        required: true
+        options: ["Approve & Create Remediation Tickets", "Request Additional Scans", "Reject"]
+      - name: "critical_compliance_issues"
+        label: "Critical Compliance Issues"
+        type: "select"
+        required: true
+        options: ["None - Compliant", "Minor Issues Found", "Major Issues Found", "Critical Issues Found"]
+      - name: "remediation_priority"
+        label: "Remediation Priority"
+        type: "select"
+        required: true
+        options: ["Immediate (P0)", "High Priority (P1)", "Standard Priority (P2)", "Low Priority (P3)"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-compliance-specialist"
+    name: "Regulatory Compliance Auditor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 250000
+    soul_profile:
+      archetype: "The Compliance Guardian"
+      legend: "Audits systems against compliance frameworks and generates remediation plans."
+      traits: { compliance: 100, creativity: 5, persistence: 95 }
+    system_prompt: "file://knowledge/prompts/compliance-specialist.md"
+    boundaries: ["server/", "client/", "shared/schema/"]
+    permissions: ["github:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["workspace_read_file", "workspace_search", "knowledge_graph_query", "jira_create_bug", "confluence_publish", "slack_post_message", "run_dependency_audit"]
+
+  - id: "ai-security-specialist"
+    name: "Security Vulnerability & Compliance Auditor"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Security Guardian"
+      legend: "Reviews security controls for compliance requirements."
+      traits: { compliance: 100, creativity: 10, persistence: 95 }
+    system_prompt: "file://knowledge/prompts/security-specialist.md"
+    boundaries: ["server/", "client/", "shared/schema/"]
+    permissions: ["github:read", "slack:read"]
+    tools: ["workspace_read_file", "workspace_search", "knowledge_graph_query"]
+
+missions:
+  - id: "mission-scan-controls"
+    name: "Scan Compliance Controls"
+    objective: "Scan systems for compliance control implementation"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger:
+      type: "manual"
+      source: "ops_workbench"
+    primary_agent: "ai-compliance-specialist"
+    inputs: ["compliance_scope"]
+    outputs: ["control_scan_results"]
+    sequence:
+      - step_code: "SCAN-1"
+        action: "scan_access_control"
+        description: "Scan access control implementations"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+      - step_code: "SCAN-2"
+        action: "scan_encryption"
+        description: "Scan encryption implementations"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+      - step_code: "SCAN-3"
+        action: "scan_logging"
+        description: "Scan logging and monitoring implementations"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+      - step_code: "SCAN-4"
+        action: "scan_data_privacy"
+        description: "Scan data privacy controls"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+      - step_code: "SCAN-5"
+        action: "scan_incident_response"
+        description: "Scan incident response procedures"
+        estimated_duration_minutes: 20
+        tool: "workspace_search"
+
+  - id: "mission-audit-frameworks"
+    name: "Audit Against Frameworks"
+    objective: "Audit controls against selected compliance frameworks"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 3
+    trigger: "on_success(mission-scan-controls)"
+    primary_agent: "ai-compliance-specialist"
+    inputs: ["control_scan_results"]
+    outputs: ["framework_audit_results"]
+    sequence:
+      - step_code: "AUDIT-1"
+        action: "audit_soc2"
+        description: "Audit against SOC2 requirements"
+        estimated_duration_minutes: 30
+      - step_code: "AUDIT-2"
+        action: "audit_gdpr"
+        description: "Audit against GDPR requirements"
+        estimated_duration_minutes: 30
+      - step_code: "AUDIT-3"
+        action: "audit_hipaa"
+        description: "Audit against HIPAA requirements"
+        estimated_duration_minutes: 30
+      - step_code: "AUDIT-4"
+        action: "audit_pci_dss"
+        description: "Audit against PCI-DSS requirements"
+        estimated_duration_minutes: 30
+      - step_code: "AUDIT-5"
+        action: "audit_owasp"
+        description: "Audit against OWASP requirements"
+        estimated_duration_minutes: 30
+      - step_code: "AUDIT-6"
+        action: "audit_iso27001"
+        description: "Audit against ISO27001 requirements"
+        estimated_duration_minutes: 30
+
+  - id: "mission-generate-report"
+    name: "Generate Compliance Report"
+    objective: "Generate comprehensive compliance audit report"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-audit-frameworks)"
+    primary_agent: "ai-compliance-specialist"
+    inputs: ["framework_audit_results"]
+    outputs: ["compliance_report"]
+    sequence:
+      - step_code: "REPORT-1"
+        action: "compile_findings"
+        description: "Compile all compliance findings"
+        estimated_duration_minutes: 30
+      - step_code: "REPORT-2"
+        action: "assess_risk"
+        description: "Assess compliance risk levels"
+        estimated_duration_minutes: 20
+      - step_code: "REPORT-3"
+        action: "generate_remediation_plan"
+        description: "Generate remediation plan"
+        estimated_duration_minutes: 30
+        template: "remediation_plan_template"
+      - step_code: "REPORT-4"
+        action: "compile_report"
+        description: "Compile comprehensive compliance report"
+        estimated_duration_minutes: 20
+        template: "compliance_report_template"
+
+  - id: "mission-review-audit"
+    name: "Review Compliance Audit"
+    objective: "Human review and approval of compliance audit"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-report)"
+    primary_agent: "ai-compliance-specialist"
+    inputs: ["compliance_report"]
+    outputs: ["approved_audit"]
+    requires_human: true
+    form_ref: "compliance_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_audit"
+        description: "Present compliance audit for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect compliance team approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_audit"
+        description: "Finalize audit based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-create-remediation-tickets"
+    name: "Create Remediation Tickets"
+    objective: "Create JIRA tickets for compliance remediation"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-audit)"
+    primary_agent: "ai-compliance-specialist"
+    inputs: ["approved_audit"]
+    outputs: ["remediation_tickets"]
+    sequence:
+      - step_code: "REM-1"
+        action: "create_critical_tickets"
+        description: "Create P0/P1 tickets for critical compliance issues"
+        estimated_duration_minutes: 20
+        tool: "jira_create_bug"
+      - step_code: "REM-2"
+        action: "create_standard_tickets"
+        description: "Create P2/P3 tickets for standard compliance issues"
+        estimated_duration_minutes: 15
+        tool: "jira_create_bug"
+      - step_code: "REM-3"
+        action: "publish_audit_report"
+        description: "Publish audit report to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "REM-4"
+        action: "notify_compliance_team"
+        description: "Notify compliance team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

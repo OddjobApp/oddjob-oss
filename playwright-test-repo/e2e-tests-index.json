@@ -1,0 +1,695 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-22T17:08:39.651Z",
+  "catalogPath": "tests/suites.json",
+  "suites": [
+    {
+      "id": "platform.smoke",
+      "name": "Platform Shell & Navigation",
+      "path": "tests/smoke",
+      "domain": "platform",
+      "feature": "shell-navigation",
+      "tier": "smoke",
+      "owner": "platform",
+      "routes": [
+        "/",
+        "/dashboard"
+      ],
+      "tags": [
+        "smoke",
+        "navigation",
+        "critical"
+      ],
+      "schedule": "per-commit",
+      "description": "Critical availability, authenticated shell, and primary navigation checks.",
+      "testCount": 1,
+      "behaviorCount": 1,
+      "files": [
+        "playwright-test-repo/tests/smoke/dashboard.spec.ts"
+      ]
+    },
+    {
+      "id": "health.e2e-testing",
+      "name": "E2E Test Health",
+      "path": "tests/features/health",
+      "domain": "health",
+      "feature": "e2e-testing",
+      "tier": "feature",
+      "owner": "platform",
+      "routes": [
+        "/health",
+        "/health/e2e-tests"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "schedule": "on-change",
+      "description": "Test health, suite execution, incidents, and validation-loop behavior.",
+      "testCount": 17,
+      "behaviorCount": 17,
+      "files": [
+        "playwright-test-repo/tests/features/health/e2e-test-health-contracts.spec.ts",
+        "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts"
+      ]
+    },
+    {
+      "id": "platform-maintenance.documentation",
+      "name": "Platform Documentation & Change Register",
+      "path": "tests/features/platform-maintenance",
+      "domain": "platform-maintenance",
+      "feature": "documentation",
+      "tier": "feature",
+      "owner": "platform",
+      "routes": [
+        "/platform-maintenance/documentation"
+      ],
+      "tags": [
+        "documentation",
+        "change-register"
+      ],
+      "schedule": "on-change",
+      "description": "Generated specifications, freshness, release notes, and change-register workflows.",
+      "testCount": 5,
+      "behaviorCount": 5,
+      "files": [
+        "playwright-test-repo/tests/features/platform-maintenance/documentation.spec.ts"
+      ]
+    },
+    {
+      "id": "sdlc.change-validation",
+      "name": "Change Validation Workflow",
+      "path": "tests/workflows",
+      "domain": "sdlc-pipeline",
+      "feature": "change-validation",
+      "tier": "workflow",
+      "owner": "platform",
+      "routes": [
+        "/health/e2e-tests",
+        "/health/pulse"
+      ],
+      "tags": [
+        "workflow",
+        "system-graph",
+        "pulse"
+      ],
+      "schedule": "on-change",
+      "description": "Version commit through behavior reconciliation, test execution, documentation, and Pulse.",
+      "testCount": 4,
+      "behaviorCount": 4,
+      "files": [
+        "playwright-test-repo/tests/workflows/change-validation.spec.ts"
+      ]
+    },
+    {
+      "id": "platform.accessibility",
+      "name": "Critical Route Accessibility",
+      "path": "tests/accessibility",
+      "domain": "platform",
+      "feature": "accessibility",
+      "tier": "accessibility",
+      "owner": "platform",
+      "routes": [
+        "/health",
+        "/health/e2e-tests",
+        "/platform-maintenance/documentation"
+      ],
+      "tags": [
+        "accessibility",
+        "critical-routes"
+      ],
+      "schedule": "nightly",
+      "description": "Keyboard, semantic navigation, and critical-route accessibility checks.",
+      "testCount": 4,
+      "behaviorCount": 4,
+      "files": [
+        "playwright-test-repo/tests/accessibility/critical-routes.spec.ts"
+      ]
+    },
+    {
+      "id": "generated.ui-contracts",
+      "name": "Generated UI Behavior Contracts",
+      "path": "tests/regression/generated",
+      "domain": "platform",
+      "feature": "generated-ui-contracts",
+      "tier": "generated",
+      "owner": "platform",
+      "routes": [],
+      "tags": [
+        "generated",
+        "behavior-contract"
+      ],
+      "schedule": "on-change",
+      "description": "High-confidence, low-risk atomic tests authored from uncovered UI behavior contracts.",
+      "testCount": 1,
+      "behaviorCount": 1,
+      "files": [
+        "playwright-test-repo/tests/regression/generated/e2e-runner-ready.spec.ts"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "id": "critical-routes:offers_a_keyboard_first_skip_link_on_health",
+      "testName": "offers a keyboard-first skip link on Health",
+      "filePath": "playwright-test-repo/tests/accessibility/critical-routes.spec.ts",
+      "code": "test('offers a keyboard-first skip link on Health', async ({ page }) => {\n    // @behavior platform.accessibility.health-skip-link\n    // @tag accessibility keyboard health critical\n\n    await page.goto('/health');\n    await page.keyboard.press('Tab');\n\n    const skipLink = page.getByRole('link', { name: 'Skip to main content' });\n    await expect(skipLink).toBeFocused();\n    await expect(skipLink).toHaveAttribute('href', '#main-content');\n    await expect(page.locator('#main-content')).toBeAttached();\n  })",
+      "startLine": 4,
+      "endLine": 15,
+      "behaviorIds": [
+        "platform.accessibility.health-skip-link"
+      ],
+      "tags": [
+        "accessibility",
+        "critical-routes"
+      ],
+      "suiteId": "platform.accessibility"
+    },
+    {
+      "id": "critical-routes:gives_health_destination_cards_accessible_link_names",
+      "testName": "gives Health destination cards accessible link names",
+      "filePath": "playwright-test-repo/tests/accessibility/critical-routes.spec.ts",
+      "code": "test('gives Health destination cards accessible link names', async ({ page }) => {\n    // @behavior platform.accessibility.health-card-link-names\n    // @tag accessibility semantics health navigation\n\n    await page.goto('/health');\n\n    await expect(\n      page.locator('a[href=\"/health/pulse\"]').filter({ hasText: 'Live system pulse' }),\n    ).toBeVisible();\n    await expect(\n      page.locator('a[href=\"/health/e2e-tests\"]').filter({ hasText: 'Playwright coverage' }),\n    ).toBeVisible();\n    await expect(\n      page.locator('a[href=\"/health/monitoring\"]').filter({ hasText: 'Runtime monitoring' }),\n    ).toBeVisible();\n  })",
+      "startLine": 17,
+      "endLine": 32,
+      "behaviorIds": [
+        "platform.accessibility.health-card-link-names"
+      ],
+      "tags": [
+        "accessibility",
+        "critical-routes"
+      ],
+      "suiteId": "platform.accessibility"
+    },
+    {
+      "id": "critical-routes:labels_e2e_execution_and_recovery_controls_by_their_target_test",
+      "testName": "labels E2E execution and recovery controls by their target test",
+      "filePath": "playwright-test-repo/tests/accessibility/critical-routes.spec.ts",
+      "code": "test('labels E2E execution and recovery controls by their target test', async ({ page }) => {\n    // @behavior platform.accessibility.e2e-control-names\n    // @tag accessibility semantics e2e-testing controls\n\n    await page.goto('/health/e2e-tests');\n\n    await expect(page.getByRole('button', { name: /^Run should load the dashboard/ })).toBeVisible();\n    await expect(page.getByRole('button', { name: /^Self-heal should load the dashboard/ })).toBeVisible();\n    await expect(page.getByRole('button', { name: 'Refresh status', exact: true })).toBeVisible();\n    await expect(page.getByRole('button', { name: 'Run suite now', exact: true })).toBeVisible();\n  })",
+      "startLine": 34,
+      "endLine": 44,
+      "behaviorIds": [
+        "platform.accessibility.e2e-control-names"
+      ],
+      "tags": [
+        "accessibility",
+        "critical-routes"
+      ],
+      "suiteId": "platform.accessibility"
+    },
+    {
+      "id": "critical-routes:exposes_documentation_navigation_as_an_accessible_tab_set",
+      "testName": "exposes documentation navigation as an accessible tab set",
+      "filePath": "playwright-test-repo/tests/accessibility/critical-routes.spec.ts",
+      "code": "test('exposes documentation navigation as an accessible tab set', async ({ page }) => {\n    // @behavior platform.accessibility.documentation-tabs\n    // @tag accessibility semantics documentation tabs\n\n    await page.goto('/platform-maintenance/documentation?tab=ui');\n\n    const tabList = page.getByRole('tablist');\n    await expect(tabList).toBeVisible();\n    await expect(page.getByRole('tab', { name: 'Current Modules', exact: true })).toBeVisible();\n    await expect(page.getByRole('tab', { name: 'UI Spec', exact: true })).toHaveAttribute(\n      'aria-selected',\n      'true',\n    );\n    await expect(page.getByRole('tab', { name: 'Change Register', exact: true })).toBeVisible();\n  })",
+      "startLine": 46,
+      "endLine": 60,
+      "behaviorIds": [
+        "platform.accessibility.documentation-tabs"
+      ],
+      "tags": [
+        "accessibility",
+        "critical-routes"
+      ],
+      "suiteId": "platform.accessibility"
+    },
+    {
+      "id": "e2e-test-health-contracts:opens_e2e_test_health_from_the_health_overview",
+      "testName": "opens E2E Test Health from the Health overview",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health-contracts.spec.ts",
+      "code": "test('opens E2E Test Health from the Health overview', async ({ page }) => {\n    // @behavior health.e2e-testing.navigation-from-health-overview\n    // @tag health e2e-testing navigation\n\n    await page.goto('/health');\n\n    const e2eTestingCard = page.getByRole('link', { name: /E2E Testing/i });\n    await expect(e2eTestingCard).toBeVisible();\n    await e2eTestingCard.click();\n\n    await expect(page).toHaveURL(/\\/health\\/e2e-tests$/);\n    await expect(page.getByRole('heading', { name: 'E2E Test Health' })).toBeVisible();\n  })",
+      "startLine": 4,
+      "endLine": 16,
+      "behaviorIds": [
+        "health.e2e-testing.navigation-from-health-overview"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health-contracts:shows_every_registered_suite",
+      "testName": "shows every registered suite",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health-contracts.spec.ts",
+      "code": "test('shows every registered suite', async ({ page }) => {\n    // @behavior health.e2e-testing.registered-suites-visible\n    // @tag health e2e-testing manifest\n\n    await page.goto('/health/e2e-tests');\n\n    for (const suiteName of [\n      'Platform Shell & Navigation',\n      'E2E Test Health',\n      'Platform Documentation & Change Register',\n      'Change Validation Workflow',\n      'Critical Route Accessibility',\n      'Generated UI Behavior Contracts',\n    ]) {\n      await expect(page.getByText(suiteName, { exact: true }).last()).toBeVisible();\n    }\n  })",
+      "startLine": 18,
+      "endLine": 34,
+      "behaviorIds": [
+        "health.e2e-testing.registered-suites-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health-contracts:links_validation_evidence_to_documentation_and_the_change_register",
+      "testName": "links validation evidence to documentation and the change register",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health-contracts.spec.ts",
+      "code": "test('links validation evidence to documentation and the change register', async ({ page }) => {\n    // @behavior health.e2e-testing.validation-evidence-navigation\n    // @tag health e2e-testing documentation change-register\n\n    await page.goto('/health/e2e-tests');\n\n    await expect(page.getByRole('link', { name: 'Documentation' })).toHaveAttribute(\n      'href',\n      '/platform-maintenance/documentation?tab=modules&feature=e2e-testing',\n    );\n    await expect(page.getByRole('link', { name: 'Change register' })).toHaveAttribute(\n      'href',\n      '/platform-maintenance/documentation?tab=changes',\n    );\n  })",
+      "startLine": 36,
+      "endLine": 50,
+      "behaviorIds": [
+        "health.e2e-testing.validation-evidence-navigation"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health-contracts:exposes_focused_execution_controls_for_indexed_tests",
+      "testName": "exposes focused execution controls for indexed tests",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health-contracts.spec.ts",
+      "code": "test('exposes focused execution controls for indexed tests', async ({ page }) => {\n    // @behavior health.e2e-testing.focused-test-controls\n    // @tag health e2e-testing execution self-healing\n\n    await page.goto('/health/e2e-tests');\n\n    await expect(page.getByRole('button', { name: /^Run should load the dashboard/ })).toBeVisible();\n    await expect(page.getByRole('button', { name: /^Self-heal should load the dashboard/ })).toBeVisible();\n  })",
+      "startLine": 52,
+      "endLine": 60,
+      "behaviorIds": [
+        "health.e2e-testing.focused-test-controls"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_load_the_e2e_test_health_dashboard_page",
+      "testName": "should load the E2E test health dashboard page",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should load the E2E test health dashboard page', async ({ page }) => {\r\n    // @behavior health.e2e-testing.page-load\r\n    // @tag health e2e-testing critical\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('heading', { name: 'E2E Test Health' })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 4,
+      "endLine": 13,
+      "behaviorIds": [
+        "health.e2e-testing.page-load"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_show_indexed_test_suites_section",
+      "testName": "should show indexed test suites section",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should show indexed test suites section', async ({ page }) => {\r\n    // @behavior health.e2e-testing.suites-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('heading', { name: 'Indexed test suites' })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 15,
+      "endLine": 24,
+      "behaviorIds": [
+        "health.e2e-testing.suites-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_display_automated_validation_path_section",
+      "testName": "should display automated validation path section",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should display automated validation path section', async ({ page }) => {\r\n    // @behavior health.e2e-testing.validation-path-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('heading', { name: 'Automated validation path' })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 26,
+      "endLine": 35,
+      "behaviorIds": [
+        "health.e2e-testing.validation-path-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_show_run_suite_button_when_tests_are_available",
+      "testName": "should show run suite button when tests are available",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should show run suite button when tests are available', async ({ page }) => {\r\n    // @behavior health.e2e-testing.run-suite-button-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('button', { name: /run suite now/i })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 37,
+      "endLine": 46,
+      "behaviorIds": [
+        "health.e2e-testing.run-suite-button-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_display_health_statistics_cards",
+      "testName": "should display health statistics cards",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should display health statistics cards', async ({ page }) => {\r\n    // @behavior health.e2e-testing.stats-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByText('Indexed suites')\r\n    ).toBeVisible();\r\n    await expect(\r\n      page.getByText('Latest pass rate')\r\n    ).toBeVisible();\r\n    await expect(\r\n      page.getByText('Open failures')\r\n    ).toBeVisible();\r\n    await expect(\r\n      page.getByText('Runner state')\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 48,
+      "endLine": 66,
+      "behaviorIds": [
+        "health.e2e-testing.stats-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_show_refresh_status_button",
+      "testName": "should show refresh status button",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should show refresh status button', async ({ page }) => {\r\n    // @behavior health.e2e-testing.refresh-button-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('button', { name: 'Refresh status', exact: true })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 68,
+      "endLine": 77,
+      "behaviorIds": [
+        "health.e2e-testing.refresh-button-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_display_individual_test_run_buttons_when_tests_are_available",
+      "testName": "should display individual test run buttons when tests are available",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should display individual test run buttons when tests are available', async ({ page }) => {\r\n    // @behavior health.e2e-testing.test-run-buttons-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    // Wait for the indexed test suites section to appear\r\n    await page.waitForSelector('text=Indexed test suites', { timeout: 10000 });\r\n    \r\n    const runTestButtons = page.getByRole('button', { name: /run test/i });\r\n    const count = await runTestButtons.count();\r\n    \r\n    // Only assert if tests are actually loaded\r\n    if (count > 0) {\r\n      await expect(runTestButtons.nth(0)).toBeVisible();\r\n    }\r\n    // If no tests available, the test passes without assertion (buttons may not exist)\r\n  })",
+      "startLine": 79,
+      "endLine": 96,
+      "behaviorIds": [
+        "health.e2e-testing.test-run-buttons-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_display_self_healing_buttons_for_individual_tests",
+      "testName": "should display self-healing buttons for individual tests",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should display self-healing buttons for individual tests', async ({ page }) => {\r\n    // @behavior health.e2e-testing.self-heal-buttons-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    // Wait for the indexed test suites section to appear\r\n    await page.waitForSelector('text=Indexed test suites', { timeout: 10000 });\r\n    \r\n    const selfHealButtons = page.getByRole('button', { name: /self-heal/i });\r\n    const count = await selfHealButtons.count();\r\n    \r\n    // Only assert if tests are actually loaded\r\n    if (count > 0) {\r\n      await expect(selfHealButtons.nth(0)).toBeVisible();\r\n    }\r\n    // If no tests available, the test passes without assertion (buttons may not exist)\r\n  })",
+      "startLine": 98,
+      "endLine": 115,
+      "behaviorIds": [
+        "health.e2e-testing.self-heal-buttons-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_show_incident_timeline_section",
+      "testName": "should show incident timeline section",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should show incident timeline section', async ({ page }) => {\r\n    // @behavior health.e2e-testing.incident-timeline-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('heading', { name: /incident/i })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 117,
+      "endLine": 126,
+      "behaviorIds": [
+        "health.e2e-testing.incident-timeline-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_display_execution_history_section",
+      "testName": "should display execution history section",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should display execution history section', async ({ page }) => {\r\n    // @behavior health.e2e-testing.execution-history-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByText(/execution history/i).first()\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 128,
+      "endLine": 137,
+      "behaviorIds": [
+        "health.e2e-testing.execution-history-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_show_documentation_link_for_e2e_testing",
+      "testName": "should show documentation link for E2E testing",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should show documentation link for E2E testing', async ({ page }) => {\r\n    // @behavior health.e2e-testing.documentation-link-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('link', { name: /documentation/i })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 139,
+      "endLine": 148,
+      "behaviorIds": [
+        "health.e2e-testing.documentation-link-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_display_change_register_link",
+      "testName": "should display change register link",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should display change register link', async ({ page }) => {\r\n    // @behavior health.e2e-testing.change-register-link-visible\r\n    // @tag health e2e-testing\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    await expect(\r\n      page.getByRole('link', { name: /change register/i })\r\n    ).toBeVisible();\r\n  })",
+      "startLine": 150,
+      "endLine": 159,
+      "behaviorIds": [
+        "health.e2e-testing.change-register-link-visible"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "e2e-test-health:should_update_form_fields_and_filter_test_list",
+      "testName": "should update form fields and filter test list",
+      "filePath": "playwright-test-repo/tests/features/health/e2e-test-health.spec.ts",
+      "code": "test('should update form fields and filter test list', async ({ page }) => {\r\n    // @behavior health.e2e-testing.filter-form-fields\r\n    // @tag health e2e-testing form-fields\r\n\r\n    await page.goto('/health/e2e-tests');\r\n\r\n    const filterInput = page.getByRole('textbox', { name: /filter test suites or specs/i });\r\n    await expect(filterInput).toBeVisible();\r\n\r\n    await filterInput.fill('Platform Shell');\r\n    await expect(filterInput).toHaveValue('Platform Shell');\r\n\r\n    await filterInput.fill('');\r\n    await expect(filterInput).toHaveValue('');\r\n  })",
+      "startLine": 161,
+      "endLine": 175,
+      "behaviorIds": [
+        "health.e2e-testing.filter-form-fields"
+      ],
+      "tags": [
+        "health",
+        "playwright",
+        "change-validation"
+      ],
+      "suiteId": "health.e2e-testing"
+    },
+    {
+      "id": "documentation:loads_the_documentation_workspace_with_platform_health_indicators",
+      "testName": "loads the documentation workspace with platform health indicators",
+      "filePath": "playwright-test-repo/tests/features/platform-maintenance/documentation.spec.ts",
+      "code": "test('loads the documentation workspace with platform health indicators', async ({ page }) => {\n    // @behavior platform-maintenance.documentation.workspace-visible\n    // @tag documentation platform-maintenance critical\n\n    await page.goto('/platform-maintenance/documentation');\n\n    await expect(page.getByRole('heading', { name: 'Platform Documentation' })).toBeVisible();\n    await expect(page.getByText('Coverage', { exact: true })).toBeVisible();\n    await expect(page.getByText('Freshness Score', { exact: true })).toBeVisible();\n    await expect(page.getByText('Total Docs', { exact: true })).toBeVisible();\n    await expect(page.getByText('Maintenance Scheduler', { exact: true })).toBeVisible();\n  })",
+      "startLine": 4,
+      "endLine": 15,
+      "behaviorIds": [
+        "platform-maintenance.documentation.workspace-visible"
+      ],
+      "tags": [
+        "documentation",
+        "change-register"
+      ],
+      "suiteId": "platform-maintenance.documentation"
+    },
+    {
+      "id": "documentation:exposes_each_documentation_surface_as_a_named_tab",
+      "testName": "exposes each documentation surface as a named tab",
+      "filePath": "playwright-test-repo/tests/features/platform-maintenance/documentation.spec.ts",
+      "code": "test('exposes each documentation surface as a named tab', async ({ page }) => {\n    // @behavior platform-maintenance.documentation.surfaces-visible\n    // @tag documentation platform-maintenance navigation\n\n    await page.goto('/platform-maintenance/documentation');\n\n    for (const tabName of [\n      'Current Modules',\n      'API Spec',\n      'UI Spec',\n      'Health',\n      'Maintenance',\n      'Change Register',\n      'Release Notes',\n      'Search',\n    ]) {\n      await expect(page.getByRole('tab', { name: tabName, exact: true })).toBeVisible();\n    }\n  })",
+      "startLine": 17,
+      "endLine": 35,
+      "behaviorIds": [
+        "platform-maintenance.documentation.surfaces-visible"
+      ],
+      "tags": [
+        "documentation",
+        "change-register"
+      ],
+      "suiteId": "platform-maintenance.documentation"
+    },
+    {
+      "id": "documentation:deep_links_to_the_e2e_architecture_reference_with_trust_status",
+      "testName": "deep-links to the E2E architecture reference with trust status",
+      "filePath": "playwright-test-repo/tests/features/platform-maintenance/documentation.spec.ts",
+      "code": "test('deep-links to the E2E architecture reference with trust status', async ({ page }) => {\n    // @behavior platform-maintenance.documentation.e2e-reference-deep-link\n    // @tag documentation platform-maintenance e2e-testing\n\n    await page.goto('/platform-maintenance/documentation?tab=modules&feature=e2e-testing');\n\n    await expect(page.getByRole('heading', { name: 'E2E Testing', exact: true })).toBeVisible();\n    await expect(page.getByRole('heading', { name: /Implementation status:/ })).toBeVisible();\n    await expect(page.getByRole('button', { name: 'Copy markdown', exact: true })).toBeVisible();\n    await expect(page.getByRole('button', { name: 'Regenerate', exact: true })).toBeVisible();\n  })",
+      "startLine": 37,
+      "endLine": 47,
+      "behaviorIds": [
+        "platform-maintenance.documentation.e2e-reference-deep-link"
+      ],
+      "tags": [
+        "documentation",
+        "change-register"
+      ],
+      "suiteId": "platform-maintenance.documentation"
+    },
+    {
+      "id": "documentation:opens_the_stored_ui_specification_from_its_url_state",
+      "testName": "opens the stored UI specification from its URL state",
+      "filePath": "playwright-test-repo/tests/features/platform-maintenance/documentation.spec.ts",
+      "code": "test('opens the stored UI specification from its URL state', async ({ page }) => {\n    // @behavior platform-maintenance.documentation.ui-spec-deep-link\n    // @tag documentation platform-maintenance ui-spec\n\n    await page.goto('/platform-maintenance/documentation?tab=ui');\n\n    await expect(page.getByRole('tab', { name: 'UI Spec', exact: true })).toHaveAttribute(\n      'data-state',\n      'active',\n    );\n    await expect(page.getByRole('heading', { name: /Implementation status:/ })).toBeVisible();\n    await expect(page.getByRole('button', { name: 'Copy markdown', exact: true })).toBeVisible();\n  })",
+      "startLine": 49,
+      "endLine": 61,
+      "behaviorIds": [
+        "platform-maintenance.documentation.ui-spec-deep-link"
+      ],
+      "tags": [
+        "documentation",
+        "change-register"
+      ],
+      "suiteId": "platform-maintenance.documentation"
+    },
+    {
+      "id": "documentation:opens_the_dated_change_register_from_its_url_state",
+      "testName": "opens the dated change register from its URL state",
+      "filePath": "playwright-test-repo/tests/features/platform-maintenance/documentation.spec.ts",
+      "code": "test('opens the dated change register from its URL state', async ({ page }) => {\n    // @behavior platform-maintenance.documentation.change-register-deep-link\n    // @tag documentation platform-maintenance change-register\n\n    await page.goto('/platform-maintenance/documentation?tab=changes');\n\n    await expect(page.getByRole('tab', { name: 'Change Register', exact: true })).toHaveAttribute(\n      'data-state',\n      'active',\n    );\n    await expect(page.getByRole('heading', { name: 'Change register', exact: true })).toBeVisible();\n    await expect(\n      page.getByText('Every meaningful documentation regeneration is dated, classified, and explained.'),\n    ).toBeVisible();\n  })",
+      "startLine": 63,
+      "endLine": 77,
+      "behaviorIds": [
+        "platform-maintenance.documentation.change-register-deep-link"
+      ],
+      "tags": [
+        "documentation",
+        "change-register"
+      ],
+      "suiteId": "platform-maintenance.documentation"
+    },
+    {
+      "id": "e2e-runner-ready:shows_the_e2e_runner_ready_state",
+      "testName": "shows the E2E runner ready state",
+      "filePath": "playwright-test-repo/tests/regression/generated/e2e-runner-ready.spec.ts",
+      "code": "test('shows the E2E runner ready state', async ({ page }) => {\n  // @behavior generated.ui-contracts.e2e-runner-ready-state\n  // @tag generated behavior-contract health e2e-testing\n\n  await page.goto('/health/e2e-tests');\n  await expect(page.getByText('Runner state', { exact: true })).toBeVisible();\n  await expect(page.getByText('Ready', { exact: true })).toBeVisible();\n})",
+      "startLine": 3,
+      "endLine": 10,
+      "behaviorIds": [
+        "generated.ui-contracts.e2e-runner-ready-state"
+      ],
+      "tags": [
+        "generated",
+        "behavior-contract"
+      ],
+      "suiteId": "generated.ui-contracts"
+    },
+    {
+      "id": "dashboard:should_load_the_dashboard_and_display_sidebar_links",
+      "testName": "should load the dashboard and display sidebar links",
+      "filePath": "playwright-test-repo/tests/smoke/dashboard.spec.ts",
+      "code": "test('should load the dashboard and display sidebar links', async ({ page }) => {\n    // @behavior platform.shell-navigation.dashboard-sidebar-visible\n    // @tag smoke navigation critical\n\n    console.log('[Smoke] Opening main page...');\r\n    await page.goto('/');\r\n\r\n    console.log('[Smoke] Verifying title...');\r\n    await expect(page).toHaveTitle(/Oddjob/);\r\n\r\n    console.log('[Smoke] Checking dashboard sidebar link...');\r\n    await expect(page.locator('[data-testid=\"link-dashboard\"]')).toBeVisible();\r\n  })",
+      "startLine": 4,
+      "endLine": 16,
+      "behaviorIds": [
+        "platform.shell-navigation.dashboard-sidebar-visible"
+      ],
+      "tags": [
+        "smoke",
+        "navigation",
+        "critical"
+      ],
+      "suiteId": "platform.smoke"
+    },
+    {
+      "id": "change-validation:presents_the_governed_validation_stages_in_execution_order",
+      "testName": "presents the governed validation stages in execution order",
+      "filePath": "playwright-test-repo/tests/workflows/change-validation.spec.ts",
+      "code": "test('presents the governed validation stages in execution order', async ({ page }) => {\n    // @behavior sdlc.change-validation.governed-stages-visible\n    // @tag workflow change-validation governance\n\n    await page.goto('/health/e2e-tests');\n\n    await expect(page.getByRole('heading', { name: 'Automated validation path' })).toBeVisible();\n    for (const stage of [\n      '1. Change registered',\n      '2. Impact scoped',\n      '3. Tests executed',\n      '4. Block assembled',\n      '5. Bug triaged',\n    ]) {\n      await expect(page.getByText(stage, { exact: true })).toBeVisible();\n    }\n  })",
+      "startLine": 4,
+      "endLine": 20,
+      "behaviorIds": [
+        "sdlc.change-validation.governed-stages-visible"
+      ],
+      "tags": [
+        "workflow",
+        "system-graph",
+        "pulse"
+      ],
+      "suiteId": "sdlc.change-validation"
+    },
+    {
+      "id": "change-validation:shows_graph_behavior_ids_beside_their_executable_atomic_tests",
+      "testName": "shows graph behavior IDs beside their executable atomic tests",
+      "filePath": "playwright-test-repo/tests/workflows/change-validation.spec.ts",
+      "code": "test('shows graph behavior IDs beside their executable atomic tests', async ({ page }) => {\n    // @behavior sdlc.change-validation.graph-test-traceability\n    // @tag workflow change-validation system-graph manifest\n\n    await page.goto('/health/e2e-tests');\n\n    await expect(\n      page.getByText(/sdlc\\.change-validation\\.governed-stages-visible/),\n    ).toBeVisible();\n    await expect(\n      page.getByText(/Atomic block \\/ change-validation:presents_the_governed_validation_stages/),\n    ).toBeVisible();\n  })",
+      "startLine": 22,
+      "endLine": 34,
+      "behaviorIds": [
+        "sdlc.change-validation.graph-test-traceability"
+      ],
+      "tags": [
+        "workflow",
+        "system-graph",
+        "pulse"
+      ],
+      "suiteId": "sdlc.change-validation"
+    },
+    {
+      "id": "change-validation:exposes_documentation_and_change_evidence_from_validation_health",
+      "testName": "exposes documentation and change evidence from validation health",
+      "filePath": "playwright-test-repo/tests/workflows/change-validation.spec.ts",
+      "code": "test('exposes documentation and change evidence from validation health', async ({ page }) => {\n    // @behavior sdlc.change-validation.documentation-evidence-visible\n    // @tag workflow change-validation documentation change-register\n\n    await page.goto('/health/e2e-tests');\n\n    await expect(page.getByText(/E2E documentation/)).toBeVisible();\n    await expect(page.getByText(/Latest register entry:/)).toBeVisible();\n    await expect(page.getByRole('link', { name: 'Documentation', exact: true })).toBeVisible();\n    await expect(page.getByRole('link', { name: 'Change register', exact: true })).toBeVisible();\n  })",
+      "startLine": 36,
+      "endLine": 46,
+      "behaviorIds": [
+        "sdlc.change-validation.documentation-evidence-visible"
+      ],
+      "tags": [
+        "workflow",
+        "system-graph",
+        "pulse"
+      ],
+      "suiteId": "sdlc.change-validation"
+    },
+    {
+      "id": "change-validation:provides_a_pulse_surface_for_pipeline_lifecycle_evidence",
+      "testName": "provides a Pulse surface for pipeline lifecycle evidence",
+      "filePath": "playwright-test-repo/tests/workflows/change-validation.spec.ts",
+      "code": "test('provides a Pulse surface for pipeline lifecycle evidence', async ({ page }) => {\n    // @behavior sdlc.change-validation.pulse-lifecycle-surface\n    // @tag workflow change-validation pulse events\n\n    await page.goto('/health/pulse');\n\n    await expect(page.getByRole('heading', { name: 'System Pulse' })).toBeVisible();\n    await expect(page.getByText('Live Activity Log', { exact: true })).toBeVisible();\n    await expect(page.getByText('Network Health', { exact: true })).toBeVisible();\n    await expect(page.getByText(/Protocol: SSE\\/EventStream/)).toBeVisible();\n  })",
+      "startLine": 48,
+      "endLine": 58,
+      "behaviorIds": [
+        "sdlc.change-validation.pulse-lifecycle-surface"
+      ],
+      "tags": [
+        "workflow",
+        "system-graph",
+        "pulse"
+      ],
+      "suiteId": "sdlc.change-validation"
+    }
+  ],
+  "summary": {
+    "suiteCount": 6,
+    "populatedSuiteCount": 6,
+    "testCount": 32,
+    "behaviorCount": 32,
+    "orphanTestCount": 0
+  }
+}

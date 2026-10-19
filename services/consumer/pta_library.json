@@ -1,0 +1,196 @@
+{
+    "version": "2.0.0",
+    "strategies": {
+        "S": {
+            "name": "The Rapid Unblocker",
+            "goal": "Immediate error resolution and unblocking.",
+            "tone": "Direct and Technical",
+            "max_tokens": 50,
+            "user_message": "Stuck? I can help diagnose what's going wrong.",
+            "user_cta": "Help me debug this",
+            "system_prompt": "You are a senior DevOps engineer. The user is stuck on a screen. Analyze their context (route/action) and the likely error. Provide a single, specific command or setting change to unblock them. Do not use pleasantries.",
+            "mcp_tools": [
+                "list_failed_jobs",
+                "get_system_health",
+                "search_knowledge_graph",
+                "sql_query"
+            ],
+            "card_hints": {
+                "alert-card": "User is looking at an alert. Check what's failing and suggest a fix.",
+                "execution-card": "User is looking at a failed execution. Explain the error and suggest resolution.",
+                "config-card": "User is stuck on configuration. Validate their settings or show correct syntax."
+            }
+        },
+        "C": {
+            "name": "The Insightful Architect",
+            "goal": "Explain the 'Why' and offer a structural fix.",
+            "tone": "Educational and encouraging",
+            "max_tokens": 60,
+            "user_message": "There might be a better way to approach this.",
+            "user_cta": "Show me a better approach",
+            "system_prompt": "The user understands the problem but needs a better approach. Explain why the current path is suboptimal and suggest a best-practice alternative (e.g., 'Use a Schedule instead of a cron loop'). Reference similar patterns in the system if helpful.",
+            "mcp_tools": [
+                "list_jobs",
+                "list_pipelines",
+                "get_job_schema",
+                "search_knowledge_graph"
+            ],
+            "card_hints": {
+                "job-card": "Suggest better job configuration or alternative job types.",
+                "pipeline-card": "Suggest improved pipeline architecture or step ordering.",
+                "config-card": "Show best practices for this configuration type."
+            }
+        },
+        "O": {
+            "name": "The Efficiency Expert",
+            "goal": "Accelerate the user to their end state.",
+            "tone": "Proactive and brief",
+            "max_tokens": 40,
+            "user_message": "I can help you get this done faster.",
+            "user_cta": "Generate this for me",
+            "system_prompt": "The user knows what they want (Outcome). Skip the manual steps and offer to generate the full config or pipeline for them immediately. Use MCP tools to create resources. Example: 'I'll create the JIRA query job and pipeline for you now.'",
+            "mcp_tools": [
+                "create_job",
+                "create_pipeline",
+                "add_pipeline_step",
+                "create_scheduled_job"
+            ],
+            "card_hints": {
+                "job-card": "Offer to complete the job configuration automatically.",
+                "pipeline-card": "Offer to generate remaining pipeline steps.",
+                "config-card": "Offer to fill in the configuration with best-practice defaults."
+            }
+        },
+        "R": {
+            "name": "The Tactical Librarian",
+            "goal": "Instant access to syntax, schema, or documentation.",
+            "tone": "Precise and technical",
+            "max_tokens": 80,
+            "user_message": "Looking for syntax or documentation?",
+            "user_cta": "Show me the reference",
+            "system_prompt": "The user is looking for a resource (docs, credential, schema). Use get_job_schema to provide the exact JSON schema. Show variable syntax ({{steps.X}}) or API endpoints they need. Be precise and provide copyable examples.",
+            "mcp_tools": [
+                "get_job_schema",
+                "get_pipeline_variable_syntax",
+                "list_credentials",
+                "search_knowledge_graph"
+            ],
+            "card_hints": {
+                "job-card": "Show the exact config schema for this job type with examples.",
+                "credential-card": "Show how to use this credential in job configurations.",
+                "config-card": "Provide exact field names, types, and valid values."
+            }
+        },
+        "E": {
+            "name": "The Quality Guardian",
+            "goal": "Verify success and suggest safeguards.",
+            "tone": "Reassuring and thorough",
+            "max_tokens": 50,
+            "user_message": "Nice work! Want me to verify this is set up correctly?",
+            "user_cta": "Verify my setup",
+            "system_prompt": "The user has completed a task. Suggest a verification step (e.g., 'Run a test job with dry-run mode') or a safety check (e.g., 'Add an alert for failures') to ensure long-term reliability. Use tools to check current state if helpful.",
+            "mcp_tools": [
+                "trigger_pipeline",
+                "get_system_health",
+                "list_recent_executions",
+                "get_entity_impact"
+            ],
+            "card_hints": {
+                "execution-card": "Verify the output looks correct and suggest monitoring.",
+                "pipeline-card": "Offer to run a test execution or add monitoring alerts.",
+                "stats-card": "Validate the metrics are within expected ranges."
+            }
+        }
+    },
+    "screen_hints": {
+        "/dashboard": {
+            "description": "User is on the main dashboard viewing system overview",
+            "likely_intent": "Get quick status or navigate to specific area",
+            "helpful_tools": [
+                "get_system_health",
+                "list_failed_jobs",
+                "list_recent_executions"
+            ]
+        },
+        "/jobs": {
+            "description": "User is browsing the jobs list",
+            "likely_intent": "Find a specific job or create a new one",
+            "helpful_tools": [
+                "list_jobs",
+                "get_job_schema",
+                "create_job"
+            ]
+        },
+        "/jobs/:id": {
+            "description": "User is configuring a specific job",
+            "likely_intent": "Edit job behavior or troubleshoot",
+            "helpful_tools": [
+                "get_job_details",
+                "get_job_schema",
+                "update_job"
+            ]
+        },
+        "/pipelines": {
+            "description": "User is browsing pipelines",
+            "likely_intent": "Find or create a workflow",
+            "helpful_tools": [
+                "list_pipelines",
+                "create_pipeline",
+                "get_pipeline_variable_syntax"
+            ]
+        },
+        "/pipelines/:id": {
+            "description": "User is building or editing a pipeline",
+            "likely_intent": "Add steps or troubleshoot flow",
+            "helpful_tools": [
+                "get_pipeline_details",
+                "add_pipeline_step",
+                "trigger_pipeline"
+            ]
+        },
+        "/alerts": {
+            "description": "User is investigating alerts",
+            "likely_intent": "Diagnose and resolve issues",
+            "helpful_tools": [
+                "list_failed_jobs",
+                "get_system_health",
+                "search_knowledge_graph"
+            ]
+        },
+        "/monitoring": {
+            "description": "User is monitoring system health",
+            "likely_intent": "Check performance or diagnose slowness",
+            "helpful_tools": [
+                "get_system_health",
+                "list_recent_executions",
+                "sql_query"
+            ]
+        },
+        "/knowledge/graph": {
+            "description": "User is exploring the knowledge graph",
+            "likely_intent": "Find entities or understand relationships",
+            "helpful_tools": [
+                "search_knowledge_graph",
+                "get_entity_impact",
+                "create_entity"
+            ]
+        },
+        "/schedules": {
+            "description": "User is managing schedules",
+            "likely_intent": "Set up timing patterns for automation",
+            "helpful_tools": [
+                "list_schedules",
+                "create_schedule",
+                "list_scheduled_jobs"
+            ]
+        },
+        "/credentials": {
+            "description": "User is managing credentials",
+            "likely_intent": "Add or check API credentials",
+            "helpful_tools": [
+                "list_credentials",
+                "get_credential_info"
+            ]
+        }
+    }
+}

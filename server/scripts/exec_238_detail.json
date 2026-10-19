@@ -1,0 +1,22 @@
+﻿[dotenv@17.2.3] injecting env (20) from .env -- tip: ΓÜÖ∩╕Å  suppress all logs with { quiet: true }
+{
+  id: 238,
+  run_uuid: '0909908e-1517-4a3f-9f67-b3ee8ac4a675',
+  pipeline_id: 43,
+  status: 'running',
+  started_at: 2026-02-14T03:08:00.555Z,
+  completed_at: null,
+  cancelled_at: null,
+  error: null,
+  organization_id: null,
+  created_by: '56c39562-0219-4c5d-8446-3d8c188eab26',
+  start_step_id: null,
+  ttl: null,
+  trace_id: '5ddadaae54ec0d8fe97aa8dff78124a7',
+  sampling_rate: '1.00',
+  trace_source: 'manual',
+  last_heartbeat: null,
+  parent_execution_id: null,
+  workgroup_id: 71,
+  version: 2
+}

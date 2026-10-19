@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar glyph: a bowler hat silhouette. Android tints it, so it is a single
+     white shape with no detail, as notification icons must be. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,5C8.7,5 6.5,7.6 6.3,11.2L6.1,14.3C3.6,14.8 2,15.6 2,16.6C2,18.4 6.5,19.5 12,19.5C17.5,19.5 22,18.4 22,16.6C22,15.6 20.4,14.8 17.9,14.3L17.7,11.2C17.5,7.6 15.3,5 12,5Z" />
+</vector>

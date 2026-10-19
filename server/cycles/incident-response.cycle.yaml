@@ -1,0 +1,93 @@
+id: incident-response
+name: "Incident Response Workflow"
+title: Incident Response Workflow
+description: Manages the process of responding to and resolving incidents.
+version: "1.0.0"
+author: "Oddjob Operations"
+ui_metadata:
+  display_name: "Incident Response Workflow"
+  icon: "alert-triangle"
+  theme_color: "#ef4444"
+  display_priority: 5
+  category: "operations"
+  show_in_gallery: true
+  featured: false
+primary_agent: incident-manager-ai
+
+agents:
+  - id: incident-manager-ai
+    name: "Incident Manager AI"
+    role: "supervisor"
+    model: "gpt-4o-mini"
+    temperature: 0.1
+    system_prompt: "Coordinate incident triage, severity classification, mitigation tracking, and post-incident learning."
+    boundaries: ["operations", "observability", "incident-response"]
+    permissions: ["cycle:read", "cycle:write", "mission:read", "mission:write"]
+    tools: ["analyze_alert", "determine_severity", "identify_root_cause", "apply_fix", "verify_resolution"]
+
+missions:
+  - id: triage-incident
+    objective: Triage a new incident and determine its severity.
+    steps:
+      - step_code: TI-1
+        action: analyze_alert
+        description: Analyze incoming alert details.
+        estimated_duration_minutes: 5
+      - step_code: TI-2
+        action: determine_severity
+        description: Determine incident severity based on analysis.
+        estimated_duration_minutes: 10
+
+  - id: resolve-incident
+    objective: Execute steps to resolve the incident.
+    steps:
+      - step_code: RI-1
+        action: identify_root_cause
+        description: Identify the root cause of the incident.
+        estimated_duration_minutes: 30
+      - step_code: RI-2
+        action: apply_fix
+        description: Apply a temporary or permanent fix.
+        estimated_duration_minutes: 60
+      - step_code: RI-3
+        action: verify_resolution
+        description: Verify that the incident is resolved.
+        estimated_duration_minutes: 15
+      - step_code: RI-4
+        action: log_evaluation_result
+        description: Log the outcome of the incident response for self-improvement.
+        estimated_duration_minutes: 5
+        inputs:
+          harnessId: incident-response
+          harnessVersion: 1.0.0 # Placeholder, will be dynamic
+          status: ${incidentStatus} # e.g., 'resolved', 'degraded'
+          metrics: ${incidentMetrics} # e.g., { mttr: '60m', human_intervention_count: 3 }
+          traceId: ${incidentTraceId}
+          failureReason: ${incidentFailureReason}
+
+forms:
+  - id: new-incident
+    label: Report New Incident
+    description: Details for a new incident.
+    fields:
+      - id: incidentTitle
+        label: Incident Title
+        type: text
+        required: true
+      - id: description
+        label: Description
+        type: textarea
+        required: true
+      - id: severity
+        label: Severity
+        type: select
+        options:
+          - value: critical
+            label: Critical
+          - value: high
+            label: High
+          - value: medium
+            label: Medium
+          - value: low
+            label: Low
+        required: true

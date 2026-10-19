@@ -1,0 +1,710 @@
+{
+  "version": "1.0.0",
+  "blocks": [
+    {
+      "id": "IndustrialDashboardHero",
+      "name": "Industrial Dashboard Hero",
+      "description": "High-fidelity hero section with KPI cards and an activity area chart. Optimized for mission overview homepages.",
+      "path": "@domain-ui/packaged/IndustrialDashboardHero",
+      "category": "hero",
+      "tags": ["dashboard", "analytics", "kpi", "charts"],
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "stats": "Array<{ label: string, value: string, change: number, trend: 'up'|'down', icon: 'activity'|'zap'|'shield'|'globe' }>",
+        "data": "Array<{ name: string, value: number }>"
+      },
+      "premium_features": ["Glassmorphism", "Entrance Animations", "Responsive Scaling", "Dynamic Area Charts"]
+    },
+    {
+      "id": "MissionControlTable",
+      "name": "Mission Control Table",
+      "description": "Interactive data table designed for resource monitoring and agent coordination. Includes status badges and search.",
+      "path": "@domain-ui/packaged/MissionControlTable",
+      "category": "data-display",
+      "tags": ["table", "list", "management", "crud"],
+      "props": {
+        "title": "string",
+        "collection": "string",
+        "columns": "Array<{ key: string, label: string, variant?: 'default'|'badge'|'currency'|'date' }>"
+      },
+      "premium_features": ["Real-time Data Fetching", "Column Sorting", "Status Badge Mapping", "Industrial Search Filters"]
+    },
+    {
+      "id": "MetricGrid",
+      "name": "Metric Grid",
+      "description": "Responsive grid of high-density KPI cards. Supports custom icons and trend indicators.",
+      "path": "@domain-ui/packaged/MetricGrid",
+      "category": "stats",
+      "tags": ["kpi", "metrics", "grid", "numbers"],
+      "props": {
+        "metrics": "Array<{ label: string, value: string|number, change?: number, trend?: 'up'|'down'|'neutral', iconName?: string, color?: string }>",
+        "columns": "2 | 3 | 4"
+      },
+      "premium_features": ["Dynamic Grid Layout", "Lucide Icon Injection", "Trend Color-Mapping", "Staggered Entrance"]
+    },
+    {
+      "id": "StatusTimeline",
+      "name": "Status Timeline",
+      "description": "Sequential activity log with status indicators. Ideal for tracking mission progress, job logs, or history.",
+      "path": "@domain-ui/packaged/StatusTimeline",
+      "category": "monitoring",
+      "tags": ["logs", "history", "timeline", "status"],
+      "props": {
+        "title": "string",
+        "events": "Array<{ id: string, timestamp: string, title: string, description?: string, status: 'completed'|'in_progress'|'failed'|'pending'|'info' }>"
+      },
+      "premium_features": ["Semantic Status Theming", "Vertical Activity Tracking", "Auto-Scrolling History", "Log Snippet Support"]
+    },
+    {
+      "id": "AIAgentChat",
+      "name": "AI Agent Chat Interface",
+      "description": "Premium conversational shell with streaming support, message history, and suggested prompt chips.",
+      "path": "@domain-ui/packaged/AIAgentChat",
+      "category": "communication",
+      "tags": ["chat", "ai", "assistant", "streaming"],
+      "props": {
+        "personaName": "string",
+        "initialMessages": "Array<{ role: 'user'|'assistant', content: string }>",
+        "suggestedPrompts": "string[]"
+      },
+      "premium_features": ["Streaming UI", "Markdown Rendering", "Action Chips", "Message Persistance"]
+    },
+    {
+      "id": "PlatformDatasetTableBlock",
+      "name": "Platform Dataset Table (Self-Wiring)",
+      "description": "PREFERRED block for all CRUD apps. Full create/read/update/delete table wired directly to /api/oddjob/datasets. Includes search, pagination, create/edit modal (uses FormRenderer), delete confirmation. Zero fetch code required from the AI.",
+      "path": "@domain-ui/packaged/PlatformDatasetTableBlock",
+      "category": "data-display",
+      "tags": ["crud", "table", "list", "dataset", "records", "management", "self-wiring"],
+      "props": {
+        "collection": "string — Oddjob dataset collection name (e.g. 'contacts', 'orders')",
+        "columns": "Array<{ key: string, label: string, type?: 'text'|'badge'|'currency'|'date'|'number', badgeVariants?: Record<string,string> }>",
+        "title": "string (optional)",
+        "allowCreate": "boolean (default true)",
+        "allowEdit": "boolean (default true)",
+        "allowDelete": "boolean (default true)",
+        "searchableFields": "string[] (optional — defaults to all column keys)",
+        "pageSize": "number (default 10)",
+        "formSchema": "FormSchema (optional — overrides auto-generated form with custom FormRenderer schema)"
+      },
+      "premium_features": ["Full CRUD", "Auto-generated Forms", "Search & Pagination", "Loading Skeletons", "Delete Confirmation", "Real-time Refresh", "Zero fetch code required"]
+    },
+    {
+      "id": "PlatformAgentChatBlock",
+      "name": "Platform Agent Chat (Self-Wiring)",
+      "description": "PREFERRED block for all chat/assistant apps. Streams responses from /api/oddjob/agents/{agentId}/chat via SSE. Loads conversation history from platform. Typing indicator, suggested prompts, error handling — all built in. Zero fetch or stream code required from the AI.",
+      "path": "@domain-ui/packaged/PlatformAgentChatBlock",
+      "category": "communication",
+      "tags": ["chat", "ai", "assistant", "streaming", "agent", "self-wiring"],
+      "props": {
+        "agentId": "number — Oddjob agent ID to connect to",
+        "personaName": "string (optional)",
+        "suggestedPrompts": "string[] (optional)",
+        "collectionName": "string (optional — dataset collection for message persistence)",
+        "height": "string CSS height (default '600px')"
+      },
+      "premium_features": ["SSE Streaming", "History Load", "Typing Indicator", "Suggested Prompts", "Error Handling", "Zero wiring code required"]
+    },
+    {
+      "id": "PlatformMissionsBlock",
+      "name": "Platform Missions Table (Self-Wiring)",
+      "description": "PREFERRED block for mission management UIs. Fetches real mission runs from /api/oddjob/missions, polls for status updates, supports launch and abort actions. Replaces fake-data MissionControlTable.",
+      "path": "@domain-ui/packaged/PlatformMissionsBlock",
+      "category": "missions",
+      "tags": ["missions", "runs", "status", "management", "self-wiring"],
+      "props": {
+        "title": "string (optional)",
+        "allowLaunch": "boolean (default false)",
+        "allowAbort": "boolean (default true)",
+        "pollingIntervalMs": "number (default 5000)",
+        "onSelect": "(missionId: number) => void (optional — called when row clicked, use to drive PlatformMissionLogBlock)"
+      },
+      "premium_features": ["Live Polling", "Launch Dialog", "Abort Control", "Status Badges", "Active Count Indicator", "Zero fetch code required"]
+    },
+    {
+      "id": "PlatformMissionLogBlock",
+      "name": "Platform Mission Log (Self-Wiring)",
+      "description": "Live scrolling log viewer for a mission run. Polls /api/oddjob/missions/{missionId}/logs, stops automatically when mission reaches terminal state. Pair with PlatformMissionsBlock onSelect to drive missionId.",
+      "path": "@domain-ui/packaged/PlatformMissionLogBlock",
+      "category": "monitoring",
+      "tags": ["logs", "mission", "live", "streaming", "self-wiring"],
+      "props": {
+        "missionId": "number — run ID to stream logs for",
+        "title": "string (optional)",
+        "maxLines": "number (default 300)",
+        "autoScroll": "boolean (default true)",
+        "pollingIntervalMs": "number (default 2000)",
+        "height": "string CSS height (default '400px')"
+      },
+      "premium_features": ["Live Polling", "Auto-stop on Terminal State", "Pause/Resume", "Download Log", "Color-coded Levels", "Zero fetch code required"]
+    },
+    {
+      "id": "PlatformPipelineTriggerBlock",
+      "name": "Platform Pipeline Trigger (Self-Wiring)",
+      "description": "Loads available pipelines from /api/oddjob/pipelines, renders a picker, triggers execution via /api/oddjob/pipelines/{id}/execute, and polls execution status with step-by-step progress. Zero orchestration code required.",
+      "path": "@domain-ui/packaged/PlatformPipelineTriggerBlock",
+      "category": "pipelines",
+      "tags": ["pipeline", "trigger", "execution", "automation", "self-wiring"],
+      "props": {
+        "allowedPipelineIds": "number[] (optional — filter to specific pipeline IDs)",
+        "title": "string (optional)",
+        "showExecutionHistory": "boolean (default true)",
+        "onComplete": "(execId: number) => void (optional)"
+      },
+      "premium_features": ["Pipeline Picker", "Step Progress Bar", "Status Polling", "Error Surface", "Zero orchestration code required"]
+    },
+    {
+      "id": "PlatformDatasetChartBlock",
+      "name": "Platform Dataset Chart (Self-Wiring)",
+      "description": "Visualizes dataset records using various chart types (line, bar, area, pie). Fetches data from /api/oddjob/datasets. Zero charting code required.",
+      "path": "@domain-ui/packaged/PlatformDatasetChartBlock",
+      "category": "data-display",
+      "tags": ["chart", "analytics", "dataset", "visualization", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "xField": "string — field for X axis (e.g. 'createdAt')",
+        "yField": "string — field for Y axis (e.g. 'amount')",
+        "chartType": "'line' | 'bar' | 'area' | 'pie'",
+        "title": "string (optional)",
+        "color": "string (optional hex)",
+        "dateRangeFilter": "boolean (default false)"
+      },
+      "premium_features": ["Dynamic Data Fetch", "Recharts Integration", "Date Filtering", "Responsive Scaling", "Zero charting code required"]
+    },
+    {
+      "id": "PlatformFormBlock",
+      "name": "Platform Dynamic Form (Self-Wiring)",
+      "description": "Renders a full form from an Oddjob form schema. Handles validation and submission to /api/oddjob/forms/{formId}/submit. Zero form handling code required.",
+      "path": "@domain-ui/packaged/PlatformFormBlock",
+      "category": "forms",
+      "tags": ["form", "input", "submission", "survey", "self-wiring"],
+      "props": {
+        "formId": "number — Oddjob form ID",
+        "prefillCollection": "string (optional — dataset to pre-populate from)",
+        "successMessage": "string (optional)"
+      },
+      "premium_features": ["Schema-driven Rendering", "Field Validation", "Prefill Support", "Zero form logic required"]
+    },
+    {
+      "id": "PlatformKnowledgeSearchBlock",
+      "name": "Platform Knowledge Graph Explorer (Self-Wiring)",
+      "description": "Interactive knowledge graph visualization with Cytoscape.js. Search, explore, and visualize entity relationships with force-directed layouts. Toggle between graph and list views. Zero graph query code required.",
+      "path": "@domain-ui/packaged/PlatformKnowledgeSearchBlock",
+      "category": "knowledge",
+      "tags": ["search", "knowledge", "rag", "graph", "visualization", "cytoscape", "self-wiring"],
+      "props": {
+        "placeholder": "string (default 'Search knowledge graph...')",
+        "maxResults": "number (default 20)",
+        "defaultView": "'graph' | 'list' (default 'graph')",
+        "title": "string (default 'Knowledge Graph Explorer')",
+        "height": "string (default '500px')",
+        "onNodeSelect": "(node: KnowledgeNode) => void (optional)"
+      },
+      "premium_features": ["Interactive Graph (Cytoscape.js)", "Force-Directed Layout", "Graph/List Toggle", "Node Detail Panel", "Zoom/Pan Controls", "Relationship Visualization", "Zero graph code required"]
+    },
+    {
+      "id": "PlatformJobRunnerBlock",
+      "name": "Platform Job Runner (Self-Wiring)",
+      "description": "Execute and monitor Oddjob jobs with real-time progress tracking. Select from available jobs, trigger runs, view execution history. Zero job orchestration code required.",
+      "path": "@domain-ui/packaged/PlatformJobRunnerBlock",
+      "category": "jobs",
+      "tags": ["jobs", "execution", "runner", "automation", "self-wiring"],
+      "props": {
+        "title": "string (optional)",
+        "allowedJobIds": "number[] (optional — restrict to specific jobs)",
+        "showHistory": "boolean (default true)",
+        "pollingIntervalMs": "number (default 3000)",
+        "onRunComplete": "(run: JobRun) => void (optional)"
+      },
+      "premium_features": ["Job Picker", "Progress Tracking", "Execution History", "Cancel Control", "Zero job code required"]
+    },
+    {
+      "id": "PlatformHILApprovalBlock",
+      "name": "Human-in-the-Loop Approval (Self-Wiring)",
+      "description": "Review and approve HIL requests from agents, pipelines, and automated systems. Shows request details, context, and approval actions. Zero approval workflow code required.",
+      "path": "@domain-ui/packaged/PlatformHILApprovalBlock",
+      "category": "governance",
+      "tags": ["hil", "approval", "governance", "workflow", "human-in-the-loop", "self-wiring"],
+      "props": {
+        "title": "string (optional)",
+        "filter": "'pending' | 'all' | 'approved' | 'rejected' (default 'pending')",
+        "showHistory": "boolean (default true)",
+        "maxItems": "number (default 10)",
+        "pollingIntervalMs": "number (default 5000)",
+        "onApprove": "(request: ApprovalRequest, comment?: string) => void (optional)",
+        "onReject": "(request: ApprovalRequest, comment?: string) => void (optional)"
+      },
+      "premium_features": ["Approval Dialog", "Context Display", "Comment Support", "Priority Badges", "Zero HIL code required"]
+    },
+    {
+      "id": "PlatformPipelineStatusBlock",
+      "name": "Platform Pipeline Status (Self-Wiring)",
+      "description": "Real-time pipeline execution monitoring with step-by-step progress visualization. Track active executions, view history, inspect step outputs. Zero pipeline monitoring code required.",
+      "path": "@domain-ui/packaged/PlatformPipelineStatusBlock",
+      "category": "pipelines",
+      "tags": ["pipeline", "status", "monitoring", "execution", "progress", "self-wiring"],
+      "props": {
+        "pipelineId": "number (optional — filter to specific pipeline)",
+        "title": "string (optional)",
+        "showExecutions": "boolean (default true)",
+        "maxExecutions": "number (default 5)",
+        "pollingIntervalMs": "number (default 3000)",
+        "onExecutionComplete": "(execution: PipelineExecution) => void (optional)"
+      },
+      "premium_features": ["Progress Bar", "Step Visualization", "Execution History", "Step Tooltips", "Zero pipeline code required"]
+    },
+    {
+      "id": "PlatformDeadLetterQueueBlock",
+      "name": "Dead Letter Queue (Self-Wiring)",
+      "description": "View and manage failed jobs, pipelines, and missions in the dead letter queue. Inspect errors, retry failed items, bulk actions. Zero error handling code required.",
+      "path": "@domain-ui/packaged/PlatformDeadLetterQueueBlock",
+      "category": "reliability",
+      "tags": ["dead-letter", "dlq", "retry", "failure", "error-handling", "self-wiring"],
+      "props": {
+        "title": "string (optional)",
+        "filterType": "'all' | 'job' | 'pipeline' | 'mission' (default 'all')",
+        "maxItems": "number (default 50)",
+        "showRetry": "boolean (default true)",
+        "showDiscard": "boolean (default true)",
+        "showBulkActions": "boolean (default true)",
+        "autoRefresh": "boolean (default true)",
+        "onRetry": "(item: DeadLetterItem) => void (optional)",
+        "onDiscard": "(item: DeadLetterItem) => void (optional)"
+      },
+      "premium_features": ["Error Inspection", "Bulk Retry/Discard", "Real-time Updates", "Stack Trace View", "Zero DLQ code required"]
+    },
+    {
+      "id": "SeleniumRunnerBlock",
+      "name": "Selenium Browser QA (Self-Wiring)",
+      "description": "Run real browser-based QA audits on forged apps. Tests page load, console errors, image integrity, responsive layout, and interactive elements. Real-time results via SSE.",
+      "path": "@domain-ui/packaged/SeleniumRunnerBlock",
+      "category": "testing",
+      "tags": ["selenium", "qa", "browser", "testing", "audit", "self-wiring"],
+      "props": {
+        "appId": "number (optional - target app ID)",
+        "appSlug": "string (optional - target app slug)",
+        "autoRun": "boolean (default false)",
+        "showHistory": "boolean (default true)",
+        "maxHistory": "number (default 5)"
+      },
+      "premium_features": ["Real Browser Testing", "Multi-Viewport Responsive", "Console Error Detection", "Screenshot Capture", "Image Integrity Check", "Zero test code required"]
+    },
+    {
+      "id": "AppVersionControlBlock",
+      "name": "App Version Control (Self-Wiring)",
+      "description": "Git-like version control for forged apps. View commit history, compare diffs, rollback to previous versions, create branches and tags. Full version management UI.",
+      "path": "@domain-ui/packaged/AppVersionControlBlock",
+      "category": "versioning",
+      "tags": ["version", "git", "rollback", "diff", "commit", "branch", "self-wiring"],
+      "props": {
+        "appId": "number (optional - target app ID)",
+        "appSlug": "string (optional - target app slug)",
+        "showDiff": "boolean (default true)",
+        "maxVersions": "number (default 20)",
+        "onRollback": "(versionId: string) => void (optional)"
+      },
+      "premium_features": ["Commit History", "Diff Viewer", "One-Click Rollback", "Branch Management", "Tag Support", "Zero version control code required"]
+    },
+    {
+      "id": "MultiAgentDashboardBlock",
+      "name": "Multi-Agent Orchestration (Self-Wiring)",
+      "description": "Real-time monitoring and control for multi-agent AI architecture. View agent status, task queues, workflows, and performance metrics. Manage Architect, Coder, Reviewer, and Tester agents.",
+      "path": "@domain-ui/packaged/MultiAgentDashboardBlock",
+      "category": "ai",
+      "tags": ["agents", "ai", "orchestration", "workflow", "multi-agent", "self-wiring"],
+      "props": {
+        "title": "string (optional)",
+        "showPerformance": "boolean (default true)",
+        "autoRefresh": "boolean (default true)"
+      },
+      "premium_features": ["Real-time Agent Status", "Task Queue Monitor", "Workflow Visualization", "Performance Metrics", "Agent Coordination", "Zero agent code required"]
+    },
+    {
+      "id": "BlueprintEvolutionBlock",
+      "name": "Blueprint Self-Evolution (Self-Wiring)",
+      "description": "Self-improving blueprints that learn from usage patterns. Track metrics, view evolution suggestions, manage blueprint generations, and approve improvements automatically generated by AI.",
+      "path": "@domain-ui/packaged/BlueprintEvolutionBlock",
+      "category": "ai",
+      "tags": ["evolution", "self-improving", "ai", "blueprint", "learning", "self-wiring"],
+      "props": {
+        "blueprintId": "string (required - target blueprint ID)",
+        "showGenerations": "boolean (default true)",
+        "autoAnalyze": "boolean (default true)"
+      },
+      "premium_features": ["Usage Analytics", "Auto-Suggestions", "Generation Management", "Impact Prediction", "One-Click Evolution", "Zero learning code required"]
+    },
+    {
+      "id": "PlatformMediaGalleryBlock",
+      "name": "Platform Media Gallery (Self-Wiring)",
+      "description": "Image and video gallery with grid, carousel, and lightbox modes. Fetches media URLs from platform datasets with automatic thumbnail generation. Perfect for marketing sites, portfolios, and product galleries.",
+      "path": "@domain-ui/packaged/PlatformMediaGalleryBlock",
+      "category": "content",
+      "tags": ["gallery", "images", "videos", "media", "carousel", "lightbox", "portfolio", "marketing", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name containing media items",
+        "mediaField": "string — field containing the media URL (image or video)",
+        "thumbnailField": "string (optional) — field for thumbnail URL",
+        "titleField": "string (optional) — field for item title",
+        "descriptionField": "string (optional) — field for item description",
+        "typeField": "string (optional) — field indicating 'image' or 'video', auto-detected if not provided",
+        "layout": "'grid' | 'carousel' | 'masonry' (default 'grid')",
+        "columns": "1-6 (default 3) — number of columns in grid mode",
+        "lightbox": "boolean (default true) — enable lightbox on click",
+        "autoPlay": "boolean (default false) — auto-play carousel",
+        "autoPlayInterval": "number (default 5) — seconds between carousel slides",
+        "title": "string (optional) — gallery title",
+        "filterType": "'all' | 'image' | 'video' (default 'all')",
+        "maxItems": "number (optional) — maximum items to display",
+        "searchable": "boolean (default false) — enable search/filter",
+        "height": "string (default 'auto') — custom CSS height"
+      },
+      "premium_features": ["Grid/Carousel/Masonry Layouts", "Video Support", "Lightbox with Navigation", "Auto-play Carousel", "Hover Previews", "Search/Filter", "Responsive Columns", "Zero media code required"]
+    },
+    {
+      "id": "PlatformContentCarouselBlock",
+      "name": "Platform Content Carousel (Self-Wiring)",
+      "description": "Testimonials, features, news, and quotes carousel. Multiple card templates with auto-play, ratings, avatars, and tags. Perfect for social proof, product features, and announcements.",
+      "path": "@domain-ui/packaged/PlatformContentCarouselBlock",
+      "category": "content",
+      "tags": ["carousel", "testimonials", "features", "content", "social-proof", "quotes", "reviews", "self-wiring"],
+      "props": {
+        "items": "Array<{ id, content, title?, author?, role?, company?, avatar?, rating?, tags?, cta? }> — supply items directly, bypassing the dataset fetch (use this in instant apps)",
+        "collection": "string — dataset collection name",
+        "contentField": "string — field containing the main content/text",
+        "titleField": "string (optional) — field for item title/heading",
+        "authorField": "string (optional) — field for author name",
+        "roleField": "string (optional) — field for author role/title",
+        "companyField": "string (optional) — field for company name",
+        "avatarField": "string (optional) — field for author avatar URL",
+        "ratingField": "string (optional) — field for star rating (1-5)",
+        "tagsField": "string (optional) — field for category tags",
+        "cardTemplate": "'testimonial' | 'feature' | 'news' | 'quote' | 'custom' (default 'testimonial')",
+        "autoPlay": "boolean (default true) — auto-play carousel",
+        "interval": "number (default 6) — seconds between slides",
+        "showIndicators": "boolean (default true) — show navigation dots",
+        "showArrows": "boolean (default true) — show navigation arrows",
+        "itemsPerSlide": "1 | 2 | 3 (default 1) — number of items per slide",
+        "title": "string (optional) — block title",
+        "filterTag": "string (optional) — filter by tag",
+        "maxItems": "number (optional) — maximum items to display",
+        "cardClassName": "string (optional) — custom CSS class for cards"
+      },
+      "premium_features": ["5 Card Templates", "Star Ratings", "Avatar Support", "Tag Filtering", "Multi-item Slides", "Auto-play", "Smooth Transitions", "Zero content code required"]
+    },
+    {
+      "id": "PlatformAgentSwarmBlock",
+      "name": "Platform Agent Swarm (Self-Wiring)",
+      "description": "Advanced AI block for coordinating multiple specialized agents on a single objective. Visualizes agent hierarchy, task delegation, and consensus-based outputs.",
+      "path": "@domain-ui/packaged/PlatformAgentSwarmBlock",
+      "category": "ai",
+      "tags": ["ai", "agents", "swarm", "orchestration", "automation", "self-wiring"],
+      "props": {
+        "agentIds": "number[] — list of agent IDs in the swarm",
+        "coordinatorPrompt": "string — system prompt for the swarm leader",
+        "consensusThreshold": "number (0-1) — required agreement for output",
+        "showDelegation": "boolean (default true) — visualize sub-task routing"
+      },
+      "premium_features": ["Visual Delegation Tree", "Parallel Execution", "Auto-Review Loop", "Token Optimization"]
+    },
+    {
+      "id": "PlatformNLQBlock",
+      "name": "Natural Language Query (Self-Wiring)",
+      "description": "Conversational data explorer. Ask questions about your data in plain English and get instant answers with charts, tables, and insights. AI-powered natural language to SQL with automatic visualization.",
+      "path": "@domain-ui/packaged/PlatformNLQBlock",
+      "category": "ai",
+      "tags": ["nlq", "natural-language", "data-explorer", "chat", "bi", "analytics", "ai", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection to query",
+        "contextDescription": "string (optional) — description of the data context",
+        "title": "string (default 'Ask Your Data')",
+        "placeholder": "string (default 'Ask a question about your data...')",
+        "generateCharts": "boolean (default true) — auto-generate visualizations",
+        "explainInsights": "boolean (default true) — AI explains the insights",
+        "suggestFollowUps": "boolean (default true) — suggest follow-up questions",
+        "maxHistory": "number (default 50) — max conversation history",
+        "enableExport": "boolean (default true) — allow exporting results",
+        "exampleQuestions": "string[] — starter question suggestions"
+      },
+      "premium_features": ["Natural Language to SQL", "Auto-Chart Generation", "Contextual Insights", "Follow-up Suggestions", "Conversation History", "Export to JSON/CSV", "Confidence Scoring", "Zero query code required"]
+    },
+    {
+      "id": "PlatformKnowledgeDrivenMissionBlock",
+      "name": "Knowledge-Driven Mission (Self-Wiring)",
+      "description": "AI-powered mission management with automatic context enrichment from knowledge graph and intelligent agent routing based on knowledge proximity. Visualizes mission context, agent assignments, and task routing decisions.",
+      "path": "@domain-ui/packaged/PlatformKnowledgeDrivenMissionBlock",
+      "category": "ai",
+      "tags": ["mission", "knowledge-graph", "agent-routing", "context-enrichment", "ai", "self-wiring"],
+      "props": {
+        "missionId": "number — mission to visualize and manage",
+        "enableAutoEnrichment": "boolean (default true) — auto-populate context from knowledge graph",
+        "enableAgentRouting": "boolean (default true) — enable knowledge-driven task routing",
+        "showContextGraph": "boolean (default true) — show knowledge context visualization",
+        "showRoutingVisualization": "boolean (default true) — show agent routing UI",
+        "refreshInterval": "number (default 30) — seconds between auto-refresh"
+      },
+      "premium_features": ["Knowledge Graph Integration", "Automatic Context Enrichment", "Intelligent Agent Routing", "Context-Aware Task Distribution", "Mission Efficiency Analytics", "Similar Mission Discovery", "Suggested Action Recommendations", "Zero context code required"]
+    },
+    {
+      "id": "PlatformSpatialSignalBlock",
+      "name": "Spatial Signal Intelligence (Self-Wiring)",
+      "description": "Schematic signal panel: plots markers on a stylised radar backdrop with severity filtering and a detail popover. NOT a geographic map — marker positions are a linear offset from `center`, not a projection, and clamp at the panel edges. Reads /api/spatial/signals when that endpoint exists; renders labelled sample data otherwise.",
+      "path": "@domain-ui/packaged/PlatformSpatialSignalBlock",
+      "category": "spatial",
+      "tags": ["spatial", "telemetry", "h3", "radar", "maps", "hex", "signals", "self-wiring"],
+      "props": {
+        "title": "string (default 'Spatial Signal Intelligence')",
+        "description": "string (default 'Live Eulerian Hexagonal Telemetry & Field Operations')",
+        "center": "{ lat: number, lng: number } (default LA coords)",
+        "showH3Mesh": "boolean (default true)",
+        "filterSeverity": "'All' | 'High+' | 'CriticalOnly' (default 'All')",
+        "autoPollMs": "number (default 5000)"
+      },
+      "premium_features": ["Radar Sweep Animation", "Interactive Anomaly Overlays", "Severity Filtering", "Explicit sample-data state when no feed is connected"]
+    },
+    {
+      "id": "PlatformHeroSliderBlock",
+      "name": "Hero Slider (Self-Wiring)",
+      "description": "Full-width hero carousel for marketing content. Auto-fetches slides from dataset with customizable CTAs, overlays, and text positioning. Perfect for landing pages and marketing sites.",
+      "path": "@domain-ui/packaged/PlatformHeroSliderBlock",
+      "category": "content",
+      "tags": ["hero", "slider", "carousel", "marketing", "landing-page", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "slides": "array — manual slide definitions (if no collection)",
+        "height": "string (default '600px') — slider height",
+        "autoPlay": "boolean (default true) — auto-advance slides",
+        "interval": "number (default 5000) — ms between slides",
+        "showIndicators": "boolean (default true) — show dot indicators",
+        "showArrows": "boolean (default true) — show navigation arrows",
+        "overlay": "boolean (default true) — dark overlay on images",
+        "overlayOpacity": "number (default 0.5) — overlay darkness (0-1)",
+        "textPosition": "string (default 'left') — 'left' | 'center' | 'right'",
+        "textColor": "string (default 'light') — 'light' | 'dark'",
+        "titleField": "string (default 'title') — slide title field",
+        "subtitleField": "string (default 'subtitle') — slide subtitle field",
+        "imageField": "string (default 'imageUrl') — slide image field",
+        "descriptionField": "string (default 'description') — slide description field",
+        "ctaField": "string (default 'ctaText') — slide CTA text field"
+      },
+      "premium_features": ["Auto-fetch from Dataset", "Responsive Design", "Touch/Swipe Support", "Customizable CTAs", "Text Overlay Options", "Marketing-Ready Templates", "Zero layout code required"]
+    },
+    {
+      "id": "PlatformImageComparisonBlock",
+      "name": "Image Comparison Slider (Self-Wiring)",
+      "description": "Interactive before/after image comparison with draggable slider. Perfect for showcasing transformations, renovations, edits, or any visual changes. Supports horizontal and vertical orientations.",
+      "path": "@domain-ui/packaged/PlatformImageComparisonBlock",
+      "category": "content",
+      "tags": ["comparison", "before-after", "slider", "interactive", "visual", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "beforeImage": "string — before image URL (if no collection)",
+        "afterImage": "string — after image URL (if no collection)",
+        "beforeLabel": "string (default 'Before') — before image label",
+        "afterLabel": "string (default 'After') — after image label",
+        "orientation": "string (default 'horizontal') — 'horizontal' | 'vertical'",
+        "height": "string (default '400px') — container height",
+        "showLabels": "boolean (default true) — show before/after labels",
+        "beforeField": "string (default 'beforeImage') — dataset before field",
+        "afterField": "string (default 'afterImage') — dataset after field",
+        "labelField": "string (default 'label') — comparison label field"
+      },
+      "premium_features": ["Drag-to-Compare", "Touch/Mobile Support", "Smooth Animations", "Customizable Labels", "Horizontal & Vertical Modes", "Dataset Integration", "Zero interaction code required"]
+    },
+    {
+      "id": "PlatformVideoGalleryBlock",
+      "name": "Video Gallery (Self-Wiring)",
+      "description": "Video collection player supporting YouTube, Vimeo, and direct URLs. Features grid/list layouts, pagination, thumbnail previews, and inline playback. Perfect for portfolios, tutorials, and media sites.",
+      "path": "@domain-ui/packaged/PlatformVideoGalleryBlock",
+      "category": "content",
+      "tags": ["video", "gallery", "youtube", "vimeo", "media", "player", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "videos": "array — manual video definitions (if no collection)",
+        "layout": "string (default 'grid') — 'grid' | 'list' | 'carousel'",
+        "itemsPerPage": "number (default 6) — videos per page",
+        "autoPlay": "boolean (default false) — auto-select first video",
+        "showThumbnails": "boolean (default true) — show video thumbnails",
+        "thumbnailField": "string (default 'thumbnailUrl') — thumbnail field",
+        "videoField": "string (default 'videoUrl') — video URL field",
+        "titleField": "string (default 'title') — video title field",
+        "descriptionField": "string (default 'description') — description field",
+        "durationField": "string (default 'duration') — duration field",
+        "tagsField": "string (default 'tags') — video tags field"
+      },
+      "premium_features": ["YouTube & Vimeo Support", "Auto-embed Generation", "Grid/List Views", "Pagination", "Duration Display", "Tag Filtering", "Inline Player", "Zero video code required"]
+    },
+    {
+      "id": "PlatformSocialFeedBlock",
+      "name": "Social Media Feed (Self-Wiring)",
+      "description": "Aggregated social media feed displaying posts from Twitter, Instagram, LinkedIn, Facebook, TikTok, or generic sources. Features platform filtering, engagement metrics, and auto-refresh.",
+      "path": "@domain-ui/packaged/PlatformSocialFeedBlock",
+      "category": "content",
+      "tags": ["social", "feed", "twitter", "instagram", "linkedin", "social-media", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "posts": "array — manual posts (if no collection)",
+        "platform": "string (default 'all') — filter by platform",
+        "usernameField": "string (default 'username') — author field",
+        "contentField": "string (default 'content') — post content field",
+        "mediaField": "string (default 'mediaUrls') — media URLs field",
+        "likesField": "string (default 'likes') — likes count field",
+        "dateField": "string (default 'postedAt') — timestamp field",
+        "platformField": "string (default 'platform') — platform field",
+        "maxItems": "number (default 20) — max posts to display",
+        "showEngagement": "boolean (default true) — show likes/comments/shares",
+        "autoRefresh": "boolean (default false) — auto-refresh feed",
+        "refreshInterval": "number (default 60) — seconds between refresh"
+      },
+      "premium_features": ["Multi-Platform Support", "Platform Filtering", "Auto-Refresh", "Engagement Metrics", "Media Preview", "Relative Timestamps", "Verified Badges", "Zero social code required"]
+    },
+    {
+      "id": "PlatformPricingTableBlock",
+      "name": "Pricing Table (Self-Wiring)",
+      "description": "Dynamic pricing table with multiple tiers, billing toggle (monthly/yearly), feature comparison, and CTA buttons. Perfect for SaaS pricing pages with dataset-backed pricing data.",
+      "path": "@domain-ui/packaged/PlatformPricingTableBlock",
+      "category": "ecommerce",
+      "tags": ["pricing", "ecommerce", "billing", "subscription", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name with pricing tiers",
+        "defaultBilling": "string (default 'monthly') — 'monthly' | 'yearly'",
+        "showToggle": "boolean (default true) — show monthly/yearly toggle",
+        "currencyField": "string (default 'currency') — currency symbol field",
+        "priceField": "string (default 'price') — price amount field",
+        "featuresField": "string (default 'features') — features array field"
+      },
+      "premium_features": ["Monthly/Yearly Toggle", "Highlighted Tier", "Trial Badges", "Feature Comparison", "Dataset-Driven Pricing", "Animated Price Display", "Zero pricing code required"]
+    },
+    {
+      "id": "PlatformTestimonialCarouselBlock",
+      "name": "Testimonial Carousel (Self-Wiring)",
+      "description": "Customer testimonials carousel with quotes, ratings, avatars, and company info. Supports carousel, grid, or masonry layouts. Auto-fetches testimonials from dataset.",
+      "path": "@domain-ui/packaged/PlatformTestimonialCarouselBlock",
+      "category": "content",
+      "tags": ["testimonials", "social-proof", "reviews", "carousel", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "variant": "string (default 'carousel') — 'carousel' | 'grid' | 'masonry'",
+        "autoPlay": "boolean (default true) — auto-rotate testimonials",
+        "interval": "number (default 6000) — ms between slides",
+        "quoteField": "string (default 'quote') — testimonial text field",
+        "authorField": "string (default 'author') — author name field",
+        "ratingField": "string (default 'rating') — star rating field"
+      },
+      "premium_features": ["Auto-Rotation", "Star Ratings", "Verified Badges", "Multiple Layouts", "Avatar Support", "Company Info Display", "Zero testimonial code required"]
+    },
+    {
+      "id": "PlatformStatsCounterBlock",
+      "name": "Stats Counter (Self-Wiring)",
+      "description": "Animated statistics counter with count-up animations, trend indicators, and multiple layout variants. Perfect for showcasing metrics, KPIs, and business growth.",
+      "path": "@domain-ui/packaged/PlatformStatsCounterBlock",
+      "category": "content",
+      "tags": ["statistics", "metrics", "counter", "animation", "kpi", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "duration": "number (default 2) — animation duration in seconds",
+        "variant": "string (default 'cards') — 'cards' | 'simple' | 'large'",
+        "columns": "number (default 4) — 2 | 3 | 4 columns",
+        "valueField": "string (default 'value') — stat value field"
+      },
+      "premium_features": ["Count-Up Animation", "Trend Indicators", "Multiple Layouts", "Prefix/Suffix Support", "Scroll-Triggered Animation", "Compact & Large Variants", "Zero stats code required"]
+    },
+    {
+      "id": "PlatformFeatureGridBlock",
+      "name": "Feature Grid (Self-Wiring)",
+      "description": "Feature showcase grid with icons, descriptions, badges, and CTAs. Multiple layout variants including cards, compact list, and horizontal rows. Auto-fetches from dataset.",
+      "path": "@domain-ui/packaged/PlatformFeatureGridBlock",
+      "category": "content",
+      "tags": ["features", "showcase", "grid", "benefits", "self-wiring"],
+      "props": {
+        "collection": "string — dataset collection name",
+        "columns": "number (default 3) — 2 | 3 | 4 columns",
+        "variant": "string (default 'cards') — 'cards' | 'compact' | 'horizontal'",
+        "showCtas": "boolean (default false) — show feature CTAs",
+        "titleField": "string (default 'title') — feature title field",
+        "descriptionField": "string (default 'description') — feature description field",
+        "iconField": "string (default 'icon') — icon name field"
+      },
+      "premium_features": ["Multiple Layouts", "8 Built-in Icons", "Badge Support", "CTA Links", "Card & Compact Variants", "Hover Animations", "Zero feature code required"]
+    },
+    {
+      "id": "TacticalMapControl",
+      "name": "Tactical Map Control",
+      "description": "Interactive radar map grid and spatial unit markers. Does not require external Mapbox tokens.",
+      "path": "@domain-ui/packaged/TacticalMapControl",
+      "category": "maps",
+      "tags": ["tactical", "map", "radar", "dispatch", "spatial", "markers"],
+      "props": {
+        "center": "object — { lat: number, lng: number }",
+        "zoom": "number (default 12)",
+        "markers": "Array<{ id: string, lat: number, lng: number, title: string, status: 'active'|'warning'|'error'|'offline' }>"
+      },
+      "premium_features": ["Radar Scan Effect", "Live Coordinates", "Zero External Token Requirement", "Interactive Layer Switcher"]
+    },
+    {
+      "id": "TacticalDispatchQueueBlock",
+      "name": "Tactical Dispatch Queue",
+      "description": "Priority incident triage and emergency rescue queue with SLA countdowns, search, filter, and dispatch triggers.",
+      "path": "@domain-ui/packaged/TacticalDispatchQueueBlock",
+      "category": "dispatch",
+      "tags": ["dispatch", "queue", "emergency", "incident", "sla", "triage"],
+      "props": {
+        "collection": "string (default 'active_rescues')",
+        "title": "string (default 'Priority Rescues Triage')",
+        "rescues": "Array<RescueIncident>"
+      },
+      "premium_features": ["Interactive Dispatch Actions", "SLA Countdown", "Multi-Level Urgency Badging", "Self-Wiring Dataset Fallback"]
+    },
+    {
+      "id": "TacticalSquadStatusBlock",
+      "name": "Tactical Squad Fleet Status",
+      "description": "Squad fleet readiness monitor with live health progress bars, personnel counts, and mission dispatch controls.",
+      "path": "@domain-ui/packaged/TacticalSquadStatusBlock",
+      "category": "operations",
+      "tags": ["squads", "fleet", "readiness", "units", "health", "roster"],
+      "props": {
+        "title": "string (default 'Squad Fleet Readiness')",
+        "squads": "Array<SquadUnit>"
+      },
+      "premium_features": ["Unit Health Bars", "Real-Time Readiness Pills", "Sector Geolocation Tracking", "Dispatch Actions"]
+    },
+    {
+      "id": "TacticalServiceProviderBlock",
+      "name": "Tactical Service Provider Roster",
+      "description": "External utility contractor and specialized service provider directory with live ETA countdowns and direct routing.",
+      "path": "@domain-ui/packaged/TacticalServiceProviderBlock",
+      "category": "operations",
+      "tags": ["providers", "contractors", "routing", "eta", "services"],
+      "props": {
+        "title": "string (default 'Service Provider Network')",
+        "providers": "Array<ServiceProviderItem>"
+      },
+      "premium_features": ["Real-time ETA Display", "Specialty Badging", "Direct Contractor Dispatch", "Rating Display"]
+    },
+    {
+      "id": "TacticalCommsBroadcastBlock",
+      "name": "Tactical Emergency Broadcast",
+      "description": "Emergency tactical communications console with encrypted frequency monitor and priority alert dispatch.",
+      "path": "@domain-ui/packaged/TacticalCommsBroadcastBlock",
+      "category": "communications",
+      "tags": ["comms", "broadcast", "emergency", "audio", "radio"],
+      "props": {
+        "channelName": "string (default 'Emergency Ops Channel 1')",
+        "frequency": "string (default '148.825 MHz // ENCRYPTED')"
+      },
+      "premium_features": ["Live Net Indicator", "Audio Alert Toggling", "Priority Alert Transmission", "Transmission History"]
+    },
+    {
+      "id": "TacticalSimulationControlBlock",
+      "name": "Tactical What-If Route Simulation",
+      "description": "Eulerian spatial proximity and SLA breach risk forecasting simulator with real-time response matrix.",
+      "path": "@domain-ui/packaged/TacticalSimulationControlBlock",
+      "category": "analytics",
+      "tags": ["simulation", "what-if", "eulerian", "risk", "sla", "routing"],
+      "props": {
+        "title": "string (default 'What-If Route & Capacity Simulation')"
+      },
+      "premium_features": ["Eulerian H3 Proximity Matrix", "Automated SLA Breach Scoring", "Multi-Unit Comparison", "Simulation Route Application"]
+    }
+  ]
+}

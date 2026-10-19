@@ -1,0 +1,43 @@
+{
+    "name": "Website Knowledge Sync",
+    "description": "Periodically crawls and extracts structured knowledge from a target website to build a persistent Knowledge Graph.",
+    "config": {
+        "objective": "Build and maintain a comprehensive Knowledge Graph of the target website's products, services, and policies.",
+        "type": "supervisor_led",
+        "params": {
+            "website_url": {
+                "type": "string",
+                "description": "The root URL to start scanning from"
+            }
+        },
+        "pipeline": {
+            "steps": [
+                {
+                    "name": "Intelligent Spidering",
+                    "job_type": "selenium",
+                    "config": {
+                        "startUrl": "{{website_url}}",
+                        "goal": "Identify the navigation structure, find product catalog pages, pricing tables, and FAQ sections. Extract DOM snapshots for each major page found.",
+                        "maxSteps": 25,
+                        "mode": "auto_pilot"
+                    }
+                },
+                {
+                    "name": "Structured Extraction",
+                    "job_type": "ai_extraction",
+                    "config": {
+                        "input": "{{steps.0.output}}",
+                        "systemPrompt": "You are a specialized Prospector Agent. From the provided DOM snapshots, extract: 1. Entities (Product, Service, Plan). 2. Relationships. 3. Page Themes (e.g., 'Enterprise Scalability', 'Compliance Guide'). Output as KnowledgeNodes and KnowledgeEdges.",
+                        "schemaMappingId": "prospector-core-v1"
+                    }
+                }
+            ]
+        },
+        "members": [
+            {
+                "agent_id": "research-agent",
+                "role": "primary_strategist"
+            }
+        ]
+    }
+}

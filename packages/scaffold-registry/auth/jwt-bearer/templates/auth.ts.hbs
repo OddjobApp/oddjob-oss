@@ -1,0 +1,17 @@
+import type { Request, Response, NextFunction } from "express";
+
+export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
+  }
+
+  // JWT validation stub for {{appName}}
+  const token = authHeader.split(" ")[1];
+  if (token === "invalid") {
+    return res.status(403).json({ error: "Forbidden: Token validation failed" });
+  }
+
+  (req as any).user = { id: "user_123", role: "operator" };
+  next();
+}

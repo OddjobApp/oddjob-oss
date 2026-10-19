@@ -1,0 +1,85 @@
+# TrustGraph Lite Infrastructure Overlay
+# This file adds the TrustGraph components to the Oddjob stack.
+# It uses 'Garage' for self-hosted S3 storage, so no AWS account is needed.
+
+version: "3.9"
+
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: oddjob-cassandra
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TrustGraphCluster
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    networks:
+      - oddjob-network
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  pulsar:
+    image: apachepulsar/pulsar:3.1.0
+    container_name: oddjob-pulsar
+    restart: unless-stopped
+    command: bin/pulsar standalone
+    ports:
+      - "6650:6650"
+      - "8080:8080"
+    volumes:
+      - pulsar_data:/pulsar/data
+    networks:
+      - oddjob-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/clusters"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  garage:
+    image: dxos/garage:0.8.0
+    container_name: oddjob-garage
+    restart: unless-stopped
+    ports:
+      - "3900:3900" # S3 API
+      - "3901:3901" # RPC
+      - "3902:3902" # Web
+    environment:
+      - GARAGE_ALLOW_WORLD_READABLE=true
+    volumes:
+      - garage_data:/var/lib/garage
+    networks:
+      - oddjob-network
+    # Note: Garage requires a small config file; usually handled via 'garage layout apply'
+    # For 'Lite', we assume default local FS storage.
+
+  trustgraph-api:
+    image: trustgraph/api:latest
+    container_name: oddjob-trustgraph-api
+    restart: unless-stopped
+    environment:
+      - CASSANDRA_HOSTS=cassandra
+      - PULSAR_SERVICE_URL=pulsar://pulsar:6650
+      - QDRANT_URL=http://oddjob-qdrant:6333
+      - S3_ENDPOINT=http://garage:3900
+      - S3_ACCESS_KEY=oddjob-key
+      - S3_SECRET_KEY=oddjob-secret
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+      garage:
+        condition: service_started
+    networks:
+      - oddjob-network
+
+volumes:
+  cassandra_data:
+  pulsar_data:
+  garage_data:

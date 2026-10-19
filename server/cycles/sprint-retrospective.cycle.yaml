@@ -1,0 +1,279 @@
+name: "Sprint Retrospective"
+version: "1.0"
+containers: {}
+description: "Analyze sprint performance, generate retrospective document, and create improvement action items. Leverages JQL injection to query completed tickets for velocity analysis and pattern identification."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Sprint Retrospective"
+  icon: "🔄"
+  theme_color: "#f59e0b"
+  display_priority: 1
+  category: "development"
+  show_in_gallery: true
+  featured: true
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: true
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "operations"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: false
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "retrospective_template"
+    path: "file://knowledge/document-templates/sprint_retrospective_template.md"
+  - id: "action_item_template"
+    path: "file://knowledge/document-templates/action_item_template.md"
+
+forms:
+  - id: "sprint_intake"
+    name: "Sprint Information"
+    description: "Provide sprint details for retrospective analysis."
+    fields:
+      - name: "sprint_number"
+        label: "Sprint Number"
+        type: "number"
+        required: true
+      - name: "sprint_name"
+        label: "Sprint Name"
+        type: "text"
+        required: true
+      - name: "sprint_goal"
+        label: "Sprint Goal"
+        type: "textarea"
+        required: true
+      - name: "start_date"
+        label: "Sprint Start Date"
+        type: "date"
+        required: true
+      - name: "end_date"
+        label: "Sprint End Date"
+        type: "date"
+        required: true
+      - name: "team_members"
+        label: "Team Members"
+        type: "text"
+        required: false
+
+  - id: "retrospective_review"
+    name: "Retrospective Review"
+    description: "Review and approve the generated retrospective."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Publish", "Request Revisions", "Reject"]
+      - name: "additional_insights"
+        label: "Additional Insights"
+        type: "textarea"
+        required: false
+      - name: "action_items_approved"
+        label: "Approve Action Items"
+        type: "select"
+        required: true
+        options: ["Yes - Create JIRA Tasks", "No - Manual Follow-up"]
+
+agents:
+  - id: "ai-scrum-master"
+    name: "Agile Backlog Organizer & Coordinator"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.2
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Pragmatic Coach"
+      legend: "Analyzes sprint performance and generates actionable improvements."
+      traits: { speed: 85, empathy: 80, compliance: 60 }
+    system_prompt: "file://knowledge/prompts/scrum-master.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["jira_jql_search", "jira_create_sprint", "confluence_read", "confluence_publish", "slack_post_message", "oddjob_prediction_windowing"]
+
+  - id: "ai-systems-analyst"
+    name: "Product Requirement Systems Analyst"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Precision Architect"
+      legend: "Analyzes technical patterns and identifies improvement areas."
+      traits: { compliance: 90, creativity: 30, speed: 50 }
+    system_prompt: "file://knowledge/prompts/systems-analyst.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["confluence:read", "jira:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-collect-sprint-data"
+    name: "Collect Sprint Data"
+    objective: "Query JIRA for completed tickets and sprint metrics"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "scrum_master_workbench"
+    primary_agent: "ai-scrum-master"
+    inputs: ["sprint_intake"]
+    outputs: ["sprint_data"]
+    config:
+      jiraJqlQuery: "project = ${ENV.JIRA_PROJECT_KEY} AND status = Done AND updated >= '${START_DATE}' AND updated <= '${END_DATE}'"
+    sequence:
+      - step_code: "SPRINT-1"
+        action: "query_completed_tickets"
+        description: "Query JQL for completed tickets in sprint"
+        estimated_duration_minutes: 10
+        tool: "jira_jql_search"
+      - step_code: "SPRINT-2"
+        action: "calculate_velocity"
+        description: "Calculate sprint velocity and story points"
+        estimated_duration_minutes: 15
+      - step_code: "SPRINT-3"
+        action: "analyze_completion_rate"
+        description: "Analyze ticket completion rate and patterns"
+        estimated_duration_minutes: 15
+      - step_code: "SPRINT-4"
+        action: "identify_blockers"
+        description: "Identify blockers and impediments"
+        estimated_duration_minutes: 10
+
+  - id: "mission-generate-retrospective"
+    name: "Generate Retrospective Document"
+    objective: "Generate comprehensive retrospective with insights and action items"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 2
+    trigger: "on_success(mission-collect-sprint-data)"
+    primary_agent: "ai-scrum-master"
+    inputs: ["sprint_data"]
+    outputs: ["retrospective_document"]
+    sequence:
+      - step_code: "RETRO-1"
+        action: "analyze_what_went_well"
+        description: "Analyze what went well in the sprint"
+        estimated_duration_minutes: 20
+      - step_code: "RETRO-2"
+        action: "analyze_what_went_wrong"
+        description: "Analyze what went wrong and challenges"
+        estimated_duration_minutes: 20
+      - step_code: "RETRO-3"
+        action: "identify_improvements"
+        description: "Identify improvement opportunities"
+        estimated_duration_minutes: 20
+      - step_code: "RETRO-4"
+        action: "generate_action_items"
+        description: "Generate actionable improvement items"
+        estimated_duration_minutes: 20
+        template: "action_item_template"
+      - step_code: "RETRO-5"
+        action: "compile_retrospective"
+        description: "Compile comprehensive retrospective document"
+        estimated_duration_minutes: 20
+        template: "retrospective_template"
+
+  - id: "mission-review-retrospective"
+    name: "Review Retrospective"
+    objective: "Human review and approval of retrospective"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-generate-retrospective)"
+    primary_agent: "ai-scrum-master"
+    inputs: ["retrospective_document"]
+    outputs: ["approved_retrospective"]
+    requires_human: true
+    form_ref: "retrospective_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_retrospective"
+        description: "Present retrospective for team review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_feedback"
+        description: "Collect team feedback and additional insights"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_retrospective"
+        description: "Finalize retrospective based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-publish-retrospective"
+    name: "Publish Retrospective"
+    objective: "Publish retrospective to Confluence and create action items"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-review-retrospective)"
+    primary_agent: "ai-scrum-master"
+    inputs: ["approved_retrospective"]
+    outputs: ["published_retrospective"]
+    sequence:
+      - step_code: "PUB-1"
+        action: "publish_to_confluence"
+        description: "Publish retrospective to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "PUB-2"
+        action: "create_action_items"
+        description: "Create JIRA tasks for approved action items"
+        estimated_duration_minutes: 15
+        tool: "jira_create_sprint"
+      - step_code: "PUB-3"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

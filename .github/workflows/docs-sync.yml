@@ -1,0 +1,54 @@
+# Documentation sync — fingerprint-aware regeneration trigger.
+#
+# Regenerates only the system-documentation specs whose content fingerprint
+# changed (module / API / UI), so docs catch up to the code "right after a
+# change ships" instead of waiting for the in-app daily schedule.
+#
+# IMPORTANT: the specs live in the application database (per org) and AI
+# enrichment uses the app's config, so this MUST run somewhere that can reach
+# the live DATABASE_URL. The safest wiring is a POST-DEPLOY step in your deploy
+# pipeline (the deployed env already has DB + AI). This workflow is provided as
+# a manually/ API-dispatchable trigger (workflow_dispatch) — e.g. call it from a
+# "deploy succeeded" webhook, or run it by hand after a merge.
+#
+# Add `push: { branches: [Development] }` below ONLY if your GitHub runners can
+# reach the database; running it on every PR would write to the live DB.
+
+name: Documentation Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Rebuild every spec (not just changed ones)"
+        type: boolean
+        default: false
+      org:
+        description: "Limit to a single organization id (blank = all orgs)"
+        type: string
+        default: ""
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync documentation
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: production
+        run: |
+          ARGS=""
+          if [ "${{ inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
+          if [ -n "${{ inputs.org }}" ]; then ARGS="$ARGS --org=${{ inputs.org }}"; fi
+          npm run docs:sync -- $ARGS

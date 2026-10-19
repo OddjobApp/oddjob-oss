@@ -1,0 +1,16 @@
+{
+    "name": "Oddjob",
+    "short_name": "Oddjob",
+    "description": "Multi-Agent Autonomous Workforce",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0F172A",
+    "theme_color": "#3B82F6",
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ]
+}

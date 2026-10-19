@@ -1,0 +1,344 @@
+name: "Customer Onboarding"
+version: "1.0"
+containers: {}
+description: "Automated customer onboarding workflows with progress tracking, training material delivery, and success milestone monitoring. Integrates with CRM for customer data and JIRA for task tracking."
+author: "Oddjob Marketplace"
+
+ui_metadata:
+  display_name: "Customer Onboarding"
+  icon: "🎯"
+  theme_color: "#10b981"
+  display_priority: 2
+  category: "customer-success"
+  show_in_gallery: true
+  featured: false
+
+guardrails:
+  execution_sandbox: true
+  max_thrashing_iterations: 3
+  enforce_read_only_prod: false
+  token_budget_per_ticket: 250000
+
+ai_provider:
+  provider: "anthropic"
+  api_key: "${ENV.AI_API_KEY}"
+  default_model: "claude-3.5-sonnet"
+  fallback_model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4096
+  timeout_ms: 120000
+
+tech_stack:
+  backend_language: "${ENV.TECH_BACKEND_LANG}"
+  frontend_framework: "${ENV.TECH_FRONTEND_FRAMEWORK}"
+
+portfolio_classification:
+  group_type: "customer-success"
+  capitalization_category: "OpEx"
+  cost_center: "${ENV.ENTERPRISE_COST_CENTER}"
+
+organizational_guidelines:
+  coding_standards:
+    required: true
+    path: "file://knowledge/guidelines/coding_standards.md"
+
+integrations:
+  source_control:
+    required: false
+    provider: "${ENV.GIT_PROVIDER}"
+    repo_url: "${ENV.GIT_REPO_URL}"
+    api_token: "${ENV.GIT_API_TOKEN}"
+  database:
+    required: true
+    dialect: "${ENV.DB_DIALECT}"
+    dev_url: "${ENV.DEV_DATABASE_URL}"
+  jira:
+    required: true
+    project_key: "${ENV.JIRA_PROJECT_KEY}"
+    endpoint: "${ENV.JIRA_BASE_URL}"
+    api_token: "${ENV.JIRA_API_TOKEN}"
+  confluence:
+    required: true
+    engineering_space: "${ENV.CONFLUENCE_ENG_SPACE}"
+    endpoint: "${ENV.CONFLUENCE_BASE_URL}"
+    api_token: "${ENV.CONFLUENCE_API_TOKEN}"
+  slack:
+    required: true
+    workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
+    approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+
+templates:
+  - id: "onboarding_plan_template"
+    path: "file://knowledge/document-templates/onboarding_plan_template.md"
+  - id: "training_material_template"
+    path: "file://knowledge/document-templates/training_material_template.md"
+
+forms:
+  - id: "onboarding_intake"
+    name: "Customer Onboarding Intake"
+    description: "Provide customer details for onboarding."
+    fields:
+      - name: "customer_name"
+        label: "Customer Name"
+        type: "text"
+        required: true
+      - name: "contact_name"
+        label: "Primary Contact"
+        type: "text"
+        required: true
+      - name: "contact_email"
+        label: "Contact Email"
+        type: "text"
+        required: true
+      - name: "plan_type"
+        label: "Plan Type"
+        type: "select"
+        required: true
+        options: ["Enterprise", "Professional", "Starter"]
+      - name: "team_size"
+        label: "Team Size"
+        type: "number"
+        required: true
+      - name: "start_date"
+        label: "Onboarding Start Date"
+        type: "date"
+        required: true
+      - name: "special_requirements"
+        label: "Special Requirements"
+        type: "textarea"
+        required: false
+
+  - id: "onboarding_review"
+    name: "Onboarding Review"
+    description: "Review and approve onboarding progress."
+    fields:
+      - name: "approval_status"
+        label: "Approval Status"
+        type: "select"
+        required: true
+        options: ["Approve & Continue", "Request Revisions", "Complete Onboarding"]
+      - name: "progress_update"
+        label: "Progress Update"
+        type: "select"
+        required: true
+        options: ["0-25%", "26-50%", "51-75%", "76-100%"]
+      - name: "milestones_achieved"
+        label: "Milestones Achieved"
+        type: "multiselect"
+        required: true
+        options: ["Account Setup", "Training Completed", "Integration Configured", "Go-Live"]
+      - name: "comments"
+        label: "Comments"
+        type: "textarea"
+        required: false
+
+agents:
+  - id: "ai-customer-success"
+    name: "Customer Success Coordinator"
+    role: "worker"
+    model: "claude-3.5-sonnet"
+    temperature: 0.1
+    max_iterations: 3
+    token_budget: 150000
+    soul_profile:
+      archetype: "The Relationship Builder"
+      legend: "Manages customer onboarding and success milestones."
+      traits: { compliance: 85, creativity: 30, speed: 70 }
+    system_prompt: "file://knowledge/prompts/customer-success-manager.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "jira:write", "slack:write:channel", "confluence:read", "confluence:write"]
+    tools: ["knowledge_graph_query", "jira_jql_search", "jira_create_sprint", "confluence_publish", "slack_post_message"]
+
+  - id: "ai-onboarding-specialist"
+    name: "Customer Onboarding Specialist"
+    role: "supervisor"
+    model: "claude-3.5-sonnet"
+    temperature: 0.0
+    max_iterations: 3
+    token_budget: 100000
+    soul_profile:
+      archetype: "The Process Optimizer"
+      legend: "Generates onboarding plans and tracks progress."
+      traits: { compliance: 90, creativity: 20, speed: 60 }
+    system_prompt: "file://knowledge/prompts/onboarding-specialist.md"
+    boundaries: ["knowledge/", "docs/"]
+    permissions: ["jira:read", "confluence:read"]
+    tools: ["knowledge_graph_query", "jira_jql_search"]
+
+missions:
+  - id: "mission-create-onboarding-plan"
+    name: "Create Onboarding Plan"
+    objective: "Generate personalized onboarding plan"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger:
+      type: "manual"
+      source: "customer_success_workbench"
+    primary_agent: "ai-onboarding-specialist"
+    inputs: ["onboarding_intake"]
+    outputs: ["onboarding_plan"]
+    sequence:
+      - step_code: "PLAN-1"
+        action: "analyze_customer"
+        description: "Analyze customer profile and needs"
+        estimated_duration_minutes: 15
+        tool: "knowledge_graph_query"
+      - step_code: "PLAN-2"
+        action: "define_milestones"
+        description: "Define onboarding milestones"
+        estimated_duration_minutes: 15
+      - step_code: "PLAN-3"
+        action: "generate_timeline"
+        description: "Generate onboarding timeline"
+        estimated_duration_minutes: 15
+      - step_code: "PLAN-4"
+        action: "create_plan_document"
+        description: "Create onboarding plan document"
+        estimated_duration_minutes: 15
+        template: "onboarding_plan_template"
+
+  - id: "mission-setup-tasks"
+    name: "Setup Onboarding Tasks"
+    objective: "Create JIRA tasks for onboarding milestones"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-create-onboarding-plan)"
+    primary_agent: "ai-customer-success"
+    inputs: ["onboarding_plan"]
+    outputs: ["onboarding_tasks"]
+    sequence:
+      - step_code: "TASK-1"
+        action: "create_jira_tasks"
+        description: "Create JIRA tasks for each milestone"
+        estimated_duration_minutes: 15
+        tool: "jira_create_sprint"
+      - step_code: "TASK-2"
+        action: "assign_owners"
+        description: "Assign task owners"
+        estimated_duration_minutes: 10
+      - step_code: "TASK-3"
+        action: "set_due_dates"
+        description: "Set due dates based on timeline"
+        estimated_duration_minutes: 5
+
+  - id: "mission-deliver-training"
+    name: "Deliver Training Materials"
+    objective: "Generate and deliver training materials"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-setup-tasks)"
+    primary_agent: "ai-onboarding-specialist"
+    inputs: ["onboarding_plan"]
+    outputs: ["training_materials"]
+    sequence:
+      - step_code: "TRAIN-1"
+        action: "generate_materials"
+        description: "Generate training materials"
+        estimated_duration_minutes: 30
+        template: "training_material_template"
+      - step_code: "TRAIN-2"
+        action: "customize_content"
+        description: "Customize content for customer"
+        estimated_duration_minutes: 15
+      - step_code: "TRAIN-3"
+        action: "publish_materials"
+        description: "Publish materials to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "TRAIN-4"
+        action: "notify_customer"
+        description: "Notify customer via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"
+
+  - id: "mission-track-progress"
+    name: "Track Onboarding Progress"
+    objective: "Monitor onboarding progress and milestones"
+    type: "mission"
+    environment: "planning"
+    estimated_duration_hours: 0.5
+    trigger:
+      type: "manual"
+      source: "customer_success_workbench"
+    primary_agent: "ai-customer-success"
+    inputs: ["onboarding_tasks"]
+    outputs: ["progress_report"]
+    sequence:
+      - step_code: "TRACK-1"
+        action: "query_tasks"
+        description: "Query JIRA for task status"
+        estimated_duration_minutes: 10
+        tool: "jira_jql_search"
+      - step_code: "TRACK-2"
+        action: "calculate_progress"
+        description: "Calculate overall progress percentage"
+        estimated_duration_minutes: 10
+      - step_code: "TRACK-3"
+        action: "identify_blockers"
+        description: "Identify any blockers or delays"
+        estimated_duration_minutes: 5
+      - step_code: "TRACK-4"
+        action: "generate_progress_report"
+        description: "Generate progress report"
+        estimated_duration_minutes: 5
+
+  - id: "mission-review-onboarding"
+    name: "Review Onboarding"
+    objective: "Human review and approval of onboarding progress"
+    type: "milestone"
+    environment: "planning"
+    estimated_duration_hours: 1
+    trigger: "on_success(mission-track-progress)"
+    primary_agent: "ai-customer-success"
+    inputs: ["progress_report"]
+    outputs: ["approved_progress"]
+    requires_human: true
+    form_ref: "onboarding_review"
+    pause_at_milestone: true
+    sequence:
+      - step_code: "REVIEW-1"
+        action: "present_progress"
+        description: "Present onboarding progress for review"
+        estimated_duration_minutes: 10
+      - step_code: "REVIEW-2"
+        action: "collect_approval"
+        description: "Collect customer success manager approval"
+        estimated_duration_minutes: 30
+        requires_human: true
+      - step_code: "REVIEW-3"
+        action: "finalize_progress"
+        description: "Finalize progress based on feedback"
+        estimated_duration_minutes: 20
+
+  - id: "mission-complete-onboarding"
+    name: "Complete Onboarding"
+    objective: "Complete onboarding and transition to success"
+    type: "mission"
+    environment: "production"
+    estimated_duration_hours: 0.5
+    trigger: "on_success(mission-review-onboarding)"
+    primary_agent: "ai-customer-success"
+    inputs: ["approved_progress"]
+    outputs: ["completed_onboarding"]
+    sequence:
+      - step_code: "COMPLETE-1"
+        action: "update_status"
+        description: "Update customer status to active"
+        estimated_duration_minutes: 10
+      - step_code: "COMPLETE-2"
+        action: "schedule_checkin"
+        description: "Schedule first success check-in"
+        estimated_duration_minutes: 5
+      - step_code: "COMPLETE-3"
+        action: "publish_summary"
+        description: "Publish onboarding summary to Confluence"
+        estimated_duration_minutes: 10
+        tool: "confluence_publish"
+      - step_code: "COMPLETE-4"
+        action: "notify_team"
+        description: "Notify team via Slack"
+        estimated_duration_minutes: 5
+        tool: "slack_post_message"

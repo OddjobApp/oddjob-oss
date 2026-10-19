@@ -1,0 +1,85 @@
+# Multi-Agent Crew Room Manifest Template
+# Oddjob Reference Implementation
+#
+# Declarative configuration for multi-agent swarms with role segregation,
+# domain SME topic assignments, hand-raising protocols, and voting quorum.
+
+version: "2.0.0"
+crew_id: "crew_code_audit_and_refactor_v2"
+name: "Production Code Audit & Refactor Crew"
+description: "Autonomous multi-agent squad with domain SMEs for discovering vulnerabilities, planning refactors, and writing verified unit tests."
+
+governance:
+  autonomy_tier: "L3" # L0 to L4
+  max_turns_total: 25
+  max_token_budget: 150000
+  hard_cost_limit_usd: 2.50
+  consensus_threshold_percent: 67 # Minimum quorum for artifact endorsement
+  sme_hand_raising_enabled: true # Automatically primes SMEs and enforces hand-raising protocol
+
+roles:
+  - role_id: "planner"
+    name: "Lead Systems Analyst & Architect"
+    designated_sme_domain: "Architecture & Infrastructure"
+    assigned_runbooks:
+      - "distributed-fleet-and-worker-isolation"
+      - "zero-downtime-database-migrations"
+      - "pipeline-and-mission-assembly"
+    model_tier: "TIER_3_FRONTIER"
+    system_prompt_ref: "docs/platform/07-reference-and-templates/agent-system-prompt.template.md"
+    capabilities:
+      - "resolve_assembly_dag"
+      - "propose_mission"
+      - "query_code_graph"
+      - "get_blackboard"
+      - "update_blackboard"
+
+  - role_id: "worker_code"
+    name: "Refactoring & Implementation Specialist"
+    designated_sme_domain: "Data & Knowledge Graph"
+    assigned_runbooks:
+      - "knowledge-graph-linking"
+      - "transactional-writeback"
+    model_tier: "TIER_2_MIDWEIGHT"
+    capabilities:
+      - "code_read"
+      - "code_edit"
+      - "code_diff"
+      - "execute_unit_tests"
+      - "propose_crew_claim"
+      - "update_blackboard"
+
+  - role_id: "critic_qa"
+    name: "Security & Adversarial QA Critic"
+    designated_sme_domain: "Security & Compliance"
+    assigned_runbooks:
+      - "secure-code-sandbox-and-python-runtime"
+      - "compliance-and-audit-trails"
+      - "escalation-and-confidence-gates"
+    model_tier: "TIER_3_FRONTIER"
+    capabilities:
+      - "run_dependency_audit"
+      - "evaluate_functional_gaps"
+      - "code_diff"
+      - "get_blackboard"
+      - "propose_crew_decision"
+
+  - role_id: "governor"
+    name: "Policy & Release Governor"
+    designated_sme_domain: "DevOps & Reliability"
+    assigned_runbooks:
+      - "agent-error-recovery"
+      - "system-limits-and-quotas"
+    model_tier: "TIER_1_LOCAL"
+    capabilities:
+      - "trigger_hil_approval"
+      - "propose_crew_commitment"
+      - "get_blackboard"
+
+escalation_triggers:
+  - condition: "critic_qa rejects worker proposal >= 3 consecutive turns"
+    action: "TRIGGER_HIL_DEADLOCK_MODAL"
+  - condition: "token_spend_usd > 2.00"
+    action: "DOWNGRADE_TO_TIER_1_AND_NOTIFY"
+  - condition: "blast_radius_score > 0.35"
+    action: "REQUIRE_HUMAN_SIGNATURE"

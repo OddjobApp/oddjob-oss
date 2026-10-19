@@ -1,0 +1,45 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": false,
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "noEmit": false,
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": [
+        "./client/src/*"
+      ],
+      "@shared/*": [
+        "./shared/*"
+      ],
+      "@server/*": [
+        "./server/*"
+      ],
+      "@domain/*": [
+        "./server/domain/*"
+      ]
+    }
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+  "include": [
+    "server/index.ts",
+    "server/worker-entrypoint.ts",
+    "server/mcp/index.ts",
+    "server/mcp/http-server.ts",
+    "server/types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "server/domain/**/ui"
+  ]
+}

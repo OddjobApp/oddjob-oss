@@ -1,0 +1,17 @@
+import React from "react";
+
+export interface DesignSystemProviderProps {
+  children: React.ReactNode;
+  theme?: "dark" | "light" | "system";
+}
+
+export const DesignSystemProvider: React.FC<DesignSystemProviderProps> = ({
+  children,
+  theme = "dark"
+}) => {
+  return (
+    <div className={`oddjob-design-system-root ${theme === "dark" ? "dark bg-background text-foreground" : ""}`}>
+      {children}
+    </div>
+  );
+};

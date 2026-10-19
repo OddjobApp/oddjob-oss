@@ -1,0 +1,49 @@
+import { GetUserIntentInput } from "../tools/ephemeral.js";
+import { db } from "../../database_service.js";
+import { contactIntentStates, engagementLogs } from "@shared/schema/index.js";
+import { eq, desc } from "drizzle-orm";
+import { successResponse, errorResponse } from "./utils.js";
+
+export async function handleGetUserIntent(args: unknown) {
+    try {
+        const input = GetUserIntentInput.parse(args);
+
+        // 1. Get latest state
+        const [latestState] = await db
+            .select()
+            .from(contactIntentStates)
+            .where(eq(contactIntentStates.userFingerprint, input.fingerprint))
+            .orderBy(desc(contactIntentStates.createdAt))
+            .limit(1);
+
+        // 2. Get recent engagements
+        const engagements = await db
+            .select()
+            .from(engagementLogs)
+            .where(eq(engagementLogs.userFingerprint, input.fingerprint))
+            .orderBy(desc(engagementLogs.createdAt))
+            .limit(5);
+
+        if (!latestState) {
+            return errorResponse(`No state found for user ${input.fingerprint}`);
+        }
+
+        return successResponse({
+            current_state: {
+                vector: latestState.stateVector,
+                confidence: latestState.confidence,
+                route: latestState.routePath,
+                timestamp: latestState.createdAt
+            },
+            recent_engagements: engagements.map(e => ({
+                strategy: e.strategyName,
+                action: e.userAction,
+                timestamp: e.createdAt
+            }))
+        }, `User is in state ${latestState.stateVector} (Confidence: ${latestState.confidence})`);
+
+    } catch (error: any) {
+        return errorResponse(error.message);
+    }
+}
+

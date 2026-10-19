@@ -1,0 +1,17 @@
+{
+  "name": "oddjob-playwright-tests",
+  "version": "1.0.0",
+  "description": "Decoupled E2E Playwright test suite for Oddjob frontend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "cross-env HEADED=true playwright test",
+    "codegen": "playwright codegen http://localhost:5000"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "axios": "^1.6.8",
+    "typescript": "^5.4.5"
+  }
+}

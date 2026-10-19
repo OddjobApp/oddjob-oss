@@ -1,0 +1,25 @@
+# Migration chain.
+#
+# The runtime migrator reads migrations/runtime/meta/_journal.json with
+# JSON.parse, which throws on a leading UTF-8 BOM. A BOM there is not a
+# cosmetic problem: it aborts readMigrationFiles before a single statement
+# runs, so the whole chain silently stops applying while the schema and the
+# journal both still look correct. See c7f92fce9.
+#
+# Pinning these to LF keeps PowerShell rewrites (Out-File / Set-Content
+# default to UTF-8 *with* BOM on Windows) from churning line endings on top
+# of that. Note that eol=lf normalizes line endings only -- Git has no
+# attribute that strips a BOM, so the actual BOM guard is
+# `npm run check:migration-journal`, wired into `npm run verify`.
+migrations/** text eol=lf
+*.sql text eol=lf
+
+# Scaffold templates.
+#
+# Same class of problem as the migration chain above, one step removed: these
+# .hbs files are rendered into TypeScript source, and the scaffold tests assert
+# against that output with LF literals (e.g. `pgTable(\n  "..."`). Checked out
+# with CRLF on Windows, the generated source contains \r\n and those assertions
+# cannot match — server/domain/scaffold/tests/dataset-pack.test.ts failed for
+# exactly this reason, on Windows only, while CI on Linux stayed green.
+packages/scaffold-registry/data/** text eol=lf
