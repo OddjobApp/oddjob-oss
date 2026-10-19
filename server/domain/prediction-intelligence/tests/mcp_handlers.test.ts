@@ -7,13 +7,13 @@ import { describe, it, expect, vi } from "vitest";
 import { handleGetHiddenStateEstimate, handlePredictOutcomes } from "../../../mcp/handlers/prediction.js";
 
 // Mock the pods to avoid complex dependencies
-vi.mock("../../hidden-state/hidden-state-pod.service.js", () => ({
+vi.mock("@domain/prediction-intelligence/hidden-state/hidden-state-pod.service.js", () => ({
     hiddenStatePod: {
         estimate: vi.fn().mockResolvedValue({ topLabel: "user_will_click", entropy: 0.2 })
     }
 }));
 
-vi.mock("../../prediction/prediction-pod.service.js", () => ({
+vi.mock("@domain/prediction-intelligence/prediction/prediction-pod.service.js", () => ({
     predictionPod: {
         generateBranches: vi.fn().mockResolvedValue([{ branchId: "1", label: "user_will_click" }])
     }

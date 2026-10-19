@@ -72,7 +72,7 @@ vi.mock("@domain/core/infrastructure/file-parser.service.js", () => ({
     }
 }));
 
-vi.mock("@domain/core/infrastructure/system-context-service.service.js", () => ({
+vi.mock("@domain/core/infrastructure/system-context.service.js", () => ({
     systemContextService: {}
 }));
 
@@ -132,7 +132,7 @@ vi.mock("@domain/mission/core/mission.service.js", () => ({
     }
 }));
 
-vi.mock("@domain/core/infrastructure/system-ai-service.service.js", () => ({
+vi.mock("@domain/ai/core/system-ai.service.js", () => ({
     systemAiService: {
         getAiConfig: vi.fn().mockResolvedValue({}),
         getAiConfigWithFallback: vi.fn().mockResolvedValue({})

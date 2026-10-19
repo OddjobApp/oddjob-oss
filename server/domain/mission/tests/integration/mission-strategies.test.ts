@@ -78,7 +78,7 @@ vi.mock("@domain/core/infrastructure/redis/redis-client.js", () => ({
 }));
 
 // Mock System AI config
-vi.mock("../../ai/core/system-ai.service.js", () => ({
+vi.mock("@domain/ai/core/system-ai.service.js", () => ({
     systemAiService: {
         getAiConfig: vi.fn().mockResolvedValue({ provider: 'google', model: 'gemini-2.0-flash', apiKey: 'test-key' }),
     }

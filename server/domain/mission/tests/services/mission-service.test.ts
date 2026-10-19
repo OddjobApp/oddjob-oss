@@ -53,7 +53,7 @@ vi.mock("@server/domain/knowledge/core/graph/graph-service", () => ({
   }
 }));
 
-vi.mock("@server/ai/ai-client", () => ({
+vi.mock("@domain/ai/core/ai-client.service.js", () => ({
   AIClientFactory: {
     getClient: vi.fn().mockReturnValue({
       execute: vi.fn().mockResolvedValue({ success: true, output: JSON.stringify({ name: "Test Mission", objective: "Test objective", members: [] }) })

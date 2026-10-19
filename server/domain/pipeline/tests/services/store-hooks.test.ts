@@ -52,7 +52,7 @@ vi.mock("@server/database_service.js", () => {
     };
 });
 
-vi.mock('../../../server/knowledge-queue.js', () => ({
+vi.mock('@domain/knowledge/knowledge-queue.js', () => ({
     queueExtractionJob: vi.fn().mockResolvedValue(undefined),
 }));
 

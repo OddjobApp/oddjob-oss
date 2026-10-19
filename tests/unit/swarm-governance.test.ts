@@ -1,4 +1,30 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// The subject is the subgraph intersection; Redis is only the transport the message is
+// published on. Unmocked, publish waited on a connection and the test failed wherever
+// Redis was not running, including CI's hermetic verify job.
+vi.mock("@domain/core/infrastructure/redis/redis-client.js", () => {
+    const client = {
+        on: vi.fn(),
+        subscribe: vi.fn().mockResolvedValue(1),
+        unsubscribe: vi.fn().mockResolvedValue(1),
+        publish: vi.fn().mockResolvedValue(1),
+        sadd: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+        smembers: vi.fn().mockResolvedValue([]),
+    };
+    return {
+        redis: client,
+        redisService: { publisher: client, subscriber: client, client },
+        getRedisOptions: () => ({}),
+        getRedisClient: () => client,
+    };
+});
+// The message is also traced onto the BullMQ system queue, which connects at import.
+vi.mock("@domain/core/infrastructure/queue/queue-service.js", () => ({
+    queueService: { systemQueue: {}, addJobWithTrace: vi.fn().mockResolvedValue({ id: "job-1" }) },
+}));
+
 import { SwarmCommunicationService } from "../../server/domain/agents/core/swarm-communication.service.js";
 import { ScopedTopicIndexer } from "../../server/domain/ai/core/scoped-topic-indexer.js";
 

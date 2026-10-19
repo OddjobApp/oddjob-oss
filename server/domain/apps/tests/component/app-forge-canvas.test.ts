@@ -20,15 +20,10 @@ vi.mock('node:fs/promises', () => ({
   },
 }));
 
-vi.mock('../../canvas/core/canvas.service.js', () => ({
-  CanvasService: {
-    generateAppCanvas: mockGenerateAppCanvas,
-  },
-}));
 
 // Mock other forge dependencies to isolate the canvas logic
 vi.mock('../../app-registry.service.js', () => ({ appRegistryService: {} }));
-vi.mock('../../core/infrastructure/docker/docker-bridge.service.js', () => ({ dockerBridgeService: {} }));
+vi.mock('@domain/core/infrastructure/docker/docker-bridge.service.js', () => ({ dockerBridgeService: {} }));
 vi.mock('get-port', () => ({ default: () => Promise.resolve(3001) }));
 vi.mock('node:child_process', () => ({ execCallback: vi.fn(() => ({ kill: vi.fn() })) }));
 

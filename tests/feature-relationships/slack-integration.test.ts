@@ -218,7 +218,7 @@ describe('Slack Conversational Integration', () => {
 
             // Mock evidence storage
             const mockEvidenceStorage = { store: vi.fn().mockResolvedValue('https://storage.example.com/file.pdf') };
-            vi.doMock('../../../server/domain/core/infrastructure/evidence-storage.service.js', () => ({
+            vi.doMock('@domain/core/infrastructure/evidence-storage.service.js', () => ({
                 EvidenceStorageService: mockEvidenceStorage,
             }));
 
@@ -237,7 +237,7 @@ describe('Slack Conversational Integration', () => {
 
             // Mock transcription service
             const mockTranscription = { transcribe: vi.fn().mockResolvedValue({ text: 'Build a website' }) };
-            vi.doMock('../../../server/domain/media/transcription-service.js', () => ({
+            vi.doMock('@domain/media/transcription-service.js', () => ({
                 transcriptionService: mockTranscription,
             }));
 

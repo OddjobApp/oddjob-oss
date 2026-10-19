@@ -104,7 +104,7 @@ vi.mock("@domain/ai/core/ai-client.service.js", () => ({
     }
 }));
 
-vi.mock("../ai/core/system-ai.service.js", () => ({
+vi.mock("@domain/ai/core/system-ai.service.js", () => ({
     systemAiService: {
         getAiConfig: vi.fn().mockResolvedValue({ provider: 'google', model: 'gemini' })
     }

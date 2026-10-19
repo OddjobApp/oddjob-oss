@@ -30,7 +30,7 @@ vi.mock("@domain/core/infrastructure/event-stream.service.js", () => ({
     },
 }));
 
-vi.mock("./mission-correlation.service.js", () => ({
+vi.mock("@domain/mission/core/mission-correlation.service.js", () => ({
     missionCorrelationService: {
         getCorrelationId: vi.fn().mockReturnValue("corr_test_123"),
     },

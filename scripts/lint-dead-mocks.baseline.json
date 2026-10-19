@@ -1,0 +1,22 @@
+{
+  "generatedBy": "npm run lint:dead-mocks -- --update-baseline",
+  "total": 16,
+  "files": {
+    "server/domain/auth/tests/services/organization-service.test.ts": 1,
+    "server/domain/core/ui/components/layout/__tests__/Header.copilot.test.tsx": 1,
+    "server/domain/jobs/tests/services/job-service.test.ts": 1,
+    "server/domain/jobs/tests/services/job-synthesis.service.test.ts": 1,
+    "server/domain/knowledge/tests/integration/memory-documentation.test.ts": 1,
+    "server/domain/knowledge/tests/services/dataset-service.test.ts": 1,
+    "server/domain/knowledge/tests/services/lineage-service.test.ts": 1,
+    "server/domain/knowledge/tests/services/query-builder-ai-service.test.ts": 1,
+    "server/domain/mission/tests/services/audit-service.test.ts": 1,
+    "server/domain/mission/tests/services/templates-service.test.ts": 1,
+    "server/domain/pipeline/tests/integration/predictive-automation.test.ts": 1,
+    "server/domain/pipeline/tests/services/supervisor-resume-hook.test.ts": 1,
+    "tests/cross-domain/cache-service.test.ts": 1,
+    "tests/cross-domain/circuit-breaker.test.ts": 1,
+    "tests/cross-domain/saas-integration.test.tsx": 1,
+    "tests/cross-domain/user-experience.test.ts": 1
+  }
+}

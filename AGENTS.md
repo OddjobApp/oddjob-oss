@@ -29,7 +29,7 @@ because tests once wrote into the development database.
 
 ## A gate that silently does not run is worse than no gate
 
-This is the single most repeated defect in this repo's history, in four
+This is the single most repeated defect in this repo's history, in five
 different forms:
 
 - CI branch filters were an allowlist of branch prefixes, so work on
@@ -41,6 +41,10 @@ different forms:
 - `lint:arch` matched files by suffix, which exempted all 110 files in
   `server/routes/`, and certified the codebase clean over 328 direct db calls.
 - Coverage thresholds were configured and never evaluated.
+- 63 `vi.mock` calls pointed at modules that had moved or been renamed, so they
+  mocked nothing and the tests ran real Redis and database code — green only on a
+  machine with those running. `lint:dead-mocks` now fails on any new one; the 16
+  left in its baseline are loggers and client helpers.
 
 The lesson generalises: when you add a check, verify it actually selects the
 files you think it does. Prefer a denylist to an allowlist.

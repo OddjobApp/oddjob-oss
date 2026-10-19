@@ -25,7 +25,7 @@ vi.mock("@server/database_service.js", () => {
 });
 
 // Mock mission module
-vi.mock("../../server/domain/mission/index.js", () => ({
+vi.mock("@domain/mission/index.js", () => ({
     missionService: {
         updateBlackboard: vi.fn().mockResolvedValue(undefined)
     }

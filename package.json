@@ -53,7 +53,7 @@
     "check": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc",
     "build:packages": "npm run build --workspace=@oddjob/design-system",
     "verify:formal": "vitest run server/domain/scaffold/formal/tests/ server/domain/mission/tests/mission-schedulability-prover.test.ts server/domain/governance/tests/formal-governance.test.ts server/domain/scaffold/tests/sat-scaffold-resolver.test.ts",
-    "verify": "npm run check:migration-journal && npm run check:executor-manifest && npm run check:tool-idempotency && npm run lint:theme && npm run lint:z-index && npm run lint:dialogs && npm run lint:arch && npm run lint:org-scoping && npm run lint:shared-ai-keys && npm run check:domain-drift && npm run check:declared-deps && npm run build:packages && npm run check && npm run test && npm run smoke && npm run build",
+    "verify": "npm run check:migration-journal && npm run check:executor-manifest && npm run check:tool-idempotency && npm run lint:theme && npm run lint:z-index && npm run lint:dialogs && npm run lint:arch && npm run lint:org-scoping && npm run lint:shared-ai-keys && npm run lint:dead-mocks && npm run check:domain-drift && npm run check:declared-deps && npm run build:packages && npm run check && npm run test && npm run smoke && npm run build",
     "verify:full": "npm run audit:deps && npm run verify",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
@@ -127,6 +127,7 @@
     "dev:client": "npm run dev --workspace=client",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:client\"",
     "lint:shared-ai-keys": "tsx scripts/lint-shared-ai-keys.ts",
+    "lint:dead-mocks": "tsx scripts/lint-dead-mocks.ts",
     "encryption:rotate": "tsx scripts/rotate-encryption-key.ts",
     "check:declared-deps": "tsx scripts/check-declared-deps.ts"
   },

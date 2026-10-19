@@ -20,19 +20,12 @@ vi.mock('@domain/ai/core/system-ai.service.js', () => ({
     },
 }));
 
-vi.mock('@domain/agents/core/agent-persona.service.js', () => ({
+vi.mock('@domain/agents/agent-persona.service.js', () => ({
     AgentPersonaService: {
         augmentSystemPrompt: (prompt: string) => `Augmented: ${prompt}`,
     },
 }));
 
-vi.mock('@domain/agents/core/capability-discovery.service.js', () => ({
-    capabilityDiscoveryService: {
-        discoverCapabilities: () => Promise.resolve([
-            { name: 'Existing Mission', type: 'Mission', score: 92, explanation: 'This mission already performs a similar function.' }
-        ]),
-    }
-}));
 
 describe("App Forge Co-Pilot Wizard", () => {
 

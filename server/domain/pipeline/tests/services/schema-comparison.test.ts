@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@domain/core/infrastructure/SchemaInferenceService.service.js", () => ({
+vi.mock("@domain/knowledge/core/schema-inference.service.js", () => ({
     JSONSchema: {}
 }));
 

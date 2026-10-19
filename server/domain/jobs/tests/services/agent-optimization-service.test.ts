@@ -55,7 +55,7 @@ vi.mock("@domain/ai/core/ai-client.service.js", () => ({
     AIClientFactory: { getClient: vi.fn() }
 }));
 
-vi.mock("@domain/core/infrastructure/system-ai-service.service.js", () => ({
+vi.mock("@domain/ai/core/system-ai.service.js", () => ({
     systemAiService: { getAiConfig: vi.fn().mockResolvedValue(null) }
 }));
 

@@ -1,3 +1,7 @@
+// Integration: exercises the real Redis-backed L2 tier (setex, tag sets, SCAN-based
+// wildcard invalidation), so it runs under `npm run test:integration`, where CI
+// provisions Redis, not in the hermetic unit gate.
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CacheService } from '../../server/domain/cache/cache.service';
 

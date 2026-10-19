@@ -25,8 +25,11 @@ vi.mock("@server/database_service.js", () => ({
 vi.mock("@server/utils/logger.js", () => ({
     createLogger: () => ({ info: h.info, warn: vi.fn(), error: h.error, debug: vi.fn() }),
 }));
-vi.mock("@domain/core/infrastructure/redis.service.js", () => ({
-    redisService: { client: { set: vi.fn().mockResolvedValue("OK") } },
+// This mocked redis.service.js, a module that no longer exists, so the real client
+// connected and its "Redis [main] error" logs failed the no-error assertion wherever
+// Redis was not running.
+vi.mock("@domain/core/infrastructure/redis/redis-client.js", () => ({
+    getRedisClient: () => ({ set: vi.fn().mockResolvedValue("OK") }),
 }));
 
 import { formPublishingService } from "@domain/governor/core/form-publishing-service.js";

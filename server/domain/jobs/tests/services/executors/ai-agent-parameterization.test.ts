@@ -72,7 +72,7 @@ vi.mock("@domain/agents/agent-runner.js", () => ({
     runAgentLoop: (...args: unknown[]) => mockRunAgentLoop(...args),
 }));
 
-vi.mock("@domain/audit/transaction-log.js", () => ({
+vi.mock("@domain/audit/core/transaction-log.js", () => ({
     transactionLogService: {
         startTransaction: vi.fn(() => ({
             transactionId: 'tx-1',

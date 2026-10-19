@@ -14,7 +14,7 @@ vi.mock("@server/database_service.js", () => ({
   },
 }));
 
-vi.mock('@server/domain/org/governor/decision-router.js', () => ({
+vi.mock('@domain/governor/core/decision-router.js', () => ({
   decisionRouter: {
     requestDecision: vi.fn(),
   },

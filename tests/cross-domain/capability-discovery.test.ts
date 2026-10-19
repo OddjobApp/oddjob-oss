@@ -20,12 +20,12 @@ vi.mock("drizzle-orm", async (importOriginal) => {
         eq: vi.fn(), inArray: vi.fn(), asc: vi.fn(), and: vi.fn(),
     };
 });
-vi.mock("@domain/core/infrastructure/input-validation-service.service.js", () => ({ InputValidationService: {} }));
+vi.mock("@domain/core/input-validation.service.js", () => ({ InputValidationService: {} }));
 vi.mock("@server/utils/logger", () => ({
     createLogger: vi.fn(() => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }))
 }));
 vi.mock("../../server/domain/tools/v1/tool-registry.service.js", () => ({ AGENT_TOOLS: {} }));
-vi.mock("@domain/core/infrastructure/agent-persona-service.service.js", () => ({ AgentPersonaService: {} }));
+vi.mock("@domain/agents/agent-persona.service.js", () => ({ AgentPersonaService: {} }));
 
 import { CapabilityDiscoveryService, type DiscoveredCapability } from "@domain/core/infrastructure/capability-discovery.service.js";
 

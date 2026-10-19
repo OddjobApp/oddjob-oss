@@ -36,12 +36,6 @@ vi.mock("@server/domain/jobs/job.service.js", () => ({
     }
 }));
 
-vi.mock("@domain/core/infrastructure/pipeline-execution-service.service.js", () => ({
-    pipelineExecutionService: {
-        getById: vi.fn().mockResolvedValue({ id: 1 }),
-        resume: vi.fn().mockResolvedValue({ success: true })
-    }
-}));
 
 vi.mock("@server/utils/logger.js", () => ({
     createLogger: vi.fn(() => ({

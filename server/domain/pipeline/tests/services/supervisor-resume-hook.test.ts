@@ -17,7 +17,7 @@ vi.mock('@server/database_service.js', () => ({
     },
 }));
 
-vi.mock("@domain/core/infrastructure/supervisor-service.service.js", () => ({
+vi.mock("@domain/integrations/core/supervisor.service.js", () => ({
     supervisorService: {
         executePlan: vi.fn().mockResolvedValue({ state: 'waiting', plan: {} }),
     },

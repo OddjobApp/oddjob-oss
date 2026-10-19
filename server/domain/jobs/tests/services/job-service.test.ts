@@ -52,11 +52,11 @@ vi.mock("../../server/utils/logger.js", () => ({
     })),
 }));
 
-vi.mock("../../server/utils/auth-context.js", () => ({
+vi.mock("@server/utils/auth-context.js", () => ({
     validateOrgAccess: vi.fn().mockResolvedValue(true),
 }));
 
-vi.mock("../../server/knowledge/knowledge-store.js", () => ({
+vi.mock("@domain/knowledge/core/knowledge-store.js", () => ({
     storeJobOutputAsKnowledge: vi.fn().mockResolvedValue(undefined),
     getJobOutputStorageConfig: vi.fn().mockReturnValue({}),
 }));

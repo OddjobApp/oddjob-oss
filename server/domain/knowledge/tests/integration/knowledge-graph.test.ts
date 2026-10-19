@@ -17,7 +17,7 @@ const mockedApiResponse = JSON.stringify({
 });
 
 // Mock Qdrant embedding service to avoid API calls or errors
-vi.mock('../../server/knowledge/knowledge-graph-service.js', () => ({
+vi.mock('@server/knowledge/knowledge-graph-service.js', () => ({
     embedKnowledgeNode: vi.fn().mockResolvedValue(true)
 }));
 

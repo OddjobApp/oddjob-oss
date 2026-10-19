@@ -212,7 +212,7 @@ vi.mock("../core/orchestration/execution.service.js", () => ({
   },
 }));
 
-vi.mock("./mission.service.js", () => ({
+vi.mock("@domain/mission/core/mission.service.js", () => ({
   missionService: {
     getMissionDetail: vi.fn(),
     updateBlackboard: vi.fn().mockResolvedValue({}),

@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock dependencies only
-vi.mock("../../server/domain/tools/v1/tool-registry.service.js", () => ({
+vi.mock("@domain/tools/v1/tool-registry.service.js", () => ({
     AGENT_TOOLS: { "t1": { name: "t1", execute: vi.fn() } },
     normalizeToolName: (name: string) => name,
 }));

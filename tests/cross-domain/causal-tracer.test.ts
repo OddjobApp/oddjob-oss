@@ -20,7 +20,7 @@ vi.mock("@server/utils/logger", () => ({
     createLogger: vi.fn(() => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }))
 }));
 
-vi.mock("@domain/core/infrastructure/job-service.service.js", () => ({ OrgContext: {} }));
+vi.mock("@domain/jobs/job.service.js", () => ({ OrgContext: {} }));
 
 import { CausalTracer } from "@domain/core/infrastructure/causal-tracer.service.js";
 

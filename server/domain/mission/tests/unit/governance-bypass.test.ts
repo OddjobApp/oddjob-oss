@@ -20,7 +20,7 @@ vi.mock("../../../integrations/core/approval.service.js", () => ({
     approvalService: {},
 }));
 
-vi.mock("../mission-run.service.js", () => ({
+vi.mock("@domain/mission/core/mission-run.service.js", () => ({
     missionRunService: {},
 }));
 

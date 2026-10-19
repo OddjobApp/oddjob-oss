@@ -54,7 +54,7 @@ vi.mock("@shared/schema/agent/tom-archived-entries.js", () => ({
     tomArchivedEntries: {},
 }));
 
-vi.mock("./user-representation.service.js", () => ({
+vi.mock("../user-representation.service.js", () => ({
     userRepresentationService: {
         getRepresentation: vi.fn().mockResolvedValue(null),
     },
