@@ -14,8 +14,8 @@ Licensed under [Apache 2.0](LICENSE). Security reports: see [SECURITY.md](SECURI
 
 ## Quickstart
 
-You need Node.js 20+, Docker (for Postgres and Redis), and an API key from at least
-one model provider — Google Gemini is the default.
+You need Node.js 22.12 or later (`.nvmrc` pins 22), Docker (for Postgres and Redis),
+and an API key from at least one model provider — Google Gemini is the default.
 
 **Oddjob is bring-your-own-key.** It never runs AI on a shared platform key: each
 organization stores its own provider key, encrypted, under Settings. In development a
@@ -26,15 +26,17 @@ organization stores its own provider key, encrypted, under Settings. In developm
 git clone <this repository> oddjob && cd oddjob
 npm ci
 
+# .env first: docker compose reads it, and refuses to start without the secrets.
+cp .env.example .env
+#   then fill in, under "Required to start":
+#   SESSION_SECRET=<openssl rand -hex 32>
+#   ENCRYPTION_KEY=<openssl rand -hex 32>
+#   JWT_SECRET=<openssl rand -hex 32>
+#   GEMINI_API_KEY=<your key>          # development fallback only
+# DATABASE_URL and REDIS_URL already match the containers below.
+
 # Postgres + Redis
 docker compose up -d db redis
-
-# .env — the server validates these at boot (server/config/env.ts)
-#   DATABASE_URL=postgresql://postgres:postgres@localhost:5433/oddjob
-#   REDIS_URL=redis://localhost:6379
-#   SESSION_SECRET=<32+ random characters>
-#   ENCRYPTION_KEY=<32+ random characters>
-#   GEMINI_API_KEY=<your key>          # development fallback only
 
 npm run setup          # applies migrations, then creates your organization and super-admin
 npm run dev:no-sidecar # http://localhost:5000 — sign in with the admin email and password
@@ -49,8 +51,36 @@ reads `ODDJOB_ADMIN_EMAIL`, `ODDJOB_ADMIN_PASSWORD` and optionally
 `ODDJOB_ADMIN_USERNAME` and `ODDJOB_ORG_NAME`. With Docker:
 `docker compose run --rm setup`.
 
-`server/config/env.ts` logs, at boot, every capability a missing variable switches
-off. For a throwaway demo database with sample organizations and logins, see
+### Optional services
+
+Nothing below is needed to start. Each switches on a capability, and
+`server/config/env.ts` logs at boot which ones are off and what that disables.
+
+| To get | Run or set |
+|---|---|
+| Vector search (RAG retrieval, knowledge similarity) | `docker compose up -d qdrant`, then `QDRANT_URL=http://localhost:6333` |
+| Background jobs (BullMQ workers) | Redis, already in the quickstart, plus `npm run start:worker` (`npm run dev` starts it) |
+| Maps in location pickers and Signal Studio | `VITE_MAPBOX_ACCESS_TOKEN` (Mapbox's terms apply; see NOTICE) |
+| Computer use on a real desktop | `docker compose --profile computer-use up -d`, then the `TRYCUA_*` settings in `.env.example` |
+| Email in and out | `AGENTMAIL_API_KEY` and `AGENTMAIL_INBOX` |
+| Web and phone push notifications | `VAPID_PRIVATE_KEY`; `FIREBASE_SERVICE_ACCOUNT_JSON` or `FIREBASE_SERVICE_ACCOUNT_FILE` |
+| Local video generation | `COMFYUI_BASE_URL` |
+| Google, Microsoft or Jira sign-in for connectors | `GOOGLE_CLIENT_ID`, `MICROSOFT_CLIENT_ID`, `JIRA_CLIENT_ID` and their secrets |
+| Signed audit reports | `AUDIT_REPORT_SIGNING_SECRET` |
+| The Python sidecar | see [Running the development server](#running-the-development-server) |
+
+### Troubleshooting install
+
+- **`npm ci` fails in `ffmpeg-static` with `ECONNRESET` or a timeout.** Its install
+  step downloads an FFmpeg binary from GitHub releases. On a network that blocks
+  that, run `npm ci --ignore-scripts`. That also skips Puppeteer's Chrome download
+  (`npx puppeteer browsers install chrome` fetches it later); everything else
+  installs, and only features that shell out to FFmpeg or launch that Chrome are
+  affected.
+- **The server listens on 8000, not 5000.** `PORT` is set in `.env`; remove it. The
+  Python sidecar reads the same variable.
+
+For a throwaway demo database with sample organizations and logins, see
 [Database seeding](#database-seeding) — it is destructive by design.
 
 ## Documentation
