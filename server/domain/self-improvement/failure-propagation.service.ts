@@ -106,7 +106,7 @@ export const failurePropagationService = {
     const normalizedSource = normalize(sourceFile);
 
     // ── Structural signal ────────────────────────────────────────────────
-    const dependents = await SystemGraphService.getReverseDependents(sourceFile, {
+    const dependents = await SystemGraphService.getReverseDependents(normalizedSource, {
       repoRoot,
       maxDepth,
     });

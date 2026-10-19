@@ -67,11 +67,13 @@ By following this pattern, we can keep our codebase clean, organized, and easy t
 5.  Run the gate before opening a pull request:
 
     ```bash
+    npm run playwright:install   # once: some unit tests drive a real Chromium
     npm run verify
     ```
 
     It runs the lints, tsc, the unit tests, the smoke checks and the build — the
-    same `verify` job CI runs. Tests that need a database are separate:
+    same `verify` job CI runs. It needs no database, Redis or API key; a unit test
+    that only passes with one of those running is a bug. Tests that need a database are separate:
     `npm run test:db:setup` once, then `npm run test:integration`.
 6.  Submit a pull request, saying what changed and how you checked it.
 

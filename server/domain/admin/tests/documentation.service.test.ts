@@ -74,6 +74,13 @@ vi.mock("@domain/knowledge/core/knowledge.service.js", () => ({
   },
 }));
 
+// The real queue is BullMQ on Redis. Unmocked, generateForFeature enqueues on it and
+// hangs until the test times out wherever Redis is not running, including the
+// hermetic verify job in CI; it only passed where a dev Redis happened to be up.
+vi.mock("@domain/knowledge/knowledge-queue.js", () => ({
+  queueExtractionJob: vi.fn().mockResolvedValue({ id: "job-1" }),
+}));
+
 vi.mock("@domain/ai/core/system-ai.service.js", () => ({
   systemAiService: {
     generateText: vi.fn().mockImplementation(async (prompt: string) =>
