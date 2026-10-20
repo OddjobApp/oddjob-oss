@@ -48,6 +48,18 @@ export default defineConfig({
   cacheDir,
   plugins: [
     react(),
+    {
+      name: "browser-external-boundary",
+      generateBundle(_options, bundle) {
+        for (const output of Object.values(bundle)) {
+          if (output.type !== "chunk") continue;
+          for (const dependency of [...output.imports, ...output.dynamicImports]) {
+            if (bundle[dependency] || dependency.startsWith(".") || dependency.startsWith("/") || /^(https?|data|blob):/.test(dependency)) continue;
+            this.error(`Browser chunk ${output.fileName} contains unresolved server dependency: ${dependency}`);
+          }
+        }
+      },
+    },
     ...(process.env.NODE_ENV !== "production" &&
       process.env.REPL_ID !== undefined
       ? [
@@ -77,6 +89,9 @@ export default defineConfig({
       "@domain-ui": path.resolve(__dirname, "server", "domain"),
       "@assets": path.resolve(__dirname, "attached_assets"),
       "@oddjob/shared-utils": path.resolve(__dirname, "packages", "shared-utils", "src"),
+      // The CommonJS package root eagerly imports CronFileParser and fs/promises.
+      // Shared calendar logic needs only expression parsing in browser builds.
+      "cron-parser": path.resolve(__dirname, "node_modules", "cron-parser", "dist", "CronExpressionParser.js"),
     },
   },
   optimizeDeps: {

@@ -5,9 +5,7 @@
   <link rel="icon" type="image/png" href="/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oddjob | Agentic Agency</title>
-  <script>
-    (function(){try{var t=localStorage.getItem('oj-ui-theme')||'dark';var l=t==='light';var r=document.documentElement;r.classList.add(l?'light':'dark');var s=r.style;s.setProperty('--boot-bg',l?'#ffffff':'#09090b');s.setProperty('--boot-ring',l?'rgba(0,0,0,0.12)':'rgba(255,255,255,0.1)');s.setProperty('--boot-ring-top',l?'rgba(0,0,0,0.55)':'rgba(255,255,255,0.6)');}catch(e){}})();
-  </script>
+  <script src="/bootstrap/theme.js"></script>
   <style>
     body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--boot-bg, #09090b); }
     #boot-loader {
@@ -24,17 +22,7 @@
     }
     @keyframes bl-spin { to { transform: rotate(360deg); } }
   </style>
-  <script>
-    window._bootTimer = setTimeout(function() {
-      var el = document.getElementById('boot-loader');
-      if (el) { el.classList.add('hide'); setTimeout(function() { el.remove(); }, 350); }
-    }, 4000);
-    window.clearBootstrapTimer = function() {
-      clearTimeout(window._bootTimer);
-      var el = document.getElementById('boot-loader');
-      if (el) { el.classList.add('hide'); setTimeout(function() { el.remove(); }, 350); }
-    };
-  </script>
+  <script src="/bootstrap/loading.js"></script>
 </head>
 <body>
   <div id="boot-loader" aria-hidden="true"><div class="bl-ring"></div></div>
