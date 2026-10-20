@@ -26,10 +26,10 @@ first. The `integration` CI job supplies disposable Postgres, Redis, and Qdrant.
 The Python service is a separate image, built with
 `docker build -f Dockerfile.python -t oddjob-python:release-sha .`.
 
-The existing Qdrant server pin is 1.8.1, while the installed JS client is 1.18.
-The client reports an unsupported version gap. Plan and validate a compatible
-server/client upgrade against a snapshot of existing vector data before release;
-the packaging changes retain the current server version.
+Development and production Compose pin Qdrant to `v1.18.3`; the JS client uses
+the 1.18 series. Before changing either version, back up vector data and validate
+the new pair against a restored snapshot. See `docker-compose.yml`,
+`docker-compose.prod.yml`, and `package-lock.json` for the shipped versions.
 
 ## Compose
 
@@ -74,12 +74,26 @@ up this volume alongside the database. Docker-backed Go/Python/Java blueprint
 execution additionally requires a configured Docker runtime: the supplied image
 and Compose stack do not provide a Docker CLI or daemon connection.
 
-Production tenant execution remains a release blocker. Apps without a Dockerfile
-can fall back to `localProcessService`, which launches tenant code with the
-platform process's user and process namespace. The environment allowlist does
-not provide isolation: a controlled child-process probe could read the parent's
-environment through `/proc/1/environ`. Require an isolated tenant runtime before
-enabling generated app execution in production, including install/build steps.
+## Tenant execution boundary
+
+Local generated-app execution is blocked when the platform process runs with
+`NODE_ENV=production`, including staging. The guard covers local app startup,
+dependency installation, builds, compiler checks, workspace commands, and generated
+Playwright tests. It checks the platform environment, even when a child build
+requests `NODE_ENV=development`; there is no production bypass setting.
+
+Local processes share the platform user, filesystem and process namespace. The
+environment allowlist does not provide isolation: a child can potentially read
+the parent environment through `/proc/1/environ`. Development must therefore use
+trusted code and disposable data.
+
+The separate Docker build/launch path remains available when a Docker runtime is
+configured; the supplied production image and Compose stack do not include one.
+A Dockerfile alone is not a security review. Before enabling untrusted tenant
+execution, provision and validate isolation of filesystem, processes, network,
+secrets and resources for install/build steps as well as the running app.
+
+## Updating a deployment
 
 For updates to an existing deployment, run `bash scripts/deploy-production.sh`.
 It backs up the running database, saves the current application image, keeps

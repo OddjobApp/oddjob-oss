@@ -12,6 +12,12 @@ model when a provider is unavailable.
 
 Licensed under [Apache 2.0](LICENSE). Security reports: see [SECURITY.md](SECURITY.md).
 
+**Production limitation:** Local generated-app installation, builds, compiler checks,
+tests and startup are disabled in production because child processes share the
+platform user and process namespace. Use development for the App Forge walkthrough;
+production tenant execution requires an isolated runtime. See
+[deployment boundaries](README_DEPLOYMENT.md#tenant-execution-boundary).
+
 ## Quickstart
 
 You need Node.js 22.12 or later (`.nvmrc` pins 22), Docker (for Postgres and Redis),
@@ -23,7 +29,8 @@ organization stores its own provider key, encrypted, under Settings. In developm
 [Keys and credentials](docs/developer-guides/KEYS_AND_CREDENTIALS.md).
 
 ```bash
-git clone <this repository> oddjob && cd oddjob
+git clone https://github.com/OddjobApp/oddjob-oss.git
+cd oddjob-oss
 npm ci
 
 # .env first: docker compose reads it, and refuses to start without the secrets.
@@ -84,6 +91,9 @@ For a throwaway demo database with sample organizations and logins, see
 [Database seeding](#database-seeding) — it is destructive by design.
 
 ## Documentation
+
+Start with the [documentation index](docs/README.md) for installation, user guides,
+contributing, operations, and historical material.
 
 - [Feature documentation](docs/feature-documentation/README.md) and the
   [feature index](docs/FEATURES.md) — what each part of the platform does.

@@ -1,3 +1,4 @@
+import { assertLocalTenantExecutionAllowed } from "@server/utils/local-tenant-execution.js";
 
 import { createLogger } from "@server/utils/logger.js";
 import { forgeCodegenService } from "./forge-codegen.service.js";
@@ -109,6 +110,7 @@ export class ForgeAssemblyService {
             return;
         }
 
+        assertLocalTenantExecutionAllowed();
         await emitLog("Hardening: Synchronizing dependencies and warming caches...", 'info', 4);
         const childEnv = tenantProcessEnv({ NODE_ENV: 'production' });
 

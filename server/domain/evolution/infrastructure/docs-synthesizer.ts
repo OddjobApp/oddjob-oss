@@ -6,7 +6,7 @@ import { createLogger } from "@server/utils/logger.js";
 const logger = createLogger("DocsSynthesizer");
 
 export class DocsSynthesizer {
-    private docsPath = path.resolve(process.cwd(), 'docs', 'SYSTEM_ARCHITECTURE.md');
+    private docsPath = path.resolve(process.cwd(), 'docs', 'reports', 'generated-architecture-registry.md');
 
     /**
      * Synthesizes the current system state into a human-readable (and AI-readable) 
@@ -18,6 +18,7 @@ export class DocsSynthesizer {
         const pods = podRegistry.getPodMetadata();
         
         let content = `# Modular Architecture Registry (Oddjob Platform)\n\n`;
+        content += `Registry snapshot only; see [System architecture](../SYSTEM_ARCHITECTURE.md) for the maintained overview.\n\n`;
         content += `*Generated automatically by the Evolution Engine on ${new Date().toLocaleString()}*\n\n`;
         
         content += `## 🌐 Central Pod Ecosystem\n`;
@@ -91,6 +92,7 @@ export class DocsSynthesizer {
         content += `*Note: This document is managed by the Evolution Pod. Manual edits will be reconciled on the next synthesis cycle.*\n`;
 
         try {
+            fs.mkdirSync(path.dirname(this.docsPath), { recursive: true });
             fs.writeFileSync(this.docsPath, content, 'utf8');
             logger.info(`[DocsSynthesizer] Architecture synchronized: ${this.docsPath}`);
             return { success: true, path: this.docsPath };

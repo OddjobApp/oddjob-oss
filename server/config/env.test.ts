@@ -10,6 +10,16 @@ import { validateEnvironment } from "./env.js";
 const base = { DATABASE_URL: "postgresql://u:p@localhost:5432/db" } as NodeJS.ProcessEnv;
 
 describe("validateEnvironment", () => {
+    it("reports the production generated-app execution restriction at boot", () => {
+        const report = validateEnvironment({
+            ...base, NODE_ENV: "production", SESSION_SECRET: "s".repeat(64), ENCRYPTION_KEY: "ab".repeat(32),
+        });
+        expect(report.ok).toBe(true);
+        expect(report.degraded.join(" ")).toContain("Local generated-app execution disabled");
+        expect(validateEnvironment({ ...base, NODE_ENV: "development" }).degraded.join(" "))
+            .not.toContain("Local generated-app execution disabled");
+    });
+
     it("rejects shared AI keys and overrides in production BYOK", () => {
         const production = { ...base, NODE_ENV: "production", SESSION_SECRET: "s".repeat(64), ENCRYPTION_KEY: "ab".repeat(32) };
         expect(validateEnvironment(production).ok).toBe(true);
