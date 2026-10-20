@@ -1,6 +1,6 @@
 {
   "name": "@oddjob/rescue-dispatch",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Tactical Emergency Dispatch & Incident Management Control Center",
   "scripts": {

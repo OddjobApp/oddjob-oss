@@ -1,6 +1,6 @@
 {
     "name": "oddjob-ingestor",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "Ephemeral Semantic Context Ingestor (Slice 1)",
     "main": "server.js",
     "scripts": {

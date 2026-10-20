@@ -1,10 +1,10 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@server/database_service.js";
-import { fileBlobs, crewAttachments, crewSessions } from "@shared/schema/index.js";
+import { fileBlobs, crewAttachments, crewSessions, projects } from "@shared/schema/index.js";
 
 /**
  * Index state is a claim that something is searchable. Like qdrant_point_id, it
@@ -14,7 +14,17 @@ import { fileBlobs, crewAttachments, crewSessions } from "@shared/schema/index.j
  */
 
 const ORG = 1;
-const PROJECT = 19;
+// Its own project: a hardcoded id (19) existed only in long-lived databases, so on a
+// fresh one, as in CI, every insert that referenced it failed its foreign key.
+let PROJECT: number;
+
+async function createProject(): Promise<number> {
+    const [row] = await db
+        .insert(projects)
+        .values({ organizationId: ORG, key: `it-project-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, name: "Integration test project", createdBy: "integration-test" })
+        .returning({ id: projects.id });
+    return row.id;
+}
 
 const embedDocuments = vi.fn();
 const upsertQdrantPoints = vi.fn();
@@ -37,9 +47,14 @@ let sessionIds: number[] = [];
 let blobIds: number[] = [];
 
 beforeAll(async () => {
+    PROJECT = await createProject();
     process.env.ATTACHMENT_STORAGE_ROOT = await fs.mkdtemp(path.join(os.tmpdir(), "oddjob-idx-"));
     ({ attachmentService } = await import("../core/attachment.service.js"));
     ({ attachmentIndexService } = await import("../core/attachment-index.service.js"));
+});
+
+afterAll(async () => {
+    if (PROJECT) await db.delete(projects).where(eq(projects.id, PROJECT)).catch(() => {});
 });
 
 beforeEach(() => {

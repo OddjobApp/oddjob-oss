@@ -1,6 +1,6 @@
 {
   "name": "@oddjob/behavioral-sdk",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Lightweight JavaScript SDK for Oddjob Behavioral Intelligence Engine. Emit behavioral events, track user interactions, and read scores in real-time.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

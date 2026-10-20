@@ -1,7 +1,7 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { db } from "@server/database_service.js";
-import { projectSaasBindings, saasConnectors } from "@shared/schema/index.js";
+import { projectSaasBindings, saasConnectors, projects } from "@shared/schema/index.js";
 import { projectBindingService } from "../project-binding.service.js";
 import { saasAdapterInventoryService } from "../saas-adapter-inventory.service.js";
 
@@ -11,7 +11,17 @@ import { saasAdapterInventoryService } from "../saas-adapter-inventory.service.j
  * torn down, and only rows it inserted are ever deleted.
  */
 const ORG = 1;
-const PROJECT = 19;
+// Its own project: a hardcoded id (19) existed only in long-lived databases, so on a
+// fresh one, as in CI, every insert that referenced it failed its foreign key.
+let PROJECT: number;
+
+async function createProject(): Promise<number> {
+    const [row] = await db
+        .insert(projects)
+        .values({ organizationId: ORG, key: `it-project-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, name: "Integration test project", createdBy: "integration-test" })
+        .returning({ id: projects.id });
+    return row.id;
+}
 
 let createdConnectorIds: number[] = [];
 
@@ -23,6 +33,14 @@ async function makeConnector(platform: string, projectId: number | null = null) 
     createdConnectorIds.push(row.id);
     return row.id;
 }
+
+beforeAll(async () => {
+    PROJECT = await createProject();
+});
+
+afterAll(async () => {
+    if (PROJECT) await db.delete(projects).where(eq(projects.id, PROJECT)).catch(() => {});
+});
 
 beforeEach(() => {
     createdConnectorIds = [];

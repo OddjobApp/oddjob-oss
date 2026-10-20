@@ -1,6 +1,6 @@
 {
   "name": "oddjob",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Agentic studio: missions, App Forge, GMS/Evolution, Hermes tracing, RAG memory, JIT MCP.",
   "type": "module",
   "license": "Apache-2.0",

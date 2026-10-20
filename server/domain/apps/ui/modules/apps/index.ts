@@ -1,6 +1,5 @@
 export { default as AppDetail } from './pages/AppDetail.js';
 export { default as AppMarketplace } from './pages/AppMarketplace.js';
-export { default as AppForge } from './pages/AppForge.js';
 export { default as PublicAppDeploymentPage } from './pages/PublicAppDeploymentPage.js';
 export * from './components/tabs/AppAnalyticsTab.js';
 export * from './components/tabs/AppHookupsTab.js';

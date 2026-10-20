@@ -1,0 +1,53 @@
+name: Bug report
+description: Something does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security problems — reading another organization's data, leaking a credential,
+        escaping the sandbox — do not belong here. Report them privately: see SECURITY.md.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The smallest set of steps that shows it. A cycle file, request or log excerpt helps.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Oddjob version or commit
+      placeholder: "0.1.0, or a commit sha"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, and how you run it (npm run dev, dev:no-sidecar, Docker).
+      placeholder: "Ubuntu 24.04, Node 22.12, npm run dev:no-sidecar"
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: AI provider in use
+      options:
+        - Gemini (default)
+        - OpenAI
+        - Anthropic
+        - Other / none
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Server output around the failure. Remove keys and personal data first.
+      render: text

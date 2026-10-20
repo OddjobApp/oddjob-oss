@@ -64,7 +64,7 @@ INBOUND (event-driven)
 
 Inbound actions are protected by **four layers**:
 
-1. **HMAC signature** — every webhook payload is signed with `whsec_UbuOqGleMLtb0buuh865F3oWd3HWje16`; invalid signatures are rejected immediately.
+1. **HMAC signature** — every webhook payload is signed with the webhook's signing secret (`AGENTMAIL_WEBHOOK_SECRET`, a `whsec_…` value issued when the webhook is registered); invalid signatures are rejected immediately.
 2. **Sender pinning** — the `From:` address must match a registered Oddjob user in the `users` table.
 3. **OTP passcode** — for `APPROVE`/`REJECT`, a 6-digit code stored in `otp_codes` (10 min TTL, single-use) must be present in the reply body.
 4. **Org role check** — (planned) low-risk intents (`STEER`) require sender to be a known user; high-risk intents (`APPROVE`/`LAUNCH`) require OTP.

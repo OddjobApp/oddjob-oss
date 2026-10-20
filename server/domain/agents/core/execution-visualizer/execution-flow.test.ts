@@ -5,7 +5,14 @@
  * @vitest-environment node
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+// The service publishes each flow event fire-and-forget through the event stream,
+// which opens its own Redis clients. Unmocked, they kept retrying after the file
+// finished and failed the run with teardown errors wherever Redis was not running.
+vi.mock("@domain/core/infrastructure/event-stream.service.js", () => ({
+    eventStream: { publish: vi.fn().mockResolvedValue(undefined) },
+}));
 import { ExecutionFlowService } from "./execution-flow.service.js";
 
 describe("ExecutionFlowService", () => {

@@ -8,6 +8,7 @@ import { spatialRegionService } from "../../core/spatial-region.service.js";
 import { spatialRegionStore } from "../../core/spatial-region-store.service.js";
 import { SpatialPredicateEngineService } from "../../core/spatial-predicate-engine.service.js";
 import type { SpatialCondition } from "@shared/contracts/spatial-predicates.js";
+import { ensureFixtureOrgs } from "../../../../../tests/helpers/fixture-orgs.js";
 
 /**
  * End-to-end for a rule that references a STORED region rather than inlining
@@ -57,12 +58,10 @@ describe("rules referencing a stored spatial region", () => {
     let mixedId: number;
 
     beforeAll(async () => {
-        for (const [id, name] of [
+        await ensureFixtureOrgs([
             [ORG_A_ID, "Region Rules Org A"],
             [ORG_B_ID, "Region Rules Org B"],
-        ] as const) {
-            await db.insert(orgs).values({ id, name }).onConflictDoNothing();
-        }
+        ]);
         await cleanup();
 
         const owned = await spatialRegionService.create(

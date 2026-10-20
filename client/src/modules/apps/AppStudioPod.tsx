@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { blueprintMaturity, MATURITY_DESCRIPTION } from "@shared/blueprint-maturity";
 import {
     FORGE_STAGE_COUNT,
     FORGE_STAGES,
@@ -910,6 +911,23 @@ function ForgeProgress({
                                                     <Icon className="h-4 w-4" />
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
+                                                    {(() => {
+                                                        const maturity = blueprintMaturity(archetype.slug);
+                                                        return (
+                                                            <span
+                                                                data-testid={`archetype-maturity-${archetype.slug}`}
+                                                                title={MATURITY_DESCRIPTION[maturity]}
+                                                                className={cn(
+                                                                    "text-[9px] px-1.5 py-0.5 rounded font-mono font-medium uppercase",
+                                                                    maturity === "stable" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" :
+                                                                    maturity === "beta" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" :
+                                                                    "bg-muted text-muted-foreground border border-border/60"
+                                                                )}
+                                                            >
+                                                                {maturity}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                     {archetype.complexity && (
                                                         <span className={cn(
                                                             "text-[9px] px-1.5 py-0.5 rounded font-mono font-medium",

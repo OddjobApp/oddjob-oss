@@ -1,6 +1,6 @@
 {
     "name": "@oddjob/shared-utils",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "Cross-platform TypeScript utilities for Oddjob",
     "main": "src/index.ts",
     "type": "module",

@@ -6,6 +6,11 @@ import { db } from "@server/database_service.js";
 import { missions, missionMembers, jobs } from "@shared/schema/index.js";
 import { eq, and } from "drizzle-orm";
 
+// The secret the server accepts for x-internal-token (server/utils/auth-context.ts).
+// This was hardcoded to a developer's .env value, so on CI, which sets its own
+// SESSION_SECRET and has no .env, every request was rejected with 401.
+const INTERNAL_TOKEN = process.env.INTERNAL_API_SECRET || process.env.SESSION_SECRET || "";
+
 describe('Missions Interactive API', () => {
     let missionId: number;
     let jobId: number;
@@ -51,7 +56,7 @@ describe('Missions Interactive API', () => {
     it.skip('should remove a member from a mission', async () => {
         const response = await request(app)
             .delete(`/api/missions/${missionId}/members/job/${jobId}`)
-            .set('x-internal-token', 'dev-secret-key-change-in-production');
+            .set('x-internal-token', INTERNAL_TOKEN);
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('success', true);
@@ -71,7 +76,7 @@ describe('Missions Interactive API', () => {
     it('should return 404 if member does not exist', async () => {
         const response = await request(app)
             .delete(`/api/missions/${missionId}/members/job/999999`)
-            .set('x-internal-token', 'dev-secret-key-change-in-production');
+            .set('x-internal-token', INTERNAL_TOKEN);
 
         expect(response.status).toBe(404);
     });

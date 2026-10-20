@@ -5,6 +5,7 @@ import { knowledgeConcepts } from "@shared/schema/knowledge/index.js";
 import { orgs } from "@shared/schema/auth.js";
 import { conceptService } from "../../core/graph/concept-service.js";
 import type { OrgContext } from "@server/utils/auth-context.js";
+import { ensureFixtureOrgs } from "../../../../../tests/helpers/fixture-orgs.js";
 
 /**
  * Live, DB-backed test for `conceptService.upsertConcept`.
@@ -65,12 +66,10 @@ describe("conceptService.upsertConcept", () => {
     beforeAll(async () => {
         // Both orgs FK from knowledge_concepts, so a missing org takes the suite
         // down before a single assertion runs.
-        for (const [id, name] of [
+        await ensureFixtureOrgs([
             [ORG_A_ID, "Concept Upsert Org A"],
             [ORG_B_ID, "Concept Upsert Org B"],
-        ] as const) {
-            await db.insert(orgs).values({ id, name }).onConflictDoNothing();
-        }
+        ]);
         await cleanup();
     });
 

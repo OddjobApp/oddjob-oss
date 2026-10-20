@@ -14,8 +14,8 @@ process.env.REDIS_URL = 'redis://127.0.0.1:6379';
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { missionRunService } from "@domain/mission/core/mission-run.service.js";
 import { db } from "@server/database_service.js";
-import { missions, missionRuns } from "@shared/schema/index.js";
-import { eq, sql } from "drizzle-orm";
+import { missions, missionRuns, pipelines } from "@shared/schema/index.js";
+import { eq, inArray, sql } from "drizzle-orm";
 
 async function missionRunsTableExists(): Promise<boolean> {
   try {
@@ -31,8 +31,17 @@ const shouldRun = await missionRunsTableExists();
 describe.runIf(shouldRun)("Mission Wake-Up Integration", () => {
   let parentMissionId: number;
   let missionRunId: number;
+  let pipelineIds: number[] = [];
 
   beforeAll(async () => {
+    // Real pipelines for the run's sequence: it named ids 1 and 2, which existed only in
+    // long-lived databases, so resuming the run failed current_pipeline_id's foreign key
+    // on a fresh one, as in CI.
+    pipelineIds = (await db
+      .insert(pipelines)
+      .values([1, 2].map((n) => ({ name: `wake-up-test-pipeline-${n}-${Date.now()}`, triggerType: "manual", createdBy: "test_wakeup" })))
+      .returning({ id: pipelines.id })).map((p) => p.id);
+
     const [mission] = await db
       .insert(missions)
       .values({
@@ -50,7 +59,7 @@ describe.runIf(shouldRun)("Mission Wake-Up Integration", () => {
         missionId: parentMissionId,
         name: "Wake-Up Test Run",
         status: "active",
-        pipelineSequence: [1, 2],
+        pipelineSequence: pipelineIds,
         createdBy: "test_wakeup",
       })
       .returning();
@@ -60,6 +69,7 @@ describe.runIf(shouldRun)("Mission Wake-Up Integration", () => {
   afterAll(async () => {
     if (missionRunId) await db.delete(missionRuns).where(eq(missionRuns.id, missionRunId));
     if (parentMissionId) await db.delete(missions).where(eq(missions.id, parentMissionId));
+    if (pipelineIds.length) await db.delete(pipelines).where(inArray(pipelines.id, pipelineIds));
   });
 
   describe("file wake-up", () => {

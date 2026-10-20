@@ -19,7 +19,6 @@ function PageLoader() {
 
 const AppMarketplace = lazy(() => import("@domain-ui/apps/ui/modules/apps/pages/AppMarketplace"));
 const AppDetail = lazy(() => import("@domain-ui/apps/ui/modules/apps/pages/AppDetail"));
-const AppForge = lazy(() => import("@domain-ui/apps/ui/modules/apps/pages/AppForge"));
 const ForgeHistory = lazy(() => import("@domain-ui/apps/ui/modules/apps/pages/ForgeHistory"));
 const ForgeSettings = lazy(() => import("@domain-ui/apps/ui/modules/apps/pages/ForgeSettings"));
 const AppsForgeOverview = lazy(() => import("@/modules/apps/pages/AppsForgeOverview"));
@@ -151,7 +150,6 @@ export function ArmoryRouting() {
             <Route path="/armory/apps" component={AppMarketplace} />
             <Route path="/armory/forge/history" component={ForgeHistory} />
             <Route path="/armory/forge/settings" component={ForgeSettings} />
-            <Route path="/armory/forge" component={AppForge} />
             <Route path="/armory/forms/builder/:id?" component={FormsBuilder} />
             <Route path="/armory/forms" component={FormsPage} />
             <Route path="/armory/org-forge" component={OrgForge} />

@@ -16,6 +16,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const recordCapabilityGap = vi.fn(async (_input: Record<string, unknown>) => {});
 
+// The executor reports each call's latency to the Python sidecar (localhost:8002) in
+// the background. Where nothing listens there, as in CI, that request failed after the
+// file ended and its log failed the run as a teardown error.
+vi.mock("@domain/knowledge/core/sidecar-sync-service.js", () => ({
+    sidecarSyncService: { logObservation: vi.fn().mockResolvedValue(undefined) },
+}));
+
 vi.mock("@domain/capabilities/core/capability-gap-event.service.js", () => ({
     recordCapabilityGap,
 }));

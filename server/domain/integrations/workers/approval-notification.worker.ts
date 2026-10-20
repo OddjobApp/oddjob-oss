@@ -43,18 +43,20 @@ async function sendNotification(
     type: ApprovalNotificationType,
     metadata: Record<string, any> = {}
 ): Promise<{ notificationsSent: number }> {
-    if (recipientIds.length === 0) {
-        logger.warn(`No recipients for approval notification`, { approvalId, type });
-        return { notificationsSent: 0 };
-    }
-
-    // Fetch approval details
+    // The approval is checked before recipients: with no recipients this used to return
+    // success, so a job for an approval that does not exist passed silently instead of
+    // failing — and whether it did depended on whether the org happened to have anyone.
     const [approval] = await db.select()
         .from(approvalRequests)
         .where(eq(approvalRequests.id, approvalId));
 
     if (!approval) {
         throw new Error(`Approval ${approvalId} not found`);
+    }
+
+    if (recipientIds.length === 0) {
+        logger.warn(`No recipients for approval notification`, { approvalId, type });
+        return { notificationsSent: 0 };
     }
 
     // Fetch recipient details

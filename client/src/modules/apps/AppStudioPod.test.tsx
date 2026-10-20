@@ -413,6 +413,9 @@ describe('AppStudioPod — forge mode', () => {
     expect(screen.getByTestId('archetype-analytics-dashboard')).toBeInTheDocument();
     expect(screen.getByTestId('archetype-industrial-dashboard')).toBeInTheDocument();
     expect(screen.getByTestId('archetype-chat-assistant')).toBeInTheDocument();
+    // Each card says how far the blueprint can be relied on; none of these is used by a cycle yet.
+    expect(screen.getByTestId('archetype-maturity-chat-assistant')).toHaveTextContent('experimental');
+    expect(screen.getByTestId('archetype-maturity-chat-assistant')).toHaveAttribute('title', expect.stringContaining('Not used by any cycle'));
 
     // Select Chat Assistant
     fireEvent.click(screen.getByTestId('archetype-chat-assistant'));

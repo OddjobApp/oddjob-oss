@@ -2,7 +2,7 @@
   "name": "oddjob-copilot",
   "displayName": "Oddjob Co-pilot",
   "description": "Trigger and steer autonomous agent cycles directly from VS Code.",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "publisher": "oddjob",
   "engines": {
     "vscode": "^1.75.0"

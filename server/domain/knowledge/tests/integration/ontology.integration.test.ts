@@ -18,6 +18,7 @@ import { schedules, scheduledJobs } from "@shared/schema/schedules.js";
 import { like } from "drizzle-orm";
 import { ontologyService, OntologyService } from "../../core/ontology.service.js";
 import { NotFoundError } from "@server/utils/errors.js";
+import { ensureFixtureOrgs } from "../../../../../tests/helpers/fixture-orgs.js";
 
 /**
  * Live, DB-backed integration test for the org-scoped Ontology (requires the migrated
@@ -113,9 +114,7 @@ describe("OntologyService (live, org-scoped)", () => {
     beforeAll(async () => {
         // Provision the two orgs rather than assuming them: every ontology row FKs to
         // orgs, so a missing org takes the whole suite down before a single assertion.
-        for (const [id, name] of [[ORG_A.organizationId, "Ontology Integration Org A"], [ORG_B.organizationId, "Ontology Integration Org B"]] as const) {
-            await db.insert(orgs).values({ id, name }).onConflictDoNothing();
-        }
+        await ensureFixtureOrgs([[ORG_A.organizationId, "Ontology Integration Org A"], [ORG_B.organizationId, "Ontology Integration Org B"]]);
 
         await ontologyService.seedDefaultObjectTypes(ORG_A);
         await ontologyService.seedDefaultObjectTypes(ORG_B);
@@ -1585,7 +1584,7 @@ describe("OntologyService (live, org-scoped)", () => {
      * rather than being replaced by a direct Project -> Mission link.
      */
     describe("project containment", () => {
-        let fixture: { projectId: number; missionId: number; memberIds: number[]; cycleMemberId: number };
+        let fixture: { projectId: number; missionId: number; memberIds: number[]; unmappedMemberId: number };
 
         beforeAll(async () => {
             const [project] = await db
@@ -1614,7 +1613,8 @@ describe("OntologyService (live, org-scoped)", () => {
                     // A resource type with no Object Type. Three of the six
                     // PROJECT_RESOURCE_TYPES are unmapped, so this is the common case,
                     // not an edge one.
-                    { projectId: project.id, resourceType: "cycle", resourceId: 999999, relation: "referenced" },
+                    // `form` has no Object Type, by design. This used `cycle` until Cycle was registered.
+                    { projectId: project.id, resourceType: "form", resourceId: 999999, relation: "referenced" },
                 ])
                 .returning({ id: projectResources.id });
 
@@ -1622,7 +1622,7 @@ describe("OntologyService (live, org-scoped)", () => {
                 projectId: project.id,
                 missionId: mission.id,
                 memberIds: rows.map((r) => r.id),
-                cycleMemberId: rows[1].id,
+                unmappedMemberId: rows[1].id,
             };
         });
 
@@ -1641,12 +1641,12 @@ describe("OntologyService (live, org-scoped)", () => {
         it("names an unmapped resource type instead of resolving it to the wrong table", async () => {
             const res = await ontologyService.traverse(ORG_A, {
                 objectType: "Project Resource",
-                id: fixture.cycleMemberId,
+                id: fixture.unmappedMemberId,
                 link: "resource_of",
             });
             expect(res.link.toType).toBeNull();
             expect(res.objects).toHaveLength(0);
-            expect(res.note).toMatch(/'cycle' is not mapped/);
+            expect(res.note).toMatch(/'form' is not mapped/);
         });
 
         it("answers which projects a mission belongs to, in two hops", async () => {
@@ -1677,7 +1677,7 @@ describe("OntologyService (live, org-scoped)", () => {
                 id: fixture.missionId,
                 link: "project_links",
             });
-            expect(back.objects.map((r) => r.id)).not.toContain(fixture.cycleMemberId);
+            expect(back.objects.map((r) => r.id)).not.toContain(fixture.unmappedMemberId);
         });
 
         it("reads every resource in a project from the project end", async () => {

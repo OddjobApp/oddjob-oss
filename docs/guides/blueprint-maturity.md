@@ -1,9 +1,10 @@
 # Blueprint app maturity
 
-App Forge builds apps from the blueprints in `server/blueprints/apps/`. Each one in
-the App Forge gallery carries a maturity label, so you know how far to rely on it.
-The labels come from `BLUEPRINT_MATURITY` in
-`server/domain/apps/core/forge-blueprint.service.ts`, and
+App Forge builds apps from the blueprints in `server/blueprints/apps/`. Each carries
+a maturity label, so you know how far to rely on it. You see it on the template cards
+in the Forge Launchpad (CREW, Forge studio); agents get it from the `list_blueprints`
+tool, and `GET /api/apps/blueprints` returns it. The labels come from
+`BLUEPRINT_MATURITY` in `shared/blueprint-maturity.ts`, and
 `forge-blueprint-catalog.test.ts` checks that they still match the evidence.
 
 | Label | Means |

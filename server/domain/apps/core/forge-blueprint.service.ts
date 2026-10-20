@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { createLogger } from "@server/utils/logger.js";
 import { withAiTimeout } from "./forge-utils.js";
+import { blueprintMaturity } from "@shared/blueprint-maturity.js";
 
 const logger = createLogger("ForgeBlueprintService");
 const BLUEPRINT_ROOT = path.resolve("server/blueprints/apps");
@@ -13,42 +14,7 @@ export interface ForgeOptions {
     [key: string]: any;
 }
 
-export type BlueprintMaturity = "stable" | "beta" | "experimental";
-
-/**
- * How far each catalog blueprint can be relied on, from evidence in this repository:
- *
- * - stable: used by a cycle, so the blueprint contract test gates it, and has its
- *   own tests (rescue-dispatch's suite, tests/sdlc-workbench for sdlc-workbench and
- *   wayfare).
- * - beta: used by a cycle, so the contract test gates it, without dedicated tests.
- * - experimental: in no cycle — starter templates, demos and stubs.
- *
- * Anything not listed is experimental. This replaces a formalVerification flag that
- * claimed "MaxSMT & WCAG AA PASSED" for every entry without anything having run.
- */
-export const BLUEPRINT_MATURITY: Record<string, BlueprintMaturity> = {
-    "rescue-dispatch": "stable",
-    "sdlc-workbench": "stable",
-    "wayfare": "stable",
-
-    "agent-training-workbench": "beta",
-    "ai-workforce-dashboard": "beta",
-    "budgetmaster-advisor": "beta",
-    "budgetmaster-workbench": "beta",
-    "codegen-pipeline-workbench": "beta",
-    "it-ticketing-portal": "beta",
-    "location-search": "beta",
-    "ops-workbench": "beta",
-    "pm-workbench": "beta",
-    "product-launch-workbench": "beta",
-    "qa-workbench": "beta",
-    "research-workbench": "beta",
-    "sales-opportunity-workbench": "beta",
-    "scrum-master-workbench": "beta",
-    "stakeholder-workbench": "beta",
-    "support-agent-dashboard": "beta",
-};
+export { BLUEPRINT_MATURITY, blueprintMaturity, type BlueprintMaturity } from "@shared/blueprint-maturity.js";
 
 export class ForgeBlueprintService {
     /**
@@ -576,7 +542,7 @@ Return ONLY the slug, nothing else.`;
         return Object.entries(BLUEPRINT_CATALOG).map(([slug, meta]) => ({
             slug,
             ...meta,
-            maturity: BLUEPRINT_MATURITY[slug] ?? "experimental",
+            maturity: blueprintMaturity(slug),
         }));
     }
 }

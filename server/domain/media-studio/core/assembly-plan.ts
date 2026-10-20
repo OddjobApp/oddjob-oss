@@ -108,9 +108,13 @@ export function buildAssemblyPlan(input: { clips: PlanClip[]; width: number; hei
         // is the middle of the cutaway, not its beginning.
         const shift = isOverlay.has(i) ? `+${seconds(Math.max(0, clip.startTimeSeconds ?? 0))}/TB` : "";
 
+        // Ends in fps, not settb=AVTB: xfade needs every input at the same timebase and a
+        // declared constant frame rate. settb gave the first but, in ffmpeg 7 (the Linux
+        // ffmpeg-static build), left the rate unknown ("current rate of 1/0 is invalid"),
+        // so every reel with a crossfade or dip failed to cut on Linux. fps gives both.
         graph.push(
             `[${i}:v:0]scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=black,`
-            + `setsar=1,fps=${REEL_FPS},format=yuv420p,${trimFilter}${holdFilter},setpts=PTS-STARTPTS${shift},settb=AVTB[v${i}]`,
+            + `setsar=1,fps=${REEL_FPS},format=yuv420p,${trimFilter}${holdFilter},setpts=PTS-STARTPTS${shift},fps=${REEL_FPS}[v${i}]`,
         );
         // No audio chain for an overlay: only V1 audio reaches the output map, and a
         // filter output nothing consumes makes ffmpeg refuse the whole graph.

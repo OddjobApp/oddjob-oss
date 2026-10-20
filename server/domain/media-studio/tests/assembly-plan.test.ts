@@ -24,7 +24,7 @@ describe("the assembly plan", () => {
         expect(plan).toMatchObject({ durationSeconds: 5.04, width: 1280, height: 720 });
         expect(plan.args.slice(0, 5)).toEqual(["-hide_banner", "-nostdin", "-y", "-i", "a.mp4"]);
         expect(graphOf(plan.args)).toEqual([
-            "[0:v:0]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=24,format=yuv420p,trim=duration=5.04,setpts=PTS-STARTPTS,settb=AVTB[v0]",
+            "[0:v:0]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=24,format=yuv420p,trim=duration=5.04,setpts=PTS-STARTPTS,fps=24[v0]",
             "anullsrc=channel_layout=stereo:sample_rate=48000,atrim=duration=5.04,aformat=sample_fmts=fltp:channel_layouts=stereo[a0]",
         ]);
         expect(plan.args.slice(plan.args.indexOf("-map"))).toEqual([

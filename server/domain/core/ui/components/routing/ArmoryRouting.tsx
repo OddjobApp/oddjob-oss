@@ -32,7 +32,6 @@ function RedirectToCrewForge() {
 
 const AppMarketplace = lazyWithRetry(() => import("@domain-ui/apps/ui/modules/apps/pages/AppMarketplace"));
 const AppDetail = lazyWithRetry(() => import("@domain-ui/apps/ui/modules/apps/pages/AppDetail"));
-const AppForge = lazyWithRetry(() => import("@domain-ui/apps/ui/modules/apps/pages/AppForge"));
 const ForgeHistory = lazyWithRetry(() => import("@domain-ui/apps/ui/modules/apps/pages/ForgeHistory"));
 const ForgeSettings = lazyWithRetry(() => import("@domain-ui/apps/ui/modules/apps/pages/ForgeSettings"));
 const AppsForgeOverview = lazyWithRetry(() => import("@/modules/apps/pages/AppsForgeOverview"));

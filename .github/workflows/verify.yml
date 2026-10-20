@@ -68,7 +68,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -103,6 +103,10 @@ jobs:
         run: npm ci
       - name: Build workspace packages
         run: npm run build:packages
+      # Pipeline steps in these suites drive a real Chromium, as verify and coverage
+      # already provide; without it pipeline-execution failed at browserType.launch.
+      - name: Install browser fixture runtime
+        run: npm run playwright:install
       - name: Provision test database and fixtures
         run: npm run test:db:setup
       - name: Run integration tests
@@ -178,13 +182,17 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/oddjob_ci_test
+      # The DB smoke scripts run through configureTestEnvironment(), which ignores
+      # DATABASE_URL on purpose and reads only TEST_DATABASE_URL; without it they
+      # fell back to a password-less default and failed to connect.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/oddjob_ci_test
 
     steps:
       - uses: actions/checkout@v4

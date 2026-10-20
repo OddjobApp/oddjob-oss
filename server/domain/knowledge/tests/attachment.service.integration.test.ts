@@ -4,14 +4,24 @@ import os from "os";
 import path from "path";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@server/database_service.js";
-import { fileBlobs, crewAttachments, crewSessions } from "@shared/schema/index.js";
+import { fileBlobs, crewAttachments, crewSessions, projects } from "@shared/schema/index.js";
 
 /**
  * Runs against oddjob_test, never dev, and writes blobs into a temp directory
  * rather than the repo's uploads tree.
  */
 const ORG = 1;
-const PROJECT = 19;
+// Its own project: a hardcoded id (19) existed only in long-lived databases, so on a
+// fresh one, as in CI, every insert that referenced it failed its foreign key.
+let PROJECT: number;
+
+async function createProject(): Promise<number> {
+    const [row] = await db
+        .insert(projects)
+        .values({ organizationId: ORG, key: `it-project-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, name: "Integration test project", createdBy: "integration-test" })
+        .returning({ id: projects.id });
+    return row.id;
+}
 
 let storageRoot: string;
 let sessionIds: number[] = [];
@@ -19,6 +29,7 @@ let blobIds: number[] = [];
 let attachmentService: typeof import("../core/attachment.service.js")["attachmentService"];
 
 beforeAll(async () => {
+    PROJECT = await createProject();
     storageRoot = await fs.mkdtemp(path.join(os.tmpdir(), "oddjob-attach-"));
     process.env.ATTACHMENT_STORAGE_ROOT = storageRoot;
     ({ attachmentService } = await import("../core/attachment.service.js"));
@@ -33,6 +44,7 @@ afterEach(async () => {
 
 afterAll(async () => {
     await fs.rm(storageRoot, { recursive: true, force: true });
+    if (PROJECT) await db.delete(projects).where(eq(projects.id, PROJECT)).catch(() => {});
 });
 
 async function makeRoom(key: string) {

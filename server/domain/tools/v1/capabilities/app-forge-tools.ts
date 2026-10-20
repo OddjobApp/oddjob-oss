@@ -1221,12 +1221,13 @@ export const APP_FORGE_TOOLS: Record<string, ToolDefinition> = {
         idempotency: "read-safe",
         label: "Forge: List Blueprints",
         group: "App Forge",
-        description: "Lists available application architectures (blueprints) that can be used to scaffold a new app. Blueprints include 'analytics-dashboard', 'chat-assistant', 'crud-app', etc.",
+        description: "Lists available application architectures (blueprints) that can be used to scaffold a new app, each with its maturity (stable, beta or experimental). Prefer a stable or beta blueprint, and tell the user when the one you pick is experimental. Blueprints include 'analytics-dashboard', 'chat-assistant', 'crud-app', etc.",
         parameters: z.object({
             category: z.string().optional().describe("Filter by category (e.g., 'Analytics', 'Communication')")
         }),
         execute: async ({ category }, context) => {
             const { blueprintRegistryService } = await import("../../../apps/blueprint-registry.service.js");
+            const { blueprintMaturity } = await import("@shared/blueprint-maturity.js");
             const orgId = context?.organizationId ? Number(context.organizationId) : undefined;
             const all = await blueprintRegistryService.listAll(orgId);
             
@@ -1240,7 +1241,9 @@ export const APP_FORGE_TOOLS: Record<string, ToolDefinition> = {
                 name: b.name,
                 description: b.description,
                 capabilities: b.capabilities.join(", "),
-                category: b.category
+                category: b.category,
+                // stable | beta | experimental — see shared/blueprint-maturity.ts.
+                maturity: blueprintMaturity(b.slug),
             }));
         }
     },

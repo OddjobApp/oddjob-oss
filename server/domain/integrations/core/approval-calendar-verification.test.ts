@@ -1,5 +1,10 @@
 import { afterEach, expect, it, vi } from 'vitest';
 const read = vi.hoisted(() => vi.fn());
+// approval.service reaches the BullMQ queues, which connect to Redis when loaded.
+// Unmocked, their connection errors were still being logged after the file ended,
+// and those teardown errors failed CI's verify run wherever Redis was not running.
+vi.mock('@domain/queue/queue.service.js', () => ({ queueService: { addJob: vi.fn().mockResolvedValue({ id: 'job-1' }) }, JobPriority: { LOW: 10, NORMAL: 5, HIGH: 1, CRITICAL: 0 } }));
+vi.mock('@domain/core/infrastructure/queue/queue-service.js', () => ({ queueService: { addJob: vi.fn(), addJobWithTrace: vi.fn() } }));
 vi.mock('@domain/tools/v1/capabilities/google-calendar.js', () => ({ GOOGLE_CALENDAR_TOOLS: { gcal_get_event: { execute: read } } }));
 import { approvalService } from './approval.service.js';
 afterEach(() => vi.restoreAllMocks());

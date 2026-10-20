@@ -1,6 +1,6 @@
 {
   "name": "@oddjob/design-system",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Unified design system for Oddjob UI - colors, icons, tokens, and component guidelines",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
