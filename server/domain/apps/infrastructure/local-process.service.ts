@@ -1,3 +1,4 @@
+import { assertLocalTenantExecutionAllowed } from "@server/utils/local-tenant-execution.js";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { createWriteStream } from "node:fs";
@@ -52,6 +53,7 @@ export const localProcessService = {
         slug: string,
         entryFile?: string
     ): Promise<{ id: string; success: boolean; error?: string }> {
+        assertLocalTenantExecutionAllowed();
         const processName = `oddjob-app-${slug}-${port}`;
 
         if (!SAFE_SLUG_RE.test(slug)) {

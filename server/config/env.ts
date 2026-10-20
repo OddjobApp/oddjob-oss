@@ -225,6 +225,10 @@ export function validateEnvironment(env: NodeJS.ProcessEnv = process.env): EnvRe
     }
 
     const degraded: string[] = [];
+    if (env.NODE_ENV === "production") {
+        degraded.push("Local generated-app execution disabled — install/build scripts, compiler checks, tests and app startup require an isolated tenant runtime. See README_DEPLOYMENT.md.");
+    }
+
     for (const d of degradations) {
         if (isProduction && d.capability === "AI inference") continue;
         const satisfied = d.vars.some((v) => !!env[v]);

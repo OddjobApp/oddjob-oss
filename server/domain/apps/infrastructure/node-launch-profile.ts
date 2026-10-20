@@ -1,3 +1,4 @@
+import { assertLocalTenantExecutionAllowed } from "@server/utils/local-tenant-execution.js";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { execFile } from "node:child_process";
@@ -41,6 +42,7 @@ const NPM = process.platform === "win32" ? "npm.cmd" : "npm";
  * command string. Do not extend this to pass caller-supplied text.
  */
 export async function runNpm(args: string[], cwd: string, timeoutMs = PREPARE_TIMEOUT_MS): Promise<void> {
+    assertLocalTenantExecutionAllowed();
     await execFileAsync(NPM, args, {
         cwd,
         timeout: timeoutMs,
@@ -115,6 +117,7 @@ export async function prepareNodeWorkspace(
     workspacePath: string,
     slug: string,
 ): Promise<NodeWorkspaceReadiness> {
+    assertLocalTenantExecutionAllowed();
     const pkg = await readPackageJson(workspacePath);
     if (!pkg) {
         return { ready: false, error: `No package.json in ${workspacePath} — nothing to start.` };

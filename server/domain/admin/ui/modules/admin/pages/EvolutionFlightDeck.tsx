@@ -134,7 +134,7 @@ export default function EvolutionFlightDeck() {
     // Validated autonomous adjustments. TODO: source from /api/evolution when the
     // adaptation-registry endpoint lands; kept inline so the section renders today.
     const adaptationRegistry = [
-        { type: "DOC_SYNTHESIS", title: "Architecture Registry Sync", description: "Automated reconciliation of SYSTEM_ARCHITECTURE.md from pod registry facade states.", timestamp: "Just now" },
+        { type: "DOC_SYNTHESIS", title: "Architecture Registry Sync", description: "Automated reconciliation of docs/reports/generated-architecture-registry.md from pod registry facade states.", timestamp: "Just now" },
         { type: "SELF_HEALING", title: "Circular Dependency Resolution", description: "Resolved recursive pod import between Learning and Evolution pods in core registry.", timestamp: "2m ago" },
         { type: "PERF_OPT", title: "Query Harmonization", description: "Injected multi-index vector optimizations on the Forensic Log telemetry table.", timestamp: "1h ago" },
     ];

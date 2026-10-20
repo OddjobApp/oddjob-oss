@@ -1,3 +1,4 @@
+import { assertLocalTenantExecutionAllowed } from "@server/utils/local-tenant-execution.js";
 /**
  * App Builder Service
  *
@@ -1016,6 +1017,9 @@ export const appBuilderService = {
                 return { success: false, error: err.message || "Docker rebuild failed." };
             }
         }
+
+        // Reject before stopping an existing app or executing install/build scripts.
+        assertLocalTenantExecutionAllowed();
 
         if (await detectLaunchProfile(workspacePath) === "node") {
             try {

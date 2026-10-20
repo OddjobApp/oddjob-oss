@@ -1,3 +1,5 @@
+import { tenantProcessEnv } from "@server/utils/tenant-process-env.js";
+import { assertLocalTenantExecutionAllowed } from "@server/utils/local-tenant-execution.js";
 
 import { createLogger } from "@server/utils/logger.js";
 import { db } from "@server/database_service.js";
@@ -799,6 +801,7 @@ export class AppForgeService {
     }
 
     async executePlaywrightTest(testPath: string, orgId: number) {
+        assertLocalTenantExecutionAllowed();
         const { exec } = await import("child_process");
         const { promisify } = await import("util");
         const execAsync = promisify(exec);
@@ -806,6 +809,7 @@ export class AppForgeService {
             const { stdout } = await execAsync(`npx playwright test ${testPath} --reporter=json`, {
                 cwd: process.cwd(),
                 timeout: 120000,
+                env: tenantProcessEnv(),
             });
             const parsed = JSON.parse(stdout);
             return {

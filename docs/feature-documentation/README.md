@@ -1,6 +1,6 @@
 # Oddjob Feature Documentation
 
-This directory contains comprehensive documentation for all Oddjob features. Each document serves as a complete reference to ensure no functionality is lost during refactoring. **Technical specifications** (routes, API, schemas) are maintained in [`docs/specs/`](../specs/).
+This directory collects feature workflows, UI behavior, and implementation references. Start with the [documentation index](../README.md) for installation and a first mission. Individual references may describe different stages of the implementation; check prerequisites, maturity notes, and the current code before relying on a behavior. **Technical specifications** (routes, API, schemas) are maintained in [`docs/specs/`](../specs/).
 
 ## **Documentation Purpose**
 
@@ -16,7 +16,7 @@ This directory contains comprehensive documentation for all Oddjob features. Eac
 | **Specs** (`docs/specs/`) | Routes, API endpoints, config schemas, data models |
 | **Feature Docs** (this folder) | Component hierarchy, user flows, integration points, error handling |
 
-For authoritative routes and API details, see specs README.
+For API and data-model references, see the [specs directory](../specs/); verify routes against their current implementation.
 
 ## **Documentation Standards**
 
@@ -44,12 +44,14 @@ Each feature document follows a standardized structure covering:
 - [signal-studio.md](./signal-studio.md) - Signal Studio: Layer 0 event harvesting, universal ingress webhooks, visual JSONPath schema mapping, spatial Uber H3 telemetry, and modular industry packs
 
 ### **Integration Features**
-- 05-auth-system.md - Authentication, users, permissions
-- 06-credentials-system.md - Credentials, API keys → CREDENTIALS_SPEC
-- 07-decision-inbox-hil.md - Decision Inbox, human-in-the-loop
+- Authentication, users, and permissions — dedicated feature guide planned; see [security boundaries](../SECURITY_BOUNDARIES.md).
+- Credentials and API keys — see [keys and credentials](../developer-guides/KEYS_AND_CREDENTIALS.md).
+- Decision Inbox and human-in-the-loop — see [governance guides](../platform/03-human-in-the-loop-governance/).
 - [08-agentmail.md](./integration-features/08-agentmail.md) - AgentMail connector: inbound/outbound email, HIL approvals by reply, MCP tools
 - 09-notifications-system.md - Alerts and notifications *(Planned)*
 - [10-confluence-gdrive-sync.md](./integration-features/10-confluence-gdrive-sync.md) - Confluence full pagination, Google Drive fix, configurable caps
+- [Dynamic SaaS schemas](./integration-features/11-dynamic-saas-schemas.md)
+- [Live HTTP connector](./integration-features/12-live-http-connector.md)
 
 ### **Admin Features**
 - [09-admin-dashboard.md](./admin-features/09-admin-dashboard.md) - Admin interface and controls
@@ -84,8 +86,9 @@ Each feature document follows a standardized structure covering:
 - 16-security-model.md - Security and permissions *(Planned)*
 
 ### **Documentation Status**
-- **Existing feature docs**: 9 (01–05 core, 05–07 integration, 09 admin)
-- **Planned**: 7 (08–09 integration, 10–12 admin, 13–16 technical)
+- Linked entries above have dedicated feature documents.
+- Entries marked **Planned** describe documentation still to be written, not a guarantee about feature availability.
+- See [blueprint maturity](../guides/blueprint-maturity.md) for template readiness and limitations.
 - **Archive/Proposals**: Historical; may not reflect current implementation. See [docs/archive](../archive/) and [docs/proposals](../proposals/) for archived designs.
 
 ## **Usage During Refactoring**
@@ -97,10 +100,10 @@ Each feature document follows a standardized structure covering:
 
 ## **Version Control**
 
-- Each document reflects the state before refactoring begins
-- Documents are versioned with the refactoring phase
-- Changes to requirements are tracked separately
+- Update a feature reference alongside behavior or prerequisite changes.
+- Use Git history for prior versions; put superseded designs in the archive or history directories.
+- Keep proposed behavior clearly labeled until its runtime path is implemented and verified.
 
 ---
 
-**Note**: These documents represent the current state and serve as preservation references. Post-refactoring documentation will be created separately to reflect the new architecture.
+**Maintenance**: Treat these as feature references, not release certification. The [system architecture](../SYSTEM_ARCHITECTURE.md) explains runtime boundaries and the [contribution guide](../../CONTRIBUTING.md) defines verification.

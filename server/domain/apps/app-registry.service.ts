@@ -1,3 +1,4 @@
+import { assertLocalTenantExecutionAllowed } from "@server/utils/local-tenant-execution.js";
 import { apps, appDeployments, appInstances, projectResources, type InsertApp, type InsertAppDeployment } from "@shared/schema/index.js";
 import { mintDeploymentToken, getPlaintextToken, ALL_CAPABILITIES } from "./infrastructure/app-token.service.js";
 import { eq, and, desc, inArray } from "drizzle-orm";
@@ -659,6 +660,8 @@ export const appRegistryService = {
         const effectiveBlueprint = app.blueprint || app.blueprintSlug;
         const isDockerApp = ["go-backend", "python-backend", "java-backend"].includes(effectiveBlueprint || "") ||
                             await fs.access(nodePath.join(workspacePath, "Dockerfile")).then(() => true).catch(() => false);
+
+        if (!isDockerApp) assertLocalTenantExecutionAllowed();
 
         let workspaceExists = await fs.access(workspacePath).then(() => true).catch(() => false);
 

@@ -1,3 +1,4 @@
+import { assertLocalTenantExecutionAllowed } from "@server/utils/local-tenant-execution.js";
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -162,6 +163,7 @@ export class ForgeWorkspaceService {
     }
 
     async checkCompilation(slug: string, blueprintSlug: string, explicitWorkspacePath?: string): Promise<{ success: boolean; errors: string[] }> {
+        assertLocalTenantExecutionAllowed();
         const cwd = explicitWorkspacePath ?? getForgeWorkspacePath(slug);
         const errors: string[] = [];
 
@@ -621,6 +623,7 @@ module.exports = {
     }
 
     async runCommand(slug: string, command: string, args: string[], explicitWorkspacePath?: string) {
+        assertLocalTenantExecutionAllowed();
         const cwd = explicitWorkspacePath ?? getForgeWorkspacePath(slug);
         const env = tenantProcessEnv({
             NODE_ENV: command === "npm" && args[0] === "run" && args[1] === "build"
