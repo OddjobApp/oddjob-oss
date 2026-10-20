@@ -22,8 +22,13 @@ agents:
 
 missions:
   - id: run-self-harness-loop
+    name: "Self-Harness Improvement Loop"
     objective: Execute one iteration of the self-harness improvement loop.
-    steps:
+    primary_agent: self-harness-manager-ai
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    sequence:
       - step_code: SH-1
         action: collect_evaluation_results
         description: Collect recent evaluation results, alerts, and pulse metrics for the target harness.
@@ -87,18 +92,19 @@ missions:
 
 forms:
   - id: self-harness-config
+    name: "Configure Self-Harness Loop"
     label: Configure Self-Harness Loop
     description: Set up parameters for the self-improvement loop.
     fields:
-      - id: harnessId
+      - name: harnessId
         label: Target Harness ID
         type: text
         required: true
-      - id: harnessVersion
+      - name: harnessVersion
         label: Current Harness Version
         type: text
         required: true
-      - id: runFrequency
+      - name: runFrequency
         label: Run Frequency (e.g., daily, weekly, on-demand)
         type: select
         options:

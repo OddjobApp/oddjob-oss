@@ -103,56 +103,65 @@ agents:
       - "trigger_hil_approval"
       - "knowledge_graph_query"
 
-phases:
+missions:
   - id: "phase_1_signal_ingestion_and_causal_mapping"
     name: "Market Signal Ingestion & Causal Blast Radius Mapping"
     description: "Ingests live technology signals across RSS, Hacker News, and TechCrunch, mapping competitor capabilities to internal modules."
-    tasks:
-      - id: "task_ingest_signals"
-        name: "Ingest Market Signals"
-        type: "system_computation"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "ai-product-strategist"
+    sequence:
+      - step_code: "P1-1"
+        action: "ingest_signals"
+        description: "Ingest Market Signals: Execute ingest_market_signals to capture competitor launches and technical primitives."
         agent: "ai-product-strategist"
-        instructions: "Execute ingest_market_signals to capture competitor launches and technical primitives."
-      - id: "task_causal_blast_radius"
-        name: "Calculate Causal Blast Radius"
-        type: "system_computation"
+      - step_code: "P1-2"
+        action: "causal_blast_radius"
+        description: "Calculate Causal Blast Radius: Execute map_causal_blast_radius to calculate market overlap and identify affected internal product modules."
         agent: "ai-product-strategist"
-        instructions: "Execute map_causal_blast_radius to calculate market overlap and identify affected internal product modules."
 
   - id: "phase_2_hil_strategy_approval"
     name: "Governed Product Manager Strategy Sign-off"
     description: "Presents competitive impact scores and counter-strategy proposals for Product Leadership approval."
-    tasks:
-      - id: "task_pm_signoff"
-        name: "Product Strategy Approval Gate"
-        type: "human_in_the_loop"
-        form_schema:
-          title: "Competitive Strategy & Feature Roadmap Approval"
-          description: "Review detected competitor announcements, threat level, and recommended counter-strategy."
-          fields:
-            - name: "approved"
-              type: "boolean"
-              label: "Approve Counter-Strategy Roadmap Epics"
-              required: true
-            - name: "targetSprint"
-              type: "select"
-              label: "Target Roadmap Sprint Priority"
-              options:
-                - "Sprint 1 (Immediate Execution)"
-                - "Sprint 2 (Next Development Cycle)"
-                - "Q4 Strategic Backlog"
-              required: true
-            - name: "managerNotes"
-              type: "textarea"
-              label: "Strategic Guidance / Focus Notes"
-              required: false
+    trigger: "on_success(phase_1_signal_ingestion_and_causal_mapping)"
+    primary_agent: "ai-product-strategist"
+    sequence:
+      - step_code: "P2-1"
+        action: "pm_signoff"
+        description: "Product Strategy Approval Gate: Review detected competitor announcements, threat level, and recommended counter-strategy."
+        requires_human: true
+        form_ref: "pm_signoff"
 
   - id: "phase_3_roadmap_backlog_sync"
     name: "Roadmap Epics Generation & Backlog Synchronization"
     description: "Generates structured backlog user stories and syncs them into Jira/GitHub."
-    tasks:
-      - id: "task_generate_epics"
-        name: "Generate Roadmap Epics"
-        type: "ai_generation"
+    trigger: "on_success(phase_2_hil_strategy_approval)"
+    primary_agent: "product-ops-lead"
+    sequence:
+      - step_code: "P3-1"
+        action: "generate_epics"
+        description: "Generate Roadmap Epics: Execute generate_counter_strategy_epics based on approved PM guidance and sync to the backlog."
         agent: "product-ops-lead"
-        instructions: "Execute generate_counter_strategy_epics based on approved PM guidance and sync to the backlog."
+
+forms:
+  - id: "pm_signoff"
+    name: "Competitive Strategy & Feature Roadmap Approval"
+    description: "Review detected competitor announcements, threat level, and recommended counter-strategy."
+    fields:
+      - name: "approved"
+        label: "Approve Counter-Strategy Roadmap Epics"
+        type: "boolean"
+        required: true
+      - name: "targetSprint"
+        label: "Target Roadmap Sprint Priority"
+        type: "select"
+        required: true
+        options:
+          - "Sprint 1 (Immediate Execution)"
+          - "Sprint 2 (Next Development Cycle)"
+          - "Q4 Strategic Backlog"
+      - name: "managerNotes"
+        label: "Strategic Guidance / Focus Notes"
+        type: "textarea"
+        required: false

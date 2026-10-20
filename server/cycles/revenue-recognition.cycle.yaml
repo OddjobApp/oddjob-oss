@@ -103,62 +103,72 @@ agents:
       - "record_audit_ledger_proof"
       - "trigger_hil_approval"
 
-phases:
+missions:
   - id: "phase_1_contract_ingestion_and_amortization"
     name: "Contract Ingestion & ASC 606 Amortization"
     description: "Ingests enterprise subscription contracts, identifies performance obligations, and builds monthly recognition waterfalls."
-    tasks:
-      - id: "task_ingest_contracts"
-        name: "Ingest Subscription Contracts"
-        type: "system_computation"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "revenue-accountant-ai"
+    sequence:
+      - step_code: "P1-1"
+        action: "ingest_contracts"
+        description: "Ingest Subscription Contracts: Execute ingest_subscription_contracts to load active billing terms and allocated performance obligation values."
         agent: "revenue-accountant-ai"
-        instructions: "Execute ingest_subscription_contracts to load active billing terms and allocated performance obligation values."
-      - id: "task_calculate_schedule"
-        name: "Compute ASC 606 Amortization Waterfall"
-        type: "system_computation"
+      - step_code: "P1-2"
+        action: "calculate_schedule"
+        description: "Compute ASC 606 Amortization Waterfall: Execute calculate_asc606_amortization to produce monthly recognized vs unearned revenue schedules."
         agent: "revenue-accountant-ai"
-        instructions: "Execute calculate_asc606_amortization to produce monthly recognized vs unearned revenue schedules."
 
   - id: "phase_2_journal_entry_generation"
     name: "Double-Entry General Ledger Generation"
     description: "Produces balanced debit/credit journal entries transferring unearned deferred revenue into recognized SaaS revenue."
-    tasks:
-      - id: "task_generate_jes"
-        name: "Generate Balanced Journal Entries"
-        type: "system_computation"
+    trigger: "on_success(phase_1_contract_ingestion_and_amortization)"
+    primary_agent: "revenue-accountant-ai"
+    sequence:
+      - step_code: "P2-1"
+        action: "generate_jes"
+        description: "Generate Balanced Journal Entries: Execute generate_journal_entries to prepare double-entry ledger records for the target period."
         agent: "revenue-accountant-ai"
-        instructions: "Execute generate_journal_entries to prepare double-entry ledger records for the target period."
 
   - id: "phase_3_hil_controller_signoff"
     name: "Dual-Control Controller Financial Sign-off"
     description: "Requires explicit Human-in-the-Loop review and attestation from the Corporate Controller or VP of Finance."
-    tasks:
-      - id: "task_controller_signoff"
-        name: "Controller Ledger Approval Gate"
-        type: "human_in_the_loop"
-        form_schema:
-          title: "ASC 606 Monthly Revenue Recognition Attestation"
-          description: "Review calculated amortization schedules, journal entries, and deferred revenue balances before ledger posting."
-          fields:
-            - name: "approved"
-              type: "boolean"
-              label: "Approve Monthly Revenue Journal Posting"
-              required: true
-            - name: "accountingPeriod"
-              type: "text"
-              label: "Target Accounting Fiscal Period (YYYY-MM)"
-              required: true
-            - name: "controllerAttestation"
-              type: "textarea"
-              label: "Controller SOX Attestation & Notes"
-              required: false
+    trigger: "on_success(phase_2_journal_entry_generation)"
+    primary_agent: "revenue-accountant-ai"
+    sequence:
+      - step_code: "P3-1"
+        action: "controller_signoff"
+        description: "Controller Ledger Approval Gate: Review calculated amortization schedules, journal entries, and deferred revenue balances before ledger posting."
+        requires_human: true
+        form_ref: "controller_signoff"
 
   - id: "phase_4_audit_ledger_sealing"
     name: "Cryptographic Audit Ledger Sealing"
     description: "Seals the approved revenue transactions into an immutable SHA-256 cryptographic audit proof."
-    tasks:
-      - id: "task_seal_proof"
-        name: "Record Cryptographic Audit Proof"
-        type: "system_computation"
+    trigger: "on_success(phase_3_hil_controller_signoff)"
+    primary_agent: "corporate-controller-ai"
+    sequence:
+      - step_code: "P4-1"
+        action: "seal_proof"
+        description: "Record Cryptographic Audit Proof: Execute record_audit_ledger_proof to seal the approved financial transactions with SHA-256 hash proof."
         agent: "corporate-controller-ai"
-        instructions: "Execute record_audit_ledger_proof to seal the approved financial transactions with SHA-256 hash proof."
+
+forms:
+  - id: "controller_signoff"
+    name: "ASC 606 Monthly Revenue Recognition Attestation"
+    description: "Review calculated amortization schedules, journal entries, and deferred revenue balances before ledger posting."
+    fields:
+      - name: "approved"
+        label: "Approve Monthly Revenue Journal Posting"
+        type: "boolean"
+        required: true
+      - name: "accountingPeriod"
+        label: "Target Accounting Fiscal Period (YYYY-MM)"
+        type: "text"
+        required: true
+      - name: "controllerAttestation"
+        label: "Controller SOX Attestation & Notes"
+        type: "textarea"
+        required: false

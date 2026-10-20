@@ -62,6 +62,8 @@ integrations:
     workspace_id: "${ENV.SLACK_WORKSPACE_ID}"
     alerts_channel: "${ENV.SLACK_ALERTS_CHANNEL}"
     approvals_channel: "${ENV.SLACK_APPROVALS_CHANNEL}"
+  jira:
+    required: false
   agentmail:
     enabled: true
     admin_address: "${ENV.AGENTMAIL_ADMIN_ADDRESS}"

@@ -50,6 +50,8 @@ integrations:
     required: true
     dialect: "${ENV.DB_DIALECT}"
     dev_url: "${ENV.DEV_DATABASE_URL}"
+  source_control:
+    required: false
   jira:
     required: false
     project_key: "${ENV.JIRA_PROJECT_KEY}"

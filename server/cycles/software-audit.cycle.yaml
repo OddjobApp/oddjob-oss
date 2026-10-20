@@ -117,76 +117,84 @@ agents:
       - "trigger_hil_approval"
       - "knowledge_graph_query"
 
-phases:
+missions:
   - id: "phase_1_ast_and_sca_scanning"
     name: "AST Static Analysis & Dependency Vulnerability Scanning"
     description: "Executes deep AST scanning on target source code and Software Composition Analysis (SCA) across package manifests."
-    tasks:
-      - id: "task_sast_scan"
-        name: "Execute SAST AST Scan"
-        type: "system_computation"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "security-auditor-ai"
+    sequence:
+      - step_code: "P1-1"
+        action: "sast_scan"
+        description: "Execute SAST AST Scan: Run trigger_sast_scan across target repository files to detect secret leakage, SQLi, command injection, and prototype pollution."
         agent: "security-auditor-ai"
-        instructions: "Run trigger_sast_scan across target repository files to detect secret leakage, SQLi, command injection, and prototype pollution."
-      - id: "task_sca_scan"
-        name: "Execute SCA Dependency Scan"
-        type: "system_computation"
+      - step_code: "P1-2"
+        action: "sca_scan"
+        description: "Execute SCA Dependency Scan: Run trigger_sca_scan on package.json to identify vulnerable transitive/direct dependencies matching known CVEs."
         agent: "security-auditor-ai"
-        instructions: "Run trigger_sca_scan on package.json to identify vulnerable transitive/direct dependencies matching known CVEs."
 
   - id: "phase_2_aggregation_and_prioritization"
     name: "Finding Aggregation & CVSS Prioritization"
     description: "Aggregates findings across all scanners, calculates the Security Posture Score, and ranks vulnerabilities by exploitability."
-    tasks:
-      - id: "task_aggregate_report"
-        name: "Aggregate Security Findings"
-        type: "system_computation"
+    trigger: "on_success(phase_1_ast_and_sca_scanning)"
+    primary_agent: "secops-triage-lead"
+    sequence:
+      - step_code: "P2-1"
+        action: "aggregate_report"
+        description: "Aggregate Security Findings: Execute aggregate_findings to merge SAST and SCA findings into a unified SecurityAuditReport with posture scores."
         agent: "secops-triage-lead"
-        instructions: "Execute aggregate_findings to merge SAST and SCA findings into a unified SecurityAuditReport with posture scores."
-      - id: "task_prioritize_triage"
-        name: "CVSS Severity Prioritization"
-        type: "ai_analysis"
+      - step_code: "P2-2"
+        action: "prioritize_triage"
+        description: "CVSS Severity Prioritization: Execute prioritize_vulnerabilities to group findings into Blockers, Sprint Fixes, and Backlog items."
         agent: "secops-triage-lead"
-        instructions: "Execute prioritize_vulnerabilities to group findings into Blockers, Sprint Fixes, and Backlog items."
 
   - id: "phase_3_hil_security_gate"
     name: "Governed SecOps / CISO Sign-off Gate"
     description: "Halts pipeline progression for human approval if Critical or High severity vulnerabilities are detected."
-    tasks:
-      - id: "task_secops_approval"
-        name: "Security Lead & CISO Sign-off"
-        type: "human_in_the_loop"
-        form_schema:
-          title: "Security Audit & Vulnerability Sign-off"
-          description: "Review detected CVEs and SAST vulnerabilities. Approve remediation plan or grant temporary compliance exceptions."
-          fields:
-            - name: "approved"
-              type: "boolean"
-              label: "Approve Security Remediation Plan"
-              required: true
-            - name: "riskAcceptance"
-              type: "select"
-              label: "Risk Acceptance Decision"
-              options:
-                - "Auto-Remediate Blockers (Generate PR)"
-                - "Accept Risk with 30-Day Exception"
-                - "Block Release & Escalate to CISO"
-              required: true
-            - name: "mitigationNotes"
-              type: "textarea"
-              label: "Security Officer Review & Justification Notes"
-              required: false
+    trigger: "on_success(phase_2_aggregation_and_prioritization)"
+    primary_agent: "secops-triage-lead"
+    sequence:
+      - step_code: "P3-1"
+        action: "secops_approval"
+        description: "Security Lead & CISO Sign-off: Review detected CVEs and SAST vulnerabilities. Approve remediation plan or grant temporary compliance exceptions."
+        requires_human: true
+        form_ref: "secops_approval"
 
   - id: "phase_4_remediation_and_compliance"
     name: "Automated Patch Generation & Compliance Evidence Ledger"
     description: "Generates surgical AST code patches, creates dependency upgrade pull requests, and logs immutable audit evidence."
-    tasks:
-      - id: "task_generate_patches"
-        name: "Generate Surgical Security Patches"
-        type: "ai_generation"
+    trigger: "on_success(phase_3_hil_security_gate)"
+    primary_agent: "secops-triage-lead"
+    sequence:
+      - step_code: "P4-1"
+        action: "generate_patches"
+        description: "Generate Surgical Security Patches: Execute generate_security_patch for each approved blocker to create surgical code diffs and dependency updates."
         agent: "secops-triage-lead"
-        instructions: "Execute generate_security_patch for each approved blocker to create surgical code diffs and dependency updates."
-      - id: "task_compliance_ledger_log"
-        name: "Record SOC2 / HIPAA Audit Evidence"
-        type: "system_computation"
+      - step_code: "P4-2"
+        action: "compliance_ledger_log"
+        description: "Record SOC2 / HIPAA Audit Evidence: Record the completed security audit report and HIL attestation in the immutable compliance knowledge graph."
         agent: "secops-triage-lead"
-        instructions: "Record the completed security audit report and HIL attestation in the immutable compliance knowledge graph."
+
+forms:
+  - id: "secops_approval"
+    name: "Security Audit & Vulnerability Sign-off"
+    description: "Review detected CVEs and SAST vulnerabilities. Approve remediation plan or grant temporary compliance exceptions."
+    fields:
+      - name: "approved"
+        label: "Approve Security Remediation Plan"
+        type: "boolean"
+        required: true
+      - name: "riskAcceptance"
+        label: "Risk Acceptance Decision"
+        type: "select"
+        required: true
+        options:
+          - "Auto-Remediate Blockers (Generate PR)"
+          - "Accept Risk with 30-Day Exception"
+          - "Block Release & Escalate to CISO"
+      - name: "mitigationNotes"
+        label: "Security Officer Review & Justification Notes"
+        type: "textarea"
+        required: false

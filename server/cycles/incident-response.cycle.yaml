@@ -27,8 +27,13 @@ agents:
 
 missions:
   - id: triage-incident
+    name: "Incident Triage"
     objective: Triage a new incident and determine its severity.
-    steps:
+    primary_agent: incident-manager-ai
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    sequence:
       - step_code: TI-1
         action: analyze_alert
         description: Analyze incoming alert details.
@@ -39,8 +44,11 @@ missions:
         estimated_duration_minutes: 10
 
   - id: resolve-incident
+    name: "Incident Resolution"
     objective: Execute steps to resolve the incident.
-    steps:
+    primary_agent: incident-manager-ai
+    trigger: "on_success(triage-incident)"
+    sequence:
       - step_code: RI-1
         action: identify_root_cause
         description: Identify the root cause of the incident.
@@ -67,18 +75,19 @@ missions:
 
 forms:
   - id: new-incident
+    name: "Report New Incident"
     label: Report New Incident
     description: Details for a new incident.
     fields:
-      - id: incidentTitle
+      - name: incidentTitle
         label: Incident Title
         type: text
         required: true
-      - id: description
+      - name: description
         label: Description
         type: textarea
         required: true
-      - id: severity
+      - name: severity
         label: Severity
         type: select
         options:

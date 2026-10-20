@@ -52,6 +52,10 @@ integrations:
   slack:
     required: false
     alerts_channel: "#sre-chaos-drills"
+  source_control:
+    required: false
+  jira:
+    required: false
 
 observability:
   logging:
@@ -93,61 +97,72 @@ agents:
       - "generate_chaos_post_mortem"
       - "trigger_hil_approval"
 
-phases:
+missions:
   - id: "phase_1_safety_preflight"
     name: "Error Budget & Blast Radius Pre-Flight Check"
     description: "Verifies that Prometheus SLO/SLI error budgets permit chaos fault injection without endangering production availability."
-    tasks:
-      - id: "task_check_error_budget"
-        name: "Verify Service Error Budget"
-        type: "system_computation"
+    trigger:
+      type: "manual"
+      source: "oddjob_dashboard"
+    primary_agent: "chaos-engineer-ai"
+    sequence:
+      - step_code: "P1-1"
+        action: "check_error_budget"
+        description: "Verify Service Error Budget: Execute check_error_budget_safety on the target service to ensure >= 20% remaining error budget."
         agent: "chaos-engineer-ai"
-        instructions: "Execute check_error_budget_safety on the target service to ensure >= 20% remaining error budget."
 
   - id: "phase_2_hil_drill_authorization"
     name: "SRE Lead Drill Authorization Gate"
     description: "Requires explicit Human-in-the-Loop approval from the on-call SRE Lead before injecting live faults."
-    tasks:
-      - id: "task_sre_drill_approval"
-        name: "SRE Drill Authorization"
-        type: "human_in_the_loop"
-        form_schema:
-          title: "Chaos Experiment Authorization Gate"
-          description: "Review target service, planned fault scenario, and current availability SLO before authorizing execution."
-          fields:
-            - name: "approved"
-              type: "boolean"
-              label: "Authorize Chaos Fault Injection"
-              required: true
-            - name: "faultScenario"
-              type: "select"
-              label: "Fault Injection Scenario"
-              options:
-                - "Upstream Latency Injection (1500ms)"
-                - "Dependency Service 503 Outage"
-                - "Database Connection Starvation"
-              required: true
-            - name: "sreCommanderNotes"
-              type: "textarea"
-              label: "SRE Commander Safety Directives"
-              required: false
+    trigger: "on_success(phase_1_safety_preflight)"
+    primary_agent: "chaos-engineer-ai"
+    sequence:
+      - step_code: "P2-1"
+        action: "sre_drill_approval"
+        description: "SRE Drill Authorization: Review target service, planned fault scenario, and current availability SLO before authorizing execution."
+        requires_human: true
+        form_ref: "sre_drill_approval"
 
   - id: "phase_3_controlled_fault_injection"
     name: "Controlled Fault Injection & Fallback Verification"
     description: "Injects the approved fault scenario, measures circuit breaker trip latency, and confirms graceful fallback."
-    tasks:
-      - id: "task_inject_fault"
-        name: "Execute Controlled Fault Injection"
-        type: "system_computation"
+    trigger: "on_success(phase_2_hil_drill_authorization)"
+    primary_agent: "chaos-engineer-ai"
+    sequence:
+      - step_code: "P3-1"
+        action: "inject_fault"
+        description: "Execute Controlled Fault Injection: Execute simulate_network_latency or simulate_service_failure and record circuit breaker recovery metrics."
         agent: "chaos-engineer-ai"
-        instructions: "Execute simulate_network_latency or simulate_service_failure and record circuit breaker recovery metrics."
 
   - id: "phase_4_post_mortem_and_remediation"
     name: "Automated Post-Mortem & Preventative Remediation"
     description: "Synthesizes drill telemetry into an automated SRE incident post-mortem with actionable reliability tickets."
-    tasks:
-      - id: "task_generate_post_mortem"
-        name: "Synthesize Chaos Post-Mortem"
-        type: "system_computation"
+    trigger: "on_success(phase_3_controlled_fault_injection)"
+    primary_agent: "sre-incident-commander-ai"
+    sequence:
+      - step_code: "P4-1"
+        action: "generate_post_mortem"
+        description: "Synthesize Chaos Post-Mortem: Execute generate_chaos_post_mortem to create incident timeline logs, resilience score, and action items."
         agent: "sre-incident-commander-ai"
-        instructions: "Execute generate_chaos_post_mortem to create incident timeline logs, resilience score, and action items."
+
+forms:
+  - id: "sre_drill_approval"
+    name: "Chaos Experiment Authorization Gate"
+    description: "Review target service, planned fault scenario, and current availability SLO before authorizing execution."
+    fields:
+      - name: "approved"
+        label: "Authorize Chaos Fault Injection"
+        type: "boolean"
+        required: true
+      - name: "faultScenario"
+        label: "Fault Injection Scenario"
+        type: "select"
+        required: true
+        options:
+          - "Upstream Latency Injection (1500ms)"
+          - "Dependency Service 503 Outage"
+          - "Database Connection Starvation"
+      - name: "sreCommanderNotes"
+        label: "SRE Commander Safety Directives"
+        type: "textarea"
+        required: false

@@ -20,9 +20,9 @@ describe("Competitive Intelligence Blueprint Cycle & Tools", () => {
 
         expect(parsed).toBeDefined();
         expect(parsed.name).toContain("Competitive Intelligence");
-        expect(parsed.phases).toHaveLength(3);
+        expect(parsed.missions).toHaveLength(3);
 
-        const phaseIds = parsed.phases.map((p: any) => p.id);
+        const phaseIds = parsed.missions.map((p: any) => p.id);
         expect(phaseIds).toContain("phase_1_signal_ingestion_and_causal_mapping");
         expect(phaseIds).toContain("phase_2_hil_strategy_approval");
         expect(phaseIds).toContain("phase_3_roadmap_backlog_sync");
@@ -67,9 +67,9 @@ describe("Revenue Recognition (ASC 606) Blueprint Cycle & Tools", () => {
 
         expect(parsed).toBeDefined();
         expect(parsed.name).toContain("Revenue Recognition");
-        expect(parsed.phases).toHaveLength(4);
+        expect(parsed.missions).toHaveLength(4);
 
-        const phaseIds = parsed.phases.map((p: any) => p.id);
+        const phaseIds = parsed.missions.map((p: any) => p.id);
         expect(phaseIds).toContain("phase_1_contract_ingestion_and_amortization");
         expect(phaseIds).toContain("phase_2_journal_entry_generation");
         expect(phaseIds).toContain("phase_3_hil_controller_signoff");
@@ -128,9 +128,9 @@ describe("Chaos Engineering & SRE Resilience Blueprint Cycle & Tools", () => {
 
         expect(parsed).toBeDefined();
         expect(parsed.name).toContain("Chaos");
-        expect(parsed.phases).toHaveLength(4);
+        expect(parsed.missions).toHaveLength(4);
 
-        const phaseIds = parsed.phases.map((p: any) => p.id);
+        const phaseIds = parsed.missions.map((p: any) => p.id);
         expect(phaseIds).toContain("phase_1_safety_preflight");
         expect(phaseIds).toContain("phase_2_hil_drill_authorization");
         expect(phaseIds).toContain("phase_3_controlled_fault_injection");

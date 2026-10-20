@@ -19,10 +19,11 @@ describe("Software & Security Audit Blueprint Cycle", () => {
         expect(parsed).toBeDefined();
         expect(parsed.name).toContain("Software & Security Audit");
         expect(parsed.version).toBe("1.0.0");
-        expect(parsed.phases).toHaveLength(4);
+        expect(parsed.missions).toHaveLength(4);
 
-        // Verify all 4 required operational phases exist
-        const phaseIds = parsed.phases.map((p: any) => p.id);
+        // Verify all 4 required operational phases exist (each phase is a mission,
+        // so Org Forge can install it; the ids are unchanged)
+        const phaseIds = parsed.missions.map((p: any) => p.id);
         expect(phaseIds).toContain("phase_1_ast_and_sca_scanning");
         expect(phaseIds).toContain("phase_2_aggregation_and_prioritization");
         expect(phaseIds).toContain("phase_3_hil_security_gate");
