@@ -124,7 +124,7 @@ export default defineConfig({
       // Vite discovers it mid-session and triggers a re-optimize. On this
       // Windows/OneDrive checkout the optimizer cannot rename deps_temp_* into
       // deps/, so that re-optimize never completes and the dep 504s for the rest
-      // of the server's life — surfacing as "Failed to fetch dynamically
+      // of the server's life â€” surfacing as "Failed to fetch dynamically
       // imported module". Listing it here pre-bundles it during the startup
       // optimize, which does succeed.
       "cronstrue",
@@ -209,14 +209,14 @@ export default defineConfig({
       // (AgentChatPanel's virtualized transcript, the mission dashboards), so
       // the first visit re-optimizes mid-session, the browserHash flips, and
       // already-loaded modules keep the old ?v= react while new deps get the
-      // new one — two React instances, and the first useState in the lazy
+      // new one â€” two React instances, and the first useState in the lazy
       // component reads a null dispatcher.
       "react-virtuoso",
       // Discovered mid-session by the browser crawl (admin credentials uses
       // react-icons/si, pipelines uses @hello-pangea/dnd, useMonacoEditor imports
       // monaco-editor directly, packaged blocks use embla autoplay and
       // cytoscape). Each discovery re-optimizes and 504s every ?v= dep URL the
-      // page already holds — "Failed to fetch dynamically imported module".
+      // page already holds â€” "Failed to fetch dynamically imported module".
       "react-icons/si",
       "@hello-pangea/dnd",
       "monaco-editor",
@@ -250,7 +250,7 @@ export default defineConfig({
         path.resolve(__dirname, "attached_assets"),
         path.resolve(__dirname, "node_modules"),
         // Vite does NOT add cacheDir to fs.allow automatically, and ours now
-        // lives outside the project root — without this the browser cannot
+        // lives outside the project root â€” without this the browser cannot
         // load a single prebundled dep.
         cacheDir,
       ],
@@ -348,60 +348,9 @@ export default defineConfig({
         },
         chunkFileNames: "assets/js/[name]-[hash].js",
         entryFileNames: "assets/js/[name]-[hash].js",
-        manualChunks(id) {
-          // Bundler runtime helpers get a chunk of their own. Left unassigned,
-          // Rollup hoists them into whichever chunk first needs them — it chose
-          // vendor-maps, so every chunk with a dynamic import() statically
-          // imported 1.8MB of mapbox-gl and every page loaded it.
-          if (id.includes('vite/preload-helper') || id.includes('commonjsHelpers')) {
-            return 'vendor-runtime';
-          }
-          // A stylesheet from a vendor package (mapbox-gl.css) is not vendor JS.
-          // Assigned to vendor-maps, it made every importer statically load the
-          // whole map library just to get the CSS.
-          if (/\.css($|\?)/.test(id)) {
-            return undefined;
-          }
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'vendor-react';
-          }
-          if (id.includes('node_modules/@radix-ui/')) {
-            return 'vendor-radix';
-          }
-          if (id.includes('node_modules/recharts/') || id.includes('node_modules/d3')) {
-            return 'vendor-charts';
-          }
-          if (id.includes('node_modules/vis-network') || id.includes('node_modules/vis-data')) {
-            return 'vendor-vis';
-          }
-          if (id.includes('node_modules/mapbox-gl') || id.includes('node_modules/react-map-gl')) {
-            return 'vendor-maps';
-          }
-          if (id.includes('node_modules/reactflow') || id.includes('node_modules/@reactflow')) {
-            return 'vendor-reactflow';
-          }
-          if (id.includes('node_modules/@tanstack/')) {
-            return 'vendor-query';
-          }
-          if (id.includes('node_modules/lucide-react')) {
-            return 'vendor-icons';
-          }
-          if (id.includes('node_modules/date-fns')) {
-            return 'vendor-dates';
-          }
-          if (id.includes('node_modules/zod') || id.includes('node_modules/react-hook-form')) {
-            return 'vendor-forms';
-          }
-          if (id.includes('node_modules/react-markdown') || id.includes('node_modules/remark')) {
-            return 'vendor-markdown';
-          }
-          if (id.includes('node_modules/framer-motion')) {
-            return 'vendor-motion';
-          }
-          if (id.includes('node_modules/')) {
-            return 'vendor-common';
-          }
-        },
+        // Let Rollup group dependency graphs. Hand-splitting interdependent
+        // vendor packages creates circular chunks and browser TDZ failures.
+
       },
     },
   },
