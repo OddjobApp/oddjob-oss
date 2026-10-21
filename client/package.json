@@ -22,7 +22,7 @@
     "@langchain/google-genai": "^2.1.29",
     "@langchain/ollama": "^1.1.0",
     "@langchain/textsplitters": "^1.0.1",
-    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@monaco-editor/react": "^4.6.0",
     "@mui/icons-material": "^9.0.0",
     "@mui/material": "^9.0.0",
