@@ -1,3 +1,4 @@
+import { AnnouncementsSignup } from '@/components/AnnouncementsSignup';
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { Activity, AppWindow, Eye, EyeOff, Fingerprint, Loader2, Lock, Route, ShieldCheck, Sparkles } from 'lucide-react';
@@ -247,6 +248,8 @@ export default function Login({ onRegisterClick }: LoginProps) {
 
           </div>
         </section>
+
+        <AnnouncementsSignup className="lg:col-span-2" />
 
           <footer className="flex flex-col items-center gap-3 border-t border-foreground/10 pt-6 lg:col-span-2">
             <div className="flex flex-wrap justify-center gap-2">
