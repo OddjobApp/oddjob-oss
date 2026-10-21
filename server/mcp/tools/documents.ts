@@ -6,8 +6,9 @@
  */
 
 import { z } from "zod";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export const documentToolDefinitions = [
+export const documentToolDefinitions: Tool[] = [
     {
         name: "search_documents",
         description: "Semantic search across all documents in the knowledge store using RAG (Retrieval Augmented Generation). Returns relevant text chunks that match the query. Use this for finding information in documentation, runbooks, API specs, and other stored documents.",
