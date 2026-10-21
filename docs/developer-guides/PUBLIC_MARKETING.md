@@ -54,7 +54,7 @@ the collection form alone is not a mailing-list delivery service.
 
 ## Guided published agents
 
-In a job’s Publish tab, open **Visitor interaction** and turn off **Allow chat input**.
+In an agent’s Deploy tab, open **Visitor interaction** and turn off **Allow chat input**.
 Save the interaction settings. Existing deployments default to chat enabled. This
 uses `embedConfig.allowChatInput`; no migration is needed.
 
