@@ -91,8 +91,8 @@ export interface ClassificationResult {
   combinedConfidence: number;
   selectedAgentCardId: number;
   selectedAgentCardName: string;
-  resolvedModelProviderId: number;
-  resolvedModelId: number;
+  resolvedModelProviderId: number | null;
+  resolvedModelId: number | null;
   latencyMs: number;
 }
 

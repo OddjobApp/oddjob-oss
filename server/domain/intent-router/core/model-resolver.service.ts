@@ -15,6 +15,8 @@ import {
   llmModels,
 } from "@shared/schema/ai/llm-router.js";
 import type { AgentCardRecord } from "@shared/schema/agent-cards.js";
+import { orgModelService } from "@domain/ai/core/org-model.service.js";
+import { ORG_AI_PROVIDERS } from "@shared/org-ai-providers.js";
 
 const logger = createLogger("ModelResolverService");
 
@@ -23,8 +25,9 @@ const logger = createLogger("ModelResolverService");
 // ============================================================================
 
 export interface ModelResolutionResult {
-  providerId: number;
-  modelId: number;
+  /** The llm_providers / llm_models rows; null when the org's own connected key decides. */
+  providerId: number | null;
+  modelId: number | null;
   providerName: string;
   /** Technical provider name used by llm-router (e.g. "openai", "anthropic") */
   providerTechnicalName: string;
@@ -49,6 +52,26 @@ export class ModelResolverService {
    * @throws Error if both primary and fallback providers are unavailable (for 503 response)
    */
   async resolve(agentCard: AgentCardRecord, orgId: number): Promise<ModelResolutionResult> {
+    // An organization that connected its own key runs every call on it: the LLM
+    // router ignores the preferred provider for such an org. Resolve to that
+    // connection, so a card binding or registry default can neither block the
+    // call (CREW refused to speak for an org whose only AI was its own key) nor
+    // misreport which model answered.
+    const connection = await orgModelService.resolve(orgId).catch((error) => {
+      logger.error(`Error resolving the connected AI key for org ${orgId}:`, error);
+      return null;
+    });
+    if (connection) {
+      return {
+        providerId: null,
+        modelId: null,
+        providerName: ORG_AI_PROVIDERS[connection.provider].label,
+        providerTechnicalName: connection.provider,
+        modelIdentifier: connection.model,
+        isFallback: false,
+      };
+    }
+
     const primaryProviderId = agentCard.modelBindingProviderId;
     const primaryModelId = agentCard.modelBindingModelId;
 

@@ -8,11 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@domain-ui/core/ui/hooks/use-toast";
-import { Shield, Monitor, Clock, Cpu, DollarSign, Video, TerminalSquare } from "lucide-react";
+import { Shield, Monitor, Clock, Cpu, DollarSign, Video, TerminalSquare, BrainCircuit, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 import { TrycuaSessionViewer } from "./TrycuaSessionViewer";
 import { BillingSettingsSection } from "./BillingSettingsSection";
-import { OrgModelSettings } from "./OrgModelSettings";
-import { OrgFalSettings } from "./OrgFalSettings";
 import { OrgAgentMailSettings } from "./OrgAgentMailSettings";
 import { useAuth } from "@domain-ui/auth/ui/modules/auth/hooks/use-auth";
 
@@ -79,8 +78,11 @@ export function SettingsPanel() {
             {/* Commercial Billing & Subscription Section */}
             <BillingSettingsSection />
             {settings?.organizationId && <OrgAgentMailSettings key={`agentmail-${settings.organizationId}`} organizationId={settings.organizationId} />}
-            {settings?.organizationId && <OrgModelSettings key={settings.organizationId} organizationId={settings.organizationId} />}
-            {settings?.organizationId && <OrgFalSettings key={`fal-${settings.organizationId}`} organizationId={settings.organizationId} />}
+            {/* AI provider keys moved to Platform -> AI Models. */}
+            <Link href="/platform/ai-models" className="flex items-center justify-between rounded-md border p-4 hover:bg-muted/40">
+                <span className="flex items-center gap-2 font-medium"><BrainCircuit className="h-5 w-5 text-primary" />AI models and provider keys are in Platform → AI Models</span>
+                <ArrowRight className="h-4 w-4" />
+            </Link>
 
             <div className="grid grid-cols-1 gap-6">
                 {/* Trycua Settings */}

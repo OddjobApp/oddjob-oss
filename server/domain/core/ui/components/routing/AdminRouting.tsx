@@ -29,6 +29,7 @@ const AccountAdminOverview = lazyWithRetry(() => import("@/modules/account-admin
 const PlatformMaintenanceOverview = lazyWithRetry(() => import("@/modules/platform-maintenance/pages/PlatformMaintenanceOverview"));
 const ComponentStyleGallery = lazyWithRetry(() => import("@domain-ui/knowledge/ui/modules/knowledge/pages/ComponentStyleGallery"));
 const PlatformOverview = lazyWithRetry(() => import("@/modules/platform/pages/PlatformOverview"));
+const AiModelsPage = lazyWithRetry(() => import("@/modules/platform/pages/AiModelsPage"));
 const SnapshotManager = lazyWithRetry(() => import("@domain-ui/admin/ui/modules/admin/pages/SnapshotManager"));
 const McpTokens = lazyWithRetry(() => import("@domain-ui/admin/ui/modules/admin/pages/McpTokens"));
 const Credentials = lazyWithRetry(() => import("@domain-ui/admin/ui/modules/admin/components/Credentials"));
@@ -233,6 +234,7 @@ export function AdminRoutingRoutes() {
 
         {/* Platform overview */}
         <Route path="/platform" component={PlatformOverview} />
+        <Route path="/platform/ai-models" component={AiModelsPage} />
 
         {/* Profile */}
         <Route path="/settings" component={Settings} />

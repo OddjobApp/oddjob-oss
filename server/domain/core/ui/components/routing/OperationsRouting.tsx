@@ -175,6 +175,7 @@ export function OperationsRouting() {
             <Route path="/account-admin"><AdminRoutingRoutes /></Route>
             <Route path="/account-admin/:rest*"><AdminRoutingRoutes /></Route>
             <Route path="/platform"><AdminRoutingRoutes /></Route>
+            <Route path="/platform/:rest*"><AdminRoutingRoutes /></Route>
             <Route path="/platform-maintenance"><AdminRoutingRoutes /></Route>
             <Route path="/platform-maintenance/:rest*"><AdminRoutingRoutes /></Route>
             <Route path="/users"><AdminRoutingRoutes /></Route>
