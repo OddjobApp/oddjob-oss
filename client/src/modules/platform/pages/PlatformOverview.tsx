@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "wouter";
 import {
   ArrowRight,
+  BrainCircuit,
   Network,
   Server,
   Users,
@@ -22,6 +23,13 @@ type LinkItem = {
 };
 
 const platformLinks: LinkItem[] = [
+  {
+    title: "AI Models",
+    description: "Your organization's AI provider keys: Gemini, Claude (direct or Amazon Bedrock), OpenAI-compatible models, and fal.ai media.",
+    href: "/platform/ai-models",
+    icon: BrainCircuit,
+    tone: "border-violet-400/20 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+  },
   {
     title: "Connections",
     description: "Credentials, integrations, MCP tokens, SaaS connectors, and external system bridges.",
