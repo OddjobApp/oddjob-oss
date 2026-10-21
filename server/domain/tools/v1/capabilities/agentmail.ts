@@ -2,6 +2,13 @@ import { z } from "zod";
 import type { ToolDefinition } from "./types.js";
 import { agentMailService } from "../../../integrations/core/agentmail.service.js";
 import { requireToolOrgId } from "./org-context.js";
+import { agentMailThreadScope, threadScopeCtx } from "../../../integrations/core/agentmail-thread-scope.service.js";
+
+/** Who is asking, as project access sees it. */
+function scopeOf(context: any) {
+    const orgId = requireToolOrgId(context);
+    return { orgId, ctx: threadScopeCtx(context, orgId) };
+}
 
 export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
     send_agentmail: {
@@ -26,7 +33,10 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params: any, context?: any) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const { orgId, ctx } = scopeOf(context);
+                // Writing into a thread is reading it: its quoted history goes with the reply.
+                if (params.threadId) await agentMailThreadScope.assertReadable(ctx, params.threadId);
+                const mail = await agentMailService.forOrg(orgId);
                 const toList = Array.isArray(params.to) ? params.to : [params.to];
                 const contentText = params.text || params.body || params.message || "";
 
@@ -42,10 +52,20 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
                     client_id: params.clientId
                 });
 
+                // A thread started from a project's room or mission is that project's.
+                if (result.thread_id && context?.projectId) {
+                    await agentMailThreadScope.record(orgId, result.thread_id, {
+                        projectId: Number(context.projectId),
+                        crewSessionId: context?.sessionId ?? null,
+                        missionRunId: context?.missionRunId ?? null,
+                    });
+                } else if (result.thread_id && context?.missionRunId) {
+                    await agentMailThreadScope.recordForMissionRun(orgId, result.thread_id, Number(context.missionRunId));
+                }
+
                 if (context?.sessionKey && result.thread_id) {
                     try {
                         const { agentMailThreadSync } = await import("../../../integrations/core/agentmail-thread-sync.service.js");
-                        const orgId = requireToolOrgId(context);
                         await agentMailThreadSync.linkThreadToCrewSession(
                             result.thread_id,
                             context.sessionKey,
@@ -101,7 +121,10 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params, context) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const { orgId, ctx } = scopeOf(context);
+                const mail = await agentMailService.forOrg(orgId);
+                const original = await mail.getMessage(params.messageId);
+                await agentMailThreadScope.assertReadable(ctx, original.thread_id);
                 const result = await mail.reply(params.messageId, {
                     text: params.text,
                     html: params.html,
@@ -129,9 +152,11 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params, context) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const { orgId, ctx } = scopeOf(context);
+                const mail = await agentMailService.forOrg(orgId);
                 const result = await mail.listThreads(params.limit);
-                return JSON.stringify(result, null, 2);
+                const threads = await agentMailThreadScope.filterThreads(ctx, result.threads ?? []);
+                return JSON.stringify({ ...result, count: threads.length, threads }, null, 2);
             } catch (err: any) {
                 return `Error: Failed to list AgentMail threads: ${err.message}`;
             }
@@ -150,7 +175,9 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params, context) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const { orgId, ctx } = scopeOf(context);
+                await agentMailThreadScope.assertReadable(ctx, params.threadId);
+                const mail = await agentMailService.forOrg(orgId);
                 const result = await mail.getThread(params.threadId);
                 return JSON.stringify(result, null, 2);
             } catch (err: any) {

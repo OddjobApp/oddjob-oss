@@ -192,8 +192,9 @@ export class EscalationService {
                     if (emailRecipients.size > 0) {
                         const recipients = Array.from(emailRecipients);
                         if (mail.isConfigured()) {
+                            const { agentMailThreadScope } = await import("@server/domain/integrations/core/agentmail-thread-scope.service.js");
                             for (const email of recipients) {
-                                await mail.send({
+                                const sent = await mail.send({
                                     to: [email],
                                     subject: `[Escalation Alert] ${mission.name} Stalled`,
                                     text: message,
@@ -203,6 +204,10 @@ export class EscalationService {
                                             <p style="font-size:12px;color:#a1a1aa;margin-top:20px;">Cycle: ${cycle.name} | Run ID: ${run.id}</p>
                                           </div>`
                                 });
+                                // The alert is about this mission, so its thread is the mission's project's.
+                                if (sent?.thread_id) {
+                                    await agentMailThreadScope.recordForMissionRun(Number(run.organizationId), sent.thread_id, run.id);
+                                }
                             }
                             logger.info(`[EscalationService] Emails sent via AgentMail to: ${recipients.join(", ")}`);
                         } else {

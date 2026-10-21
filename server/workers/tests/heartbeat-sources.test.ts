@@ -11,6 +11,12 @@ vi.mock("../../domain/integrations/core/agentmail.service.js", () => ({
     },
 }));
 
+// Project scoping has its own integration suite; here every thread is readable.
+vi.mock("../../domain/integrations/core/agentmail-thread-scope.service.js", () => ({
+    agentMailThreadScope: { assertReadable: vi.fn(), filterThreads: vi.fn(async (_ctx: unknown, threads: unknown[]) => threads), readableFilter: vi.fn(async () => () => true), record: vi.fn(), recordForMissionRun: vi.fn() },
+    threadScopeCtx: (_context: unknown, organizationId: number) => ({ organizationId }),
+}));
+
 vi.mock("../../domain/tools/v1/capabilities/sdlc-tools.js", () => ({
     sdlcToolStubs: { jiraJqlSearch: vi.fn() },
 }));

@@ -1,4 +1,4 @@
-import { pgTable, integer, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, integer, text, timestamp, primaryKey, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { orgs } from "./auth.js";
 
 /** Public connection metadata only. Secrets live in encrypted_credentials. */
@@ -21,4 +21,21 @@ export const agentmailWebhookEvents = pgTable("agentmail_webhook_events", {
     receivedAt: timestamp("received_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
     pk: primaryKey({ columns: [table.organizationId, table.eventId] }),
+}));
+
+/**
+ * Which project an AgentMail thread belongs to. No row, or no project: the whole
+ * organization may read it. projectId has no foreign key on purpose, so a thread
+ * whose project is deleted stays hidden instead of falling open.
+ */
+export const agentmailThreads = pgTable("agentmail_threads", {
+    organizationId: integer("organization_id").notNull().references(() => orgs.id, { onDelete: "cascade" }),
+    threadId: text("thread_id").notNull(),
+    projectId: integer("project_id"),
+    crewSessionId: integer("crew_session_id"),
+    missionRunId: integer("mission_run_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+    pk: primaryKey({ columns: [table.organizationId, table.threadId] }),
+    projectIdx: index("agentmail_threads_project_idx").on(table.organizationId, table.projectId),
 }));

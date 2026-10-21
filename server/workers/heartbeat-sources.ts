@@ -41,7 +41,15 @@ export async function pollAgentMailInbox(
     const { messages } = await mail.listMessages(limit);
     const ownAddress = await mail.getInboxAddress();
     const watermark = lastItemId ?? fallbackSince(config);
+    // A trigger acts for no one in particular, so it sees only mail the whole
+    // organization may read: a private project's threads stay out of the missions
+    // it creates.
+    const { agentMailThreadScope, threadScopeCtx } = await import(
+        "../domain/integrations/core/agentmail-thread-scope.service.js"
+    );
+    const orgReadable = await agentMailThreadScope.readableFilter(threadScopeCtx(undefined, organizationId));
     const fresh = (messages ?? [])
+        .filter((m) => orgReadable(m.thread_id))
         // Inbound only — our own outbound sends are not work items.
         .filter((m) => (m.from?.match(/<([^>]+)>/)?.[1] ?? m.from)?.trim().toLowerCase() !== ownAddress)
         .filter((m) => !watermark || m.created_at > watermark)

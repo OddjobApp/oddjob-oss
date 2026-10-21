@@ -34,6 +34,20 @@ export const agentMailThreadSync = {
         userEmail: string
     ): Promise<void> {
         try {
+            // The thread belongs to the mission's project before anything else is
+            // written, so a reader never sees it linked but unscoped.
+            const [owner] = await db.select({ organizationId: missions.organizationId })
+                .from(missionRuns)
+                .innerJoin(missions, eq(missionRuns.missionId, missions.id))
+                .where(eq(missionRuns.id, missionRunId))
+                .limit(1);
+            if (!owner?.organizationId) {
+                logger.warn(`[ThreadSync] Mission run ${missionRunId} has no organization; thread ${threadId} not linked`);
+                return;
+            }
+            const { agentMailThreadScope } = await import("./agentmail-thread-scope.service.js");
+            await agentMailThreadScope.recordForMissionRun(owner.organizationId, threadId, missionRunId);
+
             // Update the mission run's context with the email thread ID
             await db.update(missionRuns)
                 .set({
@@ -227,6 +241,9 @@ export const agentMailThreadSync = {
                 logger.warn(`[ThreadSync] Session ${sessionKey} not found for linking thread ${threadId}`);
                 return;
             }
+
+            const { agentMailThreadScope } = await import("./agentmail-thread-scope.service.js");
+            await agentMailThreadScope.recordForCrewSession(organizationId, threadId, session.id);
 
             const existingContext = (session.cycleContext as Record<string, unknown>) || {};
             const updatedContext = {

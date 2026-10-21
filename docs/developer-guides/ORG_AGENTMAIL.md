@@ -37,6 +37,21 @@ Without a public `https` address (a development server), connecting registers no
 
 The former shared `/api/integrations/agentmail/webhook` endpoint returns 410 in every environment. Remove that webhook from AgentMail when migrating. It never processed a real delivery: it read `event.type`/`event.data`, while AgentMail sends `event_type`/`message`.
 
+## Project threads
+
+An organization has one inbox, but a thread can belong to one of its projects. `agentmail_threads` records which, when the thread is first linked:
+
+- **Sent from a CREW room:** the room's project.
+- **About a mission:** a HIL email or an escalation alert takes the mission's primary project.
+- **Sent by a tool:** a send from a project context takes that project.
+- **Replies** stay in their thread, so they inherit its project.
+
+A thread with no row or no project belongs to the whole organization, as before. A thread's project never changes once recorded; linking it again can only give an unscoped thread a project.
+
+Every reader checks the project the way project pages do (`projectService.listProjects`): org admins see every thread, members see their private projects' threads, and other users see only org-visible ones. A thread the caller cannot read is left out of listings and answers 404 when asked for directly, the same as a thread that doesn't exist. This covers the `/threads` routes, the `list_agentmail_threads`, `get_agentmail_thread`, `reply_agentmail` and `send_agentmail` (`threadId`) tools, and the MCP handlers. Email heartbeat triggers act for no one, so they see only org-visible mail. `project_id` has no foreign key: a thread whose project is deleted stays hidden rather than becoming visible to everyone.
+
+Migration `0156` backfills threads already linked to rooms and mission runs.
+
 ## API
 
 - `GET /api/integrations/agentmail/connection`: public connection metadata and management permission.

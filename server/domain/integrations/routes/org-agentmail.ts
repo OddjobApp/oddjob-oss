@@ -5,6 +5,7 @@ import { asyncHandler } from "@server/middleware/error-handler.js";
 import { orgAgentMailService } from "../core/org-agentmail.service.js";
 import { agentMailService } from "../core/agentmail.service.js";
 import { handleOrgAgentMailDelivery } from "../core/org-agentmail-inbound.service.js";
+import { agentMailThreadScope, threadScopeCtx } from "../core/agentmail-thread-scope.service.js";
 
 const router = Router();
 
@@ -46,21 +47,30 @@ router.get("/status", asyncHandler(async (req: Request, res: Response) => {
     const context = await getUserOrgContext(req);
     res.json(await orgAgentMailService.status(requireOrgId(context)));
 }));
+// Threads that belong to a project the caller cannot read are left out of the
+// listing and answer 404 directly, the same as a thread that does not exist.
 router.get("/threads", asyncHandler(async (req: Request, res: Response) => {
     const context = await getUserOrgContext(req);
-    const client = await agentMailService.forOrg(requireOrgId(context));
+    const orgId = requireOrgId(context);
+    const client = await agentMailService.forOrg(orgId);
+    const result = await client.listThreads(25);
+    const threads = await agentMailThreadScope.filterThreads(threadScopeCtx(context, orgId), result.threads ?? []);
     res.setHeader("Cache-Control", "no-store");
-    res.json(await client.listThreads(25));
+    res.json({ ...result, count: threads.length, threads });
 }));
 router.get("/threads/:threadId", asyncHandler(async (req: Request, res: Response) => {
     const context = await getUserOrgContext(req);
-    const client = await agentMailService.forOrg(requireOrgId(context));
+    const orgId = requireOrgId(context);
+    await agentMailThreadScope.assertReadable(threadScopeCtx(context, orgId), req.params.threadId);
+    const client = await agentMailService.forOrg(orgId);
     res.setHeader("Cache-Control", "no-store");
     res.json(await client.getThread(req.params.threadId));
 }));
 router.get("/threads/:threadId/messages", asyncHandler(async (req: Request, res: Response) => {
     const context = await getUserOrgContext(req);
-    const client = await agentMailService.forOrg(requireOrgId(context));
+    const orgId = requireOrgId(context);
+    await agentMailThreadScope.assertReadable(threadScopeCtx(context, orgId), req.params.threadId);
+    const client = await agentMailService.forOrg(orgId);
     const thread = await client.getThread(req.params.threadId);
     res.setHeader("Cache-Control", "no-store");
     res.json({ messages: thread.messages });

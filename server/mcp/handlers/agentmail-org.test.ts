@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ forOrg: vi.fn(), send: vi.fn(), listThreads: vi.fn(), getThread: vi.fn() }));
 vi.mock("../../domain/integrations/core/agentmail.service.js", () => ({ agentMailService: { forOrg: mocks.forOrg } }));
+// Project scoping has its own integration suite; here every thread is readable.
+vi.mock("../../domain/integrations/core/agentmail-thread-scope.service.js", () => ({
+    agentMailThreadScope: { assertReadable: vi.fn(), filterThreads: vi.fn(async (_ctx: unknown, threads: unknown[]) => threads), readableFilter: vi.fn(async () => () => true), record: vi.fn(), recordForMissionRun: vi.fn() },
+    threadScopeCtx: (_context: unknown, organizationId: number) => ({ organizationId }),
+}));
 import { handleAgentMailSend, handleAgentMailListThreads, handleAgentMailGetThread } from "./agentmail.js";
 import { AGENTMAIL_TOOLS } from "../../domain/tools/v1/capabilities/agentmail.js";
 
@@ -34,7 +39,7 @@ describe("AgentMail tool tenant propagation", () => {
     });
     it("passes organization context through capability replies", async () => {
         const reply = vi.fn().mockResolvedValue({ message_id: "m2", thread_id: "t1" });
-        mocks.forOrg.mockResolvedValue({ reply });
+        mocks.forOrg.mockResolvedValue({ reply, getMessage: vi.fn().mockResolvedValue({ message_id: "m1", thread_id: "t1" }) });
         await AGENTMAIL_TOOLS.reply_agentmail.execute({ messageId: "m1", text: "Reply" }, { organizationId: 12 });
         expect(mocks.forOrg).toHaveBeenCalledWith(12); expect(reply).toHaveBeenCalledOnce();
     });

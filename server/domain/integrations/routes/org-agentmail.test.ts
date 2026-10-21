@@ -12,6 +12,11 @@ vi.mock("@server/utils/auth-context.js", () => ({
 }));
 vi.mock("../core/org-agentmail.service.js", () => ({ orgAgentMailService: { status: mocks.status, connect: mocks.connect, disconnect: mocks.disconnect } }));
 vi.mock("../core/agentmail.service.js", () => ({ agentMailService: { forOrg: mocks.forOrg } }));
+// Project scoping has its own integration suite; here every thread is readable.
+vi.mock("../core/agentmail-thread-scope.service.js", () => ({
+    agentMailThreadScope: { assertReadable: vi.fn(), filterThreads: vi.fn(async (_ctx: unknown, threads: unknown[]) => threads), readableFilter: vi.fn(async () => () => true), record: vi.fn(), recordForMissionRun: vi.fn() },
+    threadScopeCtx: (_context: unknown, organizationId: number) => ({ organizationId }),
+}));
 import router from "./org-agentmail.js";
 
 function app() {
