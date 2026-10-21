@@ -1,3 +1,4 @@
+vi.mock('@domain/integrations/core/oauth/org-oauth-app.service.js', () => ({ resolveOAuthApp: async () => ({ clientId: 'id', clientSecret: 'secret', environment: 'sandbox' }) }));
 // @vitest-environment node
 import express from 'express';
 import request from 'supertest';

@@ -1,3 +1,4 @@
+import { currentOAuthApp, resolveOAuthApp, withOrgOAuthApp } from './org-oauth-app.service.js';
 import { BaseOAuthAdapter } from './base-oauth.adapter.js';
 import { OAuthReauthorizationRequiredError } from './reauthorization.js';
 import type { HandleCallbackOptions, InitiateOAuthOptions, OAuthProviderConfig, OAuthTokens } from './oauth-adapter.types.js';
@@ -8,7 +9,7 @@ import { saasConnectors } from '@shared/schema/index.js';
 import { eq } from 'drizzle-orm';
 
 export function quickBooksEnvironment(): 'sandbox' | 'production' {
-    const value = process.env.QUICKBOOKS_ENVIRONMENT ?? 'sandbox';
+    const value = currentOAuthApp()?.environment ?? process.env.QUICKBOOKS_ENVIRONMENT ?? 'sandbox';
     if (value !== 'sandbox' && value !== 'production') throw new Error('QUICKBOOKS_ENVIRONMENT must be sandbox or production.');
     return value;
 }
@@ -22,14 +23,16 @@ export class QuickBooksOAuthAdapter extends BaseOAuthAdapter {
         revokeUrl: 'https://developer.api.intuit.com/v2/oauth2/tokens/revoke',
         defaultScopes: ['com.intuit.quickbooks.accounting'], usePkce: false,
     };
-    protected getClientId() { return process.env.QUICKBOOKS_CLIENT_ID ?? ''; }
-    protected getClientSecret() { return process.env.QUICKBOOKS_CLIENT_SECRET ?? ''; }
+    protected getClientId() { return currentOAuthApp()?.clientId ?? process.env.QUICKBOOKS_CLIENT_ID ?? ''; }
+    protected getClientSecret() { return currentOAuthApp()?.clientSecret ?? process.env.QUICKBOOKS_CLIENT_SECRET ?? ''; }
     isConfigured() { return Boolean(this.getClientId() && this.getClientSecret()); }
 
     override async getAuthorizationUrl(options: InitiateOAuthOptions) {
-        if (!this.isConfigured()) throw new Error('Configure QUICKBOOKS_CLIENT_ID and QUICKBOOKS_CLIENT_SECRET first.');
-        return super.getAuthorizationUrl({ ...options, scopes: this.config.defaultScopes,
-            extraState: { ...options.extraState, environment: quickBooksEnvironment() } });
+        return withOrgOAuthApp(options.organizationId, this.platform, async () => {
+            if (!this.isConfigured()) throw new Error('Configure the organization’s QuickBooks OAuth app first.');
+            return super.getAuthorizationUrl({ ...options, scopes: this.config.defaultScopes,
+                extraState: { ...options.extraState, environment: quickBooksEnvironment() } });
+        });
     }
 
     override async handleCallback(options: HandleCallbackOptions) {
@@ -41,7 +44,7 @@ export class QuickBooksOAuthAdapter extends BaseOAuthAdapter {
             const sameUser = String(state.extra?.userId ?? '') === String(caller.userId);
             const canManageStateOrg = caller.isSuperAdmin || (caller.isOrgAdmin && state.organizationId === requireOrgId(caller));
             if (!sameUser || !canManageStateOrg) throw new ForbiddenError('QuickBooks OAuth state belongs to a different user or organization.');
-            if (state.extra?.environment !== quickBooksEnvironment()) throw new Error('QuickBooks environment changed during sign-in. Start again.');
+            if (state.extra?.environment !== (await resolveOAuthApp(state.organizationId, 'quickbooks')).environment) throw new Error('QuickBooks environment changed during sign-in. Start again.');
             state.extra = { ...state.extra, realmId, enabled: true, lastCdcAt: null };
         } });
     }
@@ -77,7 +80,7 @@ export class QuickBooksOAuthAdapter extends BaseOAuthAdapter {
         const operation = (async () => {
             const [connector] = await db.select().from(saasConnectors).where(eq(saasConnectors.id, connectorId)).limit(1);
             if (connector?.platform !== this.platform || connector.status !== 'connected') throw new Error('QuickBooks is not connected.');
-            if ((connector.config as any)?.environment !== quickBooksEnvironment()) throw new Error('Reconnect QuickBooks using the configured environment.');
+            if ((connector.config as any)?.environment !== (await resolveOAuthApp(connector.orgId, 'quickbooks')).environment) throw new Error('Reconnect QuickBooks using the configured environment.');
             return super.getValidAccessToken(connectorId);
         })();
         this.tokenRequests.set(connectorId, operation);

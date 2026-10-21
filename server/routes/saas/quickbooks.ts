@@ -1,10 +1,11 @@
+import { resolveOAuthApp } from '@domain/integrations/core/oauth/org-oauth-app.service.js';
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { requireAuth } from '@domain/core/auth/security.service.js';
 import { asyncHandler } from '@server/middleware/error-handler.js';
 import { getUserOrgContext, requireOrgId } from '@server/utils/auth-context.js';
 import { resolveProjectScope } from '@server/middleware/project-scope.js';
-import { quickBooksEnvironment, quickBooksOAuthAdapter } from '@domain/integrations/core/oauth/quickbooks-oauth.adapter.js';
+import { quickBooksOAuthAdapter } from '@domain/integrations/core/oauth/quickbooks-oauth.adapter.js';
 import { disconnectQuickBooks, findQuickBooksConnection, getQuickBooksClient } from '@domain/integrations/quickbooks/service.js';
 import { BadRequestError, ForbiddenError } from '@server/utils/errors.js';
 import { financeRolesService } from '@domain/projects/core/finance-roles.service.js';
@@ -23,7 +24,8 @@ router.get('/connectors/quickbooks/oauth/status', requireAuth, asyncHandler(asyn
     const s = await scope(req);
     const connector = await findQuickBooksConnection(s.organizationId, s.projectId);
     const config = connector?.config as Record<string, unknown> | undefined;
-    res.json({ configured: quickBooksOAuthAdapter.isConfigured(), environment: quickBooksEnvironment(), canManage: canManage(s),
+    const app = await resolveOAuthApp(s.organizationId, 'quickbooks');
+    res.json({ organizationId: s.organizationId, configured: Boolean(app.clientId && app.clientSecret), environment: app.environment, canManage: canManage(s),
         callbackUri: quickBooksOAuthAdapter.resolveRedirectUri(req),
         connection: connector ? { id: connector.id, status: connector.status, realmId: config?.realmId, environment: config?.environment,
             inherited: s.projectId != null && connector.projectId == null } : null });
