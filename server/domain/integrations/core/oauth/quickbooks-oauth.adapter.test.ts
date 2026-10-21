@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ caller: { userId: 'owner', organizationId: 342, isOrgAdmin: true, isSuperAdmin: false } as any }));
 vi.mock('@server/database_service.js', () => ({ db: {} }));
 vi.mock('@domain/core/infrastructure/redis/redis-client.js', () => ({ redis: {} }));
-vi.mock('@domain/auth/core/encrypted-credentials.service.js', () => ({ encryptedCredentialsService: {} }));
+vi.mock('@domain/auth/core/encrypted-credentials.service.js', () => ({ encryptedCredentialsService: { retrieve: async () => null, exists: async () => false } }));
 vi.mock('@server/utils/auth-context.js', () => ({ getUserOrgContext: async () => mocks.caller, requireOrgId: (c: any) => c.organizationId }));
 import { BaseOAuthAdapter } from './base-oauth.adapter.js';
 import { QuickBooksOAuthAdapter } from './quickbooks-oauth.adapter.js';

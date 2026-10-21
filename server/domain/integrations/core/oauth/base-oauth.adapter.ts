@@ -1,3 +1,4 @@
+import { withOrgOAuthApp, currentOAuthApp, oauthAppFingerprint } from './org-oauth-app.service.js';
 /**
  * Base OAuth Adapter
  * 
@@ -120,6 +121,10 @@ export abstract class BaseOAuthAdapter implements OAuthAdapter {
      * Generates the authorization URL and records the state payload in Redis.
      */
     public async getAuthorizationUrl(options: InitiateOAuthOptions): Promise<{ url: string; stateId: string; redirectUri: string }> {
+        return withOrgOAuthApp(options.organizationId, this.platform, () => this.createAuthorizationUrl(options));
+    }
+
+    private async createAuthorizationUrl(options: InitiateOAuthOptions) {
         const stateId = randomBytes(24).toString("hex");
         const redirectUri = this.resolveRedirectUri(options.req, options.customRedirectUri);
 
@@ -141,7 +146,7 @@ export abstract class BaseOAuthAdapter implements OAuthAdapter {
             codeVerifier,
             returnTo: sanitizeReturnTo(options.returnTo),
             createdAt: Date.now(),
-            extra: options.extraState,
+            extra: { ...options.extraState, ...(currentOAuthApp() ? { oauthAppFingerprint: oauthAppFingerprint(currentOAuthApp()!) } : {}) },
         };
 
         await this.storeState(stateId, statePayload);
@@ -202,7 +207,13 @@ export abstract class BaseOAuthAdapter implements OAuthAdapter {
 
         await options.validateState?.(statePayload);
 
-        const tokens = await this.exchangeCodeForTokens(code, statePayload.redirectUri, statePayload.codeVerifier);
+        const tokens = await withOrgOAuthApp(statePayload.organizationId, this.platform, async () => {
+            const app = currentOAuthApp();
+            if (statePayload.extra?.oauthAppFingerprint && app && statePayload.extra.oauthAppFingerprint !== oauthAppFingerprint(app)) {
+                throw new BadRequestError("OAuth app settings changed during sign-in. Start again.");
+            }
+            return this.exchangeCodeForTokens(code, statePayload.redirectUri, statePayload.codeVerifier);
+        });
 
         // Fetch user profile / tenant info if supported
         let userInfo: Record<string, any> | undefined;
@@ -223,6 +234,7 @@ export abstract class BaseOAuthAdapter implements OAuthAdapter {
             scopes: tokens.scopes,
             userInfo,
             raw: tokens.rawPayload,
+            oauthAppFingerprint: statePayload.extra?.oauthAppFingerprint,
         };
 
         // The connector comes first, because its id is what the credential is
@@ -324,7 +336,13 @@ export abstract class BaseOAuthAdapter implements OAuthAdapter {
 
         logger.info(`Refreshing access token for ${this.platform} connector ${connectorId}...`);
         try {
-            const newTokens = await this.refreshAccessToken(refreshToken);
+            const newTokens = await withOrgOAuthApp(connector.orgId, this.platform, async () => {
+                const app = currentOAuthApp();
+                if (credential.oauthAppFingerprint && app && credential.oauthAppFingerprint !== oauthAppFingerprint(app)) {
+                    throw new OAuthReauthorizationRequiredError(this.platform, 'refresh_rejected', 'OAuth app settings changed. Reconnect this organization.');
+                }
+                return this.refreshAccessToken(refreshToken);
+            });
 
             const updatedData = {
                 ...credential,

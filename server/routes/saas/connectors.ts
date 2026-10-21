@@ -1,3 +1,4 @@
+import { findGoogleConnection, disconnectGoogleConnection } from '@domain/integrations/google-workspace-connector-bridge.js';
 import { Router, Request, Response } from "express";
 import { randomBytes } from "node:crypto";
 import { getUserOrgContext, requireOrgId } from "@server/utils/auth-context.js";
@@ -6,7 +7,9 @@ import { requireAuth } from "@domain/core/auth/security.service.js";
 import { db } from "@server/database_service.js";
 import { saasConnectors, encryptedCredentials } from "@shared/schema/index.js";
 import { eq, and } from "drizzle-orm";
-import { BadRequestError } from "@server/utils/errors.js";
+import { z } from "zod";
+import { resolveOAuthApp, readOrgOAuthApp, saveOrgOAuthApp, type OAuthAppProvider } from "@domain/integrations/core/oauth/org-oauth-app.service.js";
+import { BadRequestError, ForbiddenError } from "@server/utils/errors.js";
 import { generalGateway } from "@server/integrations/general-gateway.js";
 import { encryptedCredentialsService } from '@domain/auth/core/encrypted-credentials.service.js';
 import { redis } from "@domain/core/infrastructure/redis/redis-client.js";
@@ -31,6 +34,36 @@ async function requestedProjectId(req: Request): Promise<number | null> {
 const logger = createLogger("SaasConnectors");
 
 const router = Router();
+
+// OAuth app configuration belongs to the active organization; secrets are write-only.
+const oauthAppInput = z.object({
+    clientId: z.string().trim().min(1).max(2048),
+    clientSecret: z.string().trim().min(1).max(4096),
+    environment: z.enum(['sandbox', 'production']).optional(),
+}).strict();
+for (const provider of ['google', 'quickbooks'] as OAuthAppProvider[]) {
+    router.get(`/connectors/${provider}/oauth/app`, requireAuth, asyncHandler(async (req: Request, res: Response) => {
+        const caller = await getUserOrgContext(req);
+        const organizationId = requireOrgId(caller);
+        const app = await resolveOAuthApp(organizationId, provider);
+        const owned = await readOrgOAuthApp(organizationId, provider);
+        res.setHeader('Cache-Control', 'no-store');
+        res.json({ organizationId, configured: Boolean(app.clientId && app.clientSecret),
+            source: owned ? 'organization' : 'platform', canManage: caller.isOrgAdmin || caller.isSuperAdmin,
+            environment: app.environment, callbackUri: connectorCallbackUri(req, `/api/saas/connectors/${provider}/oauth/callback`) });
+    }));
+    router.put(`/connectors/${provider}/oauth/app`, requireAuth, asyncHandler(async (req: Request, res: Response) => {
+        const caller = await getUserOrgContext(req);
+        const organizationId = requireOrgId(caller);
+        if (!caller.isOrgAdmin && !caller.isSuperAdmin) throw new ForbiddenError('Only an organization admin can configure OAuth apps.');
+        const parsed = oauthAppInput.safeParse(req.body);
+        if (!parsed.success) throw new BadRequestError('Enter a client ID, client secret, and valid environment.');
+        await saveOrgOAuthApp(organizationId, provider, { ...parsed.data,
+            environment: provider === 'quickbooks' ? parsed.data.environment ?? 'sandbox' : undefined });
+        res.setHeader('Cache-Control', 'no-store');
+        res.json({ success: true, organizationId });
+    }));
+}
 
 // GET /api/saas/connectors - List all connectors for an organization
 router.get("/connectors", requireAuth, asyncHandler(async (req: Request, res: Response) => {
@@ -60,7 +93,11 @@ router.get("/connectors", requireAuth, asyncHandler(async (req: Request, res: Re
 // POST /api/saas/create-connector - Create or Update a connector
 router.post("/create-connector", requireAuth, asyncHandler(async (req: Request, res: Response) => {
     const { platform, organization_id, config, credentials } = req.body;
-    const orgId = organization_id ? parseInt(organization_id) : 1;
+    const caller = await getUserOrgContext(req);
+    const orgId = requireOrgId(caller);
+    if (!caller.isOrgAdmin && !caller.isSuperAdmin) throw new ForbiddenError('Only an organization admin can manage connectors.');
+    if (organization_id != null && Number(organization_id) !== orgId) throw new ForbiddenError('Connector organization does not match the active organization.');
+    if (platform === 'google' || platform === 'quickbooks') throw new BadRequestError('Use the organization OAuth connection flow.');
 
     if (!platform) {
         throw new BadRequestError("Platform is required");
@@ -170,15 +207,31 @@ function connectorCallbackUri(req: Request, path: string): string {
     return `${proto}://${host}${path}`;
 }
 router.get("/connectors/google/oauth/status", requireAuth, asyncHandler(async (req: Request, res: Response) => {
-    requireOrgId(await getUserOrgContext(req));
-    res.json({ configured: googleOAuthAdapter.isConfigured(), callbackUri: connectorCallbackUri(req, GOOGLE_OAUTH_CALLBACK) });
+    const caller = await getUserOrgContext(req);
+    const organizationId = requireOrgId(caller);
+    const app = await resolveOAuthApp(organizationId, 'google');
+    const projectId = await requestedProjectId(req);
+    const connector = await findGoogleConnection(organizationId, projectId);
+    res.json({ organizationId, canManage: caller.isOrgAdmin || caller.isSuperAdmin,
+        configured: Boolean(app.clientId && app.clientSecret), callbackUri: connectorCallbackUri(req, GOOGLE_OAUTH_CALLBACK),
+        connection: connector ? { status: connector.status, inherited: projectId != null && connector.projectId == null } : null });
+}));
+
+router.post('/connectors/google/disconnect', requireAuth, asyncHandler(async (req: Request, res: Response) => {
+    const caller = await getUserOrgContext(req);
+    const orgId = requireOrgId(caller);
+    if (!caller.isOrgAdmin && !caller.isSuperAdmin) throw new ForbiddenError('Only an organization admin can disconnect Google.');
+    await disconnectGoogleConnection(orgId, await requestedProjectId(req));
+    res.json({ success: true });
 }));
 
 router.get("/connectors/google/oauth/initiate", requireAuth, asyncHandler(async (req: Request, res: Response) => {
     const orgContext = await getUserOrgContext(req);
     const organizationId = requireOrgId(orgContext);
     const projectId = await requestedProjectId(req);
-    if (!googleOAuthAdapter.isConfigured()) throw new BadRequestError("Google sign-in has not been configured by your administrator.");
+    if (!orgContext.isOrgAdmin && !orgContext.isSuperAdmin) throw new ForbiddenError('Only an organization admin can connect Google.');
+    const app = await resolveOAuthApp(organizationId, 'google');
+    if (!app.clientId || !app.clientSecret) throw new BadRequestError("Configure Google sign-in for this organization first.");
     const profile = req.query.for ?? "gmail";
     if (typeof profile !== "string" || !Object.hasOwn(GOOGLE_CONNECTION_PROFILES, profile)) throw new BadRequestError("Choose Gmail, Drive, Calendar, Workspace, or YouTube.");
     const scopeProfile = [...GOOGLE_CONNECTION_PROFILES[profile as GoogleConnectionProfile].scopes];
@@ -189,6 +242,7 @@ router.get("/connectors/google/oauth/initiate", requireAuth, asyncHandler(async 
         projectId,
         req,
         scopes: scopeProfile,
+        extraState: { userId: orgContext.userId },
         returnTo,
         customRedirectUri: connectorCallbackUri(req, GOOGLE_OAUTH_CALLBACK),
     });
@@ -203,10 +257,15 @@ router.get("/connectors/google/oauth/callback", requireAuth, asyncHandler(async 
     if (!state || typeof state !== "string") throw new BadRequestError("Missing OAuth state parameter");
     if (!code || typeof code !== "string") throw new BadRequestError("Authorization code not present in callback");
 
+    const caller = await getUserOrgContext(req);
+    const organizationId = requireOrgId(caller);
     const result = await googleOAuthAdapter.handleCallback({
-        code,
-        stateId: state,
-        req,
+        code, stateId: state, req,
+        validateState: payload => {
+            if ((!caller.isOrgAdmin && !caller.isSuperAdmin) || (!caller.isSuperAdmin && payload.organizationId !== organizationId) || String(payload.extra?.userId) !== String(caller.userId)) {
+                throw new ForbiddenError('Google OAuth state belongs to a different user or organization.');
+            }
+        },
     });
 
     res.redirect(result.returnTo || "/admin/integrations?status=google_connected");

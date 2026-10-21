@@ -1,9 +1,9 @@
+import { OrgOAuthAppSettings } from './OrgOAuthAppSettings';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOrgContextOptional } from '@domain-ui/core/ui/hooks/use-org-context';
 import { apiRequest, resolveActiveOrgId } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
-import { CopyButton } from '@/components/ui/copy-button';
 
 export function QuickBooksConnectionOptions({ projectKey, onConnectionChange }: { projectKey?: string; onConnectionChange?: () => void | Promise<void> }) {
     const orgContext = useOrgContextOptional();
@@ -40,12 +40,7 @@ export function QuickBooksConnectionOptions({ projectKey, onConnectionChange }: 
         <p className="text-sm text-muted-foreground">Connect a company to read accounting records and reports. CREW can prepare invoices for your approval; it does not email invoices or collect payments.</p>
         <p className="text-xs text-muted-foreground">{projectKey ? 'Connection belongs to this project; company permissions cover the company you authorize.' : 'Connection is shared across your organization’s projects.'} Environment: {status.data?.environment ?? 'Checking…'}.</p>
         {status.isError && <p role="alert">Could not check QuickBooks setup. <Button variant="ghost" size="sm" onClick={() => void status.refetch()}>Retry</Button></p>}
-        {status.data && !status.data.configured && <div className="space-y-2 text-sm">
-            <p>An administrator must configure an Intuit app with the accounting scope and register this callback URL.</p>
-            <div className="flex items-center gap-2"><code className="break-all text-xs">{status.data.callbackUri}</code><CopyButton value={status.data.callbackUri} /></div>
-            <p className="text-xs text-muted-foreground">Server settings: QUICKBOOKS_CLIENT_ID, QUICKBOOKS_CLIENT_SECRET, QUICKBOOKS_ENVIRONMENT (sandbox or production).</p>
-            <a href="https://developer.intuit.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Open Intuit Developer</a>
-        </div>}
+        <OrgOAuthAppSettings provider="quickbooks" orgId={orgId} onSaved={() => void status.refetch()} />
         {connected && <p className="text-sm">Connected company: {status.data?.connection?.realmId}. {status.data?.connection?.inherited && 'Inherited from your organization.'}</p>}
         <div className="flex flex-wrap gap-2">
             {status.data?.configured && canManage ? <Button asChild variant="outline"><a href={`/api/saas/connectors/quickbooks/oauth/initiate?${initiate}`}>{connected ? 'Reconnect QuickBooks' : 'Connect QuickBooks'}</a></Button>

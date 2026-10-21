@@ -1,3 +1,4 @@
+import { resolveOAuthApp } from '../core/oauth/org-oauth-app.service.js';
 import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import { db } from '@server/database_service.js';
 import { saasConnectors, saasSyncLinks } from '@shared/schema/index.js';
@@ -32,9 +33,10 @@ export async function disconnectQuickBooks(organizationId: number, projectId?: n
         // Intuit revocation affects the app/company grant, not just this local row.
         // Keep that grant while another organization/project still uses it.
         if (!peers.some(peer => peer.id !== connector.id)) {
+            const app = await resolveOAuthApp(organizationId, 'quickbooks');
             const response = await fetch('https://developer.api.intuit.com/v2/oauth2/tokens/revoke', {
                 method: 'POST', signal: AbortSignal.timeout(30_000),
-                headers: { Authorization: `Basic ${Buffer.from(`${process.env.QUICKBOOKS_CLIENT_ID ?? ''}:${process.env.QUICKBOOKS_CLIENT_SECRET ?? ''}`).toString('base64')}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+                headers: { Authorization: `Basic ${Buffer.from(`${app.clientId}:${app.clientSecret}`).toString('base64')}`, 'Content-Type': 'application/json', Accept: 'application/json' },
                 body: JSON.stringify({ token: stored.refreshToken ?? stored.accessToken }),
             });
             if (!response.ok) throw new Error(`QuickBooks revocation failed (${response.status}). The connection has not been removed.`);
