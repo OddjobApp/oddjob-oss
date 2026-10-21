@@ -6,8 +6,9 @@
  */
 
 import { z } from "zod";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export const documentToolDefinitions = [
+export const documentToolDefinitions: Tool[] = [
     {
         name: "search_documents",
         description: "Semantic search across all documents in the knowledge store using RAG (Retrieval Augmented Generation). Returns relevant text chunks that match the query. Use this for finding information in documentation, runbooks, API specs, and other stored documents.",
@@ -54,8 +55,8 @@ export const documentToolDefinitions = [
             type: "object" as const,
             properties: {
                 documentId: {
-                    type: "number",
-                    description: "Document ID",
+                    anyOf: [{ type: "number" }, { type: "string", pattern: "^platform:[a-z0-9-]+$" }],
+                    description: "Organization document ID or published platform documentation ID (platform:slug)",
                 },
             },
             required: ["documentId"],
@@ -117,6 +118,6 @@ export const ListDocumentsInput = z.object({
 });
 
 export const GetDocumentContentInput = z.object({
-    documentId: z.number(),
+    documentId: z.union([z.number(), z.string().regex(/^platform:[a-z0-9-]+$/)]),
 });
 

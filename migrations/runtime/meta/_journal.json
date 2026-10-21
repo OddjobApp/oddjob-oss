@@ -1086,6 +1086,20 @@
       "when": 1793000000008,
       "tag": "0153_system_super_admin_executive",
       "breakpoints": true
+    },
+    {
+      "idx": 155,
+      "version": "7",
+      "when": 1793000000009,
+      "tag": "0154_org_agentmail",
+      "breakpoints": true
+    },
+    {
+      "idx": 156,
+      "version": "7",
+      "when": 1793000000010,
+      "tag": "0155_org_agentmail_webhooks",
+      "breakpoints": true
     }
   ]
 }

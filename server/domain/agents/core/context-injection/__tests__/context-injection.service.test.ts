@@ -105,7 +105,9 @@ describe("ContextInjectionService integration", () => {
             // Assert: fallback is activated with timeout info
             expect(result.metadata.fallbackActivated).toBe(true);
             expect(result.prompt).toContain("timed out");
-            expect(result.metadata.queryLatencyMs).toBeGreaterThanOrEqual(100);
+            // It waited for the 100 ms timeout. A timer can fire a millisecond early
+            // against Date.now() (CI measured 99 under coverage), so allow that much.
+            expect(result.metadata.queryLatencyMs).toBeGreaterThanOrEqual(95);
         });
     });
 

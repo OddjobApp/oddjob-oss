@@ -3,6 +3,7 @@ import { Router } from "express";
 import knowledgeGraphRouter from "./routes/knowledge-graph.route.js";
 import knowledgeExtractionRouter from "./routes/knowledge-extraction.route.js";
 import searchRouter from "./routes/search.route.js";
+import platformDocumentationRouter from "./routes/platform-documentation.route.js";
 import ragRouter from "./routes/rag.route.js";
 import datasetsRouter from "./routes/datasets.route.js";
 import collectionsRouter from "./routes/collections.route.js";
@@ -69,6 +70,7 @@ podRegistry.register('knowledge', {
 export * from "./core/types.js";
 
 const knowledgeRouter = Router();
+knowledgeRouter.use("/knowledge/platform-docs", platformDocumentationRouter);
 
 knowledgeRouter.use("/knowledge/predictions", predictedLinksRouter);
 knowledgeRouter.use("/knowledge", knowledgeGraphRouter);

@@ -179,3 +179,16 @@ installed app. Renamed or removed fields will.
 - **Release signing**: `assembleRelease` produces an unsigned APK.
 - **Cleartext HTTP is debug-only** (`src/debug/res/xml/network_security_config.xml`),
   so a release build needs an `https://` origin.
+
+## Which server it talks to
+
+Debug builds show a Server field, defaulting to `http://10.0.2.2:5000` (the
+emulator's view of your computer). Release builds have no Server field: they
+talk to `https://oddjob.app`. To build for your own deployment, pass its origin:
+
+```
+./gradlew assembleRelease -PoddjobServerUrl=https://oddjob.example.com
+```
+
+An install that signed in to a different server before the server was fixed is
+signed out once at launch, and signs in again at the fixed one.

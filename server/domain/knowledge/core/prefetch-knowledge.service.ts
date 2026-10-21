@@ -1,4 +1,4 @@
-import { UNIFIED_SEARCH_TOOLS } from "../../tools/v1/capabilities/search.js";
+import { search_unified_knowledge } from "../../tools/v1/capabilities/search-core.js";
 import { researchPredictor } from "../../prediction-intelligence/prediction/research-predictor.js";
 import { createLogger } from "@server/utils/logger.js";
 
@@ -28,9 +28,9 @@ export class PrefetchKnowledgeService {
 
             logger.info(`[PrefetchKnowledge] Predicted queries/keywords: ${JSON.stringify(queries)}`);
 
-            // 2. Execute searches to populate cache
-            const { search_unified_knowledge } = UNIFIED_SEARCH_TOOLS;
-            
+            // 2. Execute searches to populate cache. This must be the registered
+            // tool: the cache is shared, and agents get back whatever this writes.
+
             for (const query of queries) {
                 try {
                     logger.info(`[PrefetchKnowledge] Prefetching query: "${query}"`);

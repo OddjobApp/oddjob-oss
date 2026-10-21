@@ -21,6 +21,7 @@ import { eq } from "drizzle-orm";
 import { getAssetPlainText, buildRagContextString, type RagContentSource } from "./rag-utils.service.js";
 import { withEmbeddingRetry } from "@server/utils/embedding-retry.js";
 import { createLogger } from "@server/utils/logger.js";
+import { retrievePlatformDocumentation } from "./platform-documentation-retrieval.js";
 import crypto from "crypto";
 import { redisService } from "@domain/core/infrastructure/redis/redis-client.js";
 
@@ -41,12 +42,33 @@ const splitter = new RecursiveCharacterTextSplitter({
 
 /**
  * Resolves the sharded collection name based on organization context.
+ *
+ * Only deletion still falls through to QDRANT_COLLECTION, so legacy points there
+ * can be cleaned up. Reads and writes go through requireVectorOrgId first.
  */
 function getShardedCollection(organizationId?: number | null): string {
   if (organizationId) {
     return `oddjob_org_${organizationId}`;
   }
   return QDRANT_COLLECTION;
+}
+
+/**
+ * The organization a vector read or write belongs to, or a throw.
+ *
+ * A missing organization used to mean "the default collection". That collection
+ * (oddjob_rag_assets) is not neutral: it holds chunks tagged with real
+ * organizations from before per-org sharding, alongside ~40k with no owner at all,
+ * and a null-org read searched it with no organization filter. So a caller that
+ * lost its context read other tenants' documents, and a writer that lost its
+ * context added to the pile. Neither may happen; fail instead.
+ */
+export function requireVectorOrgId(organizationId: number | null | undefined, operation: string): number {
+  const orgId = Number(organizationId);
+  if (!Number.isInteger(orgId) || orgId <= 0) {
+    throw new Error(`Organization context required for vector ${operation}: it will not fall back to the shared default collection.`);
+  }
+  return orgId;
 }
 
 const OLLAMA_BASE_URL   = (process.env.OLLAMA_BASE_URL || "http://localhost:11434").replace(/\/$/, "");
@@ -516,7 +538,7 @@ export async function addDocumentsToVectorStore(docs: RagDocument[]): Promise<vo
   // Group by sharded collection
   const shards = new Map<string, RagDocument[]>();
   for (const doc of docs) {
-    const collection = getShardedCollection(doc.metadata.organizationId);
+    const collection = getShardedCollection(requireVectorOrgId(doc.metadata.organizationId, "indexing"));
     if (!shards.has(collection)) shards.set(collection, []);
     shards.get(collection)!.push(doc);
   }
@@ -631,6 +653,32 @@ export async function retrieveSimilarDocuments(
   query: string,
   options: RetrieverOptions = {}
 ): Promise<RetrievedDocument[]> {
+  // The library reads docs/ from disk on first use and throws if a published file
+  // is missing (an image built without docs/, say). That must cost the shared
+  // guides, not every organization's own retrieval.
+  let platform: RetrievedDocument[] = [];
+  try {
+    platform = retrievePlatformDocumentation(query, options);
+  } catch (error) {
+    logger.error("[RAG] Platform documentation unavailable; retrieving organization documents only", { error });
+  }
+  let organization: RetrievedDocument[];
+  try {
+    organization = await retrieveOrganizationDocuments(query, options);
+  } catch (error) {
+    if (!platform.length) throw error;
+    logger.warn("[RAG] Organization retrieval failed; returning published platform documentation only", { error });
+    return platform;
+  }
+  return [...organization, ...platform]
+    .sort((a, b) => (b.adjustedScore ?? b.score ?? 0) - (a.adjustedScore ?? a.score ?? 0))
+    .slice(0, options.k ?? Number(process.env.RAG_RETRIEVAL_K || 5));
+}
+
+async function retrieveOrganizationDocuments(
+  query: string,
+  options: RetrieverOptions = {}
+): Promise<RetrievedDocument[]> {
   const {
     k = Number(process.env.RAG_RETRIEVAL_K || 5),
     scoreThreshold,
@@ -638,11 +686,13 @@ export async function retrieveSimilarDocuments(
     authorityBias = 0,
   } = options;
 
+  const organizationId = requireVectorOrgId(options.organizationId, "retrieval");
+
   if (!query || typeof query !== 'string' || !query.trim()) {
     return [];
   }
 
-  const collection = getShardedCollection(options.organizationId);
+  const collection = getShardedCollection(organizationId);
   const embeddings = getEmbeddings();
   let vector: number[];
   try {
@@ -654,13 +704,12 @@ export async function retrieveSimilarDocuments(
 
   const fetchLimit = (recencyBias > 0 || authorityBias > 0) ? Math.max(k * 2, 50) : k;
 
-  // Construct Organization Filter
-  const orgFilter = (options.organizationId !== undefined && options.organizationId !== null)
-    ? {
-      key: "organizationId",
-      match: { value: options.organizationId }
-    }
-    : null;
+  // Kept although the collection is already per-org: a chunk filed in the wrong
+  // shard must still not be returned to this organization.
+  const orgFilter = {
+    key: "organizationId",
+    match: { value: organizationId }
+  };
 
   // Construct Mission Filter
   const missionFilter = (options.missionId !== undefined)

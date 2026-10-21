@@ -37,8 +37,11 @@ class CrewApplication : Application(), coil3.SingletonImageLoader.Factory {
         super.onCreate()
         val store = SharedPrefsStore(this)
         session = SessionStore(store)
+        val forgotOtherServer = BuildConfig.SERVER_URL_FIXED && session.forgetOtherServer(BuildConfig.DEFAULT_SERVER_URL)
         api = OddjobApi(session, PersistentCookieJar(store))
         roomCache = RoomCache(java.io.File(cacheDir, "rooms")) { RoomCache.ownerOf(session.serverUrl, session.username) }
+        // The cached rooms belong to the forgotten server's account.
+        if (forgotOtherServer) roomCache.clear()
         PushRegistrar.createChannel(this)
     }
 

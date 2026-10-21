@@ -4,7 +4,11 @@
 
 AgentMail is a **connector** — it bridges Oddjob's internal agent infrastructure to the open email network via the AgentMail API (`api.agentmail.to/v0`). It is not a skill (no sandboxed code execution) and not a plain tool (it is stateful, bidirectional, and operates over an external persistent channel).
 
-The inbox Oddjob sends from is set by `AGENTMAIL_INBOX` (for example **your-inbox@agentmail.to**).
+> **Each organization now connects its own inbox and gets its own webhook.** See
+> [Organization AgentMail connections](../../developer-guides/ORG_AGENTMAIL.md). The single
+> `AGENTMAIL_INBOX` / `AGENTMAIL_WEBHOOK_SECRET` setup and the shared
+> `/api/integrations/agentmail/webhook` endpoint described below are retired (the endpoint answers 410);
+> this page is kept for the intent and security-gate design, which the per-organization handler still follows.
 
 ---
 

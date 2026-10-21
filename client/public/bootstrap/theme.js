@@ -1,0 +1,1 @@
+(function(){try{var t=localStorage.getItem('oj-ui-theme')||'dark';var l=t==='light';var r=document.documentElement;r.classList.add(l?'light':'dark');var s=r.style;s.setProperty('--boot-bg',l?'#ffffff':'#09090b');s.setProperty('--boot-ring',l?'rgba(0,0,0,0.12)':'rgba(255,255,255,0.1)');s.setProperty('--boot-ring-top',l?'rgba(0,0,0,0.55)':'rgba(255,255,255,0.6)');}catch(e){}})();

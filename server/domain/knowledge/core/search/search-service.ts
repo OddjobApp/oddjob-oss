@@ -11,6 +11,8 @@ import {
 } from "@shared/schema/index.js";
 import { eq, or, ilike, and, sql, inArray } from "drizzle-orm";
 import { createLogger } from "../../../../utils/logger.js";
+import { assertOrgId } from "../../../../utils/auth-context.js";
+import { getPlatformDocumentationLibrary } from "../platform-documentation.service.js";
 // Lazy load services to avoid circular dependencies if any
 // But for type safety we can import types if separated.
 // Using inline imports or lazy imports for now to match original logic style if needed,
@@ -146,6 +148,10 @@ export const searchService = {
             projectId?: number | null;
         } = {}
     ): Promise<SearchResult[]> {
+        // Outside the try below, which turns every failure into a partial result.
+        // With no organization, each arm either matched nothing or matched every
+        // tenant, depending on how it filtered; no caller wants either.
+        organizationId = assertOrgId(organizationId);
         const projectScope = typeof options.projectId === "number" ? options.projectId : null;
         const results: SearchResult[] = [];
 
@@ -164,6 +170,17 @@ export const searchService = {
 
             console.log(`[SearchService] Executing Unified Search (${queryType}) for org: ${organizationId} | Clearance: ${securityClearance}`);
             const queryLower = query.toLowerCase();
+
+            // Available without tenant embeddings/BYOK; namespaced IDs never resolve as private documents.
+            // A library that cannot load (a published file missing from the image)
+            // costs the shared guides, not the rest of the search.
+            if (queryType !== "dataset" && queryType !== "graph" && !options.before && !options.after && !options.updated_before && !options.updated_after) {
+                try {
+                    results.push(...getPlatformDocumentationLibrary().search(query, organizationId, options.limit || 5));
+                } catch (e: any) {
+                    logger.error("[SearchService] Platform documentation unavailable:", e?.message);
+                }
+            }
 
             // Define parallel sub-tasks using Promise.allSettled for maximum concurrency and resilience
 
@@ -220,10 +237,15 @@ export const searchService = {
                 if (queryType !== "keyword" && queryType !== "dataset" && queryType !== "unknown") return [];
                 const res: SearchResult[] = [];
                 try {
+                    // Each query here is scoped to the caller's organization. They
+                    // were not, so any organization's search, and every agent's
+                    // search_unified_knowledge, returned other tenants' dataset names
+                    // and fine-tuning examples.
                     const [matchingGeneric, matchingFineTuning] = await Promise.all([
                         db.select()
                             .from(datasets)
                             .where(and(
+                                eq(datasets.organizationId, organizationId),
                                 or(ilike(datasets.name, `%${query}%`), ilike(datasets.description, `%${query}%`)),
                                 // Datasets carry a real project_id (migration 0007), so this
                                 // narrowing is exact rather than inferred.
@@ -233,7 +255,10 @@ export const searchService = {
                             .catch(() => []),
                         db.select()
                             .from(fineTuningDatasets)
-                            .where(or(ilike(fineTuningDatasets.name, `%${query}%`), ilike(fineTuningDatasets.description, `%${query}%`)))
+                            .where(and(
+                                eq(fineTuningDatasets.organizationId, organizationId),
+                                or(ilike(fineTuningDatasets.name, `%${query}%`), ilike(fineTuningDatasets.description, `%${query}%`)),
+                            ))
                             .limit(5)
                             .catch(() => [])
                     ]);
@@ -271,7 +296,10 @@ export const searchService = {
                             })
                             .from(fineTuningExamples)
                             .innerJoin(fineTuningDatasets, eq(fineTuningExamples.datasetId, fineTuningDatasets.id))
-                            .where(or(ilike(fineTuningExamples.input, `%${query}%`), ilike(fineTuningExamples.output, `%${query}%`)))
+                            .where(and(
+                                eq(fineTuningDatasets.organizationId, organizationId),
+                                or(ilike(fineTuningExamples.input, `%${query}%`), ilike(fineTuningExamples.output, `%${query}%`)),
+                            ))
                             .limit(5)
                             .catch(() => []);
 
@@ -537,8 +565,12 @@ export const searchService = {
                 }
             }
 
-            results.sort((a, b) => (b.score || 0) - (a.score || 0));
-            return results.slice(0, 15);
+            const unique = new Map<string, SearchResult>();
+            for (const result of results) {
+                const key = `${result.type}:${result.id}`;
+                if (!unique.has(key) || (result.score || 0) > (unique.get(key)!.score || 0)) unique.set(key, result);
+            }
+            return [...unique.values()].sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, options.limit || 15);
         } catch (error: any) {
             logger.error("[SearchService] Execution error", error);
             return results;
@@ -562,6 +594,9 @@ export const searchService = {
             similarityThreshold = 0.7,
             maxResults = 20
         } = options;
+
+        // Before the try, which would turn the refusal into an empty result.
+        organizationId = assertOrgId(organizationId);
 
         try {
             // 1. Execute all search types in parallel

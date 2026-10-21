@@ -16,6 +16,13 @@ process.env.TZ = 'America/Los_Angeles';
 export default defineConfig({
     test: {
         globals: true,
+        // Console output goes straight to stdout instead of over vitest's worker RPC.
+        // Modules many suites import keep logging after a file finishes (Redis
+        // reconnects, background queries); intercepted, each late line was an
+        // EnvironmentTeardownError that failed the run although every test passed.
+        // On Linux with no Redis the default gave 7,305 such errors and this gives 0,
+        // with the same tests passing. Spying on console in a test still works.
+        disableConsoleIntercept: true,
         environment: 'jsdom',
         include: [
             'tests/**/*.test.{ts,tsx}',

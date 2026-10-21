@@ -4,7 +4,8 @@
  * Wraps the AgentMail REST API (https://api.agentmail.to/v0).
  * Provides: send, list threads/messages, HMAC webhook signature verification.
  *
- * Credentials (set in environment):
+ * Production clients are resolved with forOrg(organizationId) from encrypted
+ * organization credentials. These environment variables are legacy development only:
  *   AGENTMAIL_API_KEY   — Bearer token
  *   AGENTMAIL_INBOX     — the inbox to send from, e.g. your-inbox@agentmail.to
  *   AGENTMAIL_WEBHOOK_SECRET — whsec_... returned when the webhook was registered
@@ -81,12 +82,32 @@ export interface SendMessageResult {
     thread_id: string;
 }
 
-class AgentMailService {
+export class AgentMailService {
+    constructor(private readonly connection?: { apiKey: string; inboxId: string; organizationId: number }) {}
+
+    async forOrg(organizationId: number): Promise<AgentMailService> {
+        const { orgAgentMailService } = await import("./org-agentmail.service.js");
+        return new AgentMailService(await orgAgentMailService.resolve(organizationId));
+    }
+
+    getInboxId(): string { return this.inbox; }
+
+    async getInboxAddress(): Promise<string> {
+        const inbox = await this.request<{ email?: string }>("GET", `/inboxes/${encodeURIComponent(this.inbox)}`);
+        const email = inbox.email ?? (this.inbox.includes("@") ? this.inbox : "");
+        if (!email) throw new Error("AgentMail did not return the inbox email address");
+        return email.toLowerCase();
+    }
+
     private get apiKey(): string {
+        if (this.connection) return this.connection.apiKey;
+        if (process.env.NODE_ENV === "production") return "";
         return process.env.AGENTMAIL_API_KEY ?? "";
     }
 
     private get inbox(): string {
+        if (this.connection) return this.connection.inboxId;
+        if (process.env.NODE_ENV === "production") return "";
         return process.env.AGENTMAIL_INBOX ?? "";
     }
 
@@ -106,17 +127,19 @@ class AgentMailService {
     }
 
     private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+        if (!this.isConfigured()) throw new Error("Connect AgentMail in Organization Settings first");
         const res = await fetch(`${BASE_URL}${path}`, {
             method,
             headers: this.headers(),
             body: body !== undefined ? JSON.stringify(body) : undefined,
+            signal: AbortSignal.timeout(15_000),
         });
 
-        const json = await res.json() as any;
         if (!res.ok) {
-            throw new Error(`AgentMail API error [${res.status}]: ${json?.message ?? JSON.stringify(json)}`);
+            throw new Error(`AgentMail API error [${res.status}]`);
         }
-        return json as T;
+        try { return await res.json() as T; }
+        catch { throw new Error("AgentMail returned an invalid response"); }
     }
 
     // ── Send ────────────────────────────────────────────────────────────────

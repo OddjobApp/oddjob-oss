@@ -37,6 +37,21 @@ class SessionStore(private val store: KeyValueStore) {
         get() = store.get(KEY_USER)
         set(value) = store.put(KEY_USER, value)
 
+    /**
+     * For a build whose server is fixed: forgets a sign-in saved against any other
+     * server (an install from before the server was fixed, still on its old
+     * address), so the person signs in once more at the fixed one. Leaving the
+     * stored server null makes the next login clear the old server's cookies.
+     * Returns whether anything was forgotten.
+     */
+    fun forgetOtherServer(fixed: String): Boolean {
+        val saved = serverUrl ?: return false
+        if (saved == normalizeServerUrl(fixed)) return false
+        serverUrl = null
+        username = null
+        return true
+    }
+
     /** Show tool chips and the serving model under agent turns. */
     var showTurnDetails: Boolean
         get() = store.get(KEY_DETAILS) != "false"

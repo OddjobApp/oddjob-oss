@@ -32,6 +32,13 @@ val mapboxToken: String = run {
     ).map { it.trim().trim('"') }.firstOrNull { it.startsWith("pk.") }.orEmpty()
 }
 
+/**
+ * The Oddjob server release builds talk to. It is fixed, so people only sign in:
+ * there is no server field to fill. A build for another deployment passes
+ * -PoddjobServerUrl=https://its.domain (or sets it in gradle.properties).
+ */
+val releaseServerUrl: String = providers.gradleProperty("oddjobServerUrl").getOrElse("https://oddjob.app")
+
 android {
     namespace = "app.oddjob.crew"
     compileSdk = 36
@@ -44,6 +51,8 @@ android {
         versionName = "0.1.0"
         // The emulator reaches the host's localhost on 10.0.2.2; a phone needs the LAN address or a deployed origin.
         buildConfigField("String", "DEFAULT_SERVER_URL", "\"http://10.0.2.2:5000\"")
+        // Debug builds let you type a server (an emulator, a LAN address); release builds do not.
+        buildConfigField("boolean", "SERVER_URL_FIXED", "false")
         // The Maps SDK reads its token from this string resource.
         resValue("string", "mapbox_access_token", mapboxToken)
         buildConfigField("boolean", "MAPS_ENABLED", mapboxToken.isNotEmpty().toString())
@@ -53,7 +62,8 @@ android {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "DEFAULT_SERVER_URL", "\"https://\"")
+            buildConfigField("String", "DEFAULT_SERVER_URL", "\"$releaseServerUrl\"")
+            buildConfigField("boolean", "SERVER_URL_FIXED", "true")
         }
     }
 

@@ -179,4 +179,5 @@ export * from "./scribe.js";
 export * from "./media-studio.js";
 export * from "./app-reviews.js";
 export * from "./push.js";
+export * from "./agentmail.js";
 export * from "./marketplace/marketplace-listing.js";

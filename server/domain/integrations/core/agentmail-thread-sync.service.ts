@@ -58,7 +58,9 @@ export const agentMailThreadSync = {
      * Find a mission run by AgentMail thread ID.
      * Called when receiving email replies to route them to the correct mission.
      */
-    async findMissionByThreadId(threadId: string): Promise<MissionThreadLink | null> {
+    async findMissionByThreadId(threadId: string, organizationId: number): Promise<MissionThreadLink | null> {
+        // A thread ID found in another organization's mission is not this inbox's reply.
+        const orgId = assertOrgId(organizationId);
         try {
             // Search for mission runs with matching email thread ID
             const [run] = await db
@@ -70,9 +72,10 @@ export const agentMailThreadSync = {
                 })
                 .from(missionRuns)
                 .innerJoin(missions, eq(missionRuns.missionId, missions.id))
-                .where(
-                    sql`${missionRuns.missionContext}->>'emailThreadId' = ${threadId}`
-                )
+                .where(and(
+                    eq(missions.organizationId, orgId),
+                    sql`${missionRuns.missionContext}->>'emailThreadId' = ${threadId}`,
+                ))
                 .limit(1);
 
             if (!run) {
@@ -102,9 +105,10 @@ export const agentMailThreadSync = {
     async routeReplyToMission(
         threadId: string,
         fromEmail: string,
-        replyText: string
+        replyText: string,
+        organizationId: number,
     ): Promise<{ success: boolean; missionRunId?: number; message?: string }> {
-        const link = await this.findMissionByThreadId(threadId);
+        const link = await this.findMissionByThreadId(threadId, organizationId);
         
         if (!link) {
             return { success: false, message: "No mission linked to this email thread" };
@@ -245,7 +249,9 @@ export const agentMailThreadSync = {
     /**
      * Find a CREW room session by AgentMail thread ID.
      */
-    async findCrewSessionByThreadId(threadId: string): Promise<CrewThreadLink | null> {
+    async findCrewSessionByThreadId(threadId: string, organizationId: number): Promise<CrewThreadLink | null> {
+        // A thread ID found in another organization's room is not this inbox's reply.
+        const orgId = assertOrgId(organizationId);
         try {
             const { crewSessions } = await import("@shared/schema/index.js");
             const [session] = await db
@@ -257,7 +263,10 @@ export const agentMailThreadSync = {
                     cycleContext: crewSessions.cycleContext,
                 })
                 .from(crewSessions)
-                .where(sql`${crewSessions.cycleContext}->>'emailThreadId' = ${threadId}`)
+                .where(and(
+                    eq(crewSessions.organizationId, orgId),
+                    sql`${crewSessions.cycleContext}->>'emailThreadId' = ${threadId}`,
+                ))
                 .limit(1);
 
             if (!session) {
@@ -287,9 +296,10 @@ export const agentMailThreadSync = {
         threadId: string,
         fromEmail: string,
         replyText: string,
-        subject?: string
+        subject: string | undefined,
+        organizationId: number,
     ): Promise<{ success: boolean; sessionKey?: string; turnId?: number; message?: string }> {
-        const link = await this.findCrewSessionByThreadId(threadId);
+        const link = await this.findCrewSessionByThreadId(threadId, organizationId);
         if (!link) {
             return { success: false, message: "No CREW session linked to this email thread" };
         }

@@ -33,6 +33,7 @@ const DatasetsPage = lazy(() => import("@domain-ui/knowledge/ui/modules/knowledg
 const DatasetDetail = lazy(() => import("@domain-ui/knowledge/ui/modules/knowledge/pages/DatasetManagerDetail"));
 const ForensicAnalysisPage = lazy(() => import("@domain-ui/pipeline/ui/modules/pipelines/pages/ForensicAnalysis"));
 const KnowledgeOverview = lazy(() => import("@/modules/knowledge/pages/KnowledgeOverview"));
+const PlatformDocumentation = lazy(() => import("@/modules/knowledge/pages/PlatformDocumentation"));
 const CalculationsPage = lazy(() => import("@/modules/knowledge/pages/CalculationsPage"));
 const FineTuningDashboard = lazy(() => import("@domain-ui/ai/ui/modules/ai/pages/FineTuningDashboard"));
 
@@ -150,6 +151,7 @@ export function KnowledgeRouting() {
             <Route path="/knowledge/data-repository"><Redirect to="/knowledge/datasets" /></Route>
 
             {/* Knowledge Domain Routes */}
+            <Route path="/knowledge/platform-docs" component={PlatformDocumentation} />
             <Route path="/knowledge/store" component={KnowledgeStorePage} />
             <Route path="/knowledge/fine-tuning/datasets/:id" component={KnowledgeDatasetDetailPage} />
             <Route path="/knowledge/fine-tuning/datasets" component={KnowledgeDatasetsPage} />

@@ -15,7 +15,7 @@
  */
 
 import { db } from "@server/database_service.js";
-import { otpCodes, approvalRequests, users } from "@shared/schema/index.js";
+import { otpCodes, approvalRequests, users, userOrgs } from "@shared/schema/index.js";
 import { eq, and, gt, sql, desc } from "drizzle-orm";
 import { createLogger } from "@server/utils/logger.js";
 import { validateExternalToken } from "@domain/auth/core/jwt.service.js";
@@ -105,28 +105,31 @@ export type GateResult =
 
 /**
  * HIGH-RISK gate (approve / reject / launch / promote):
- *   - Verifies sender is a known org member
+ *   - Verifies sender is a member of the organization whose inbox received the reply
  *   - Verifies OTP passcode against otp_codes table
  */
 export async function verifyHighRiskAction(
     fromEmail: string,
     executionId: string,
     passcode: string | undefined,
+    organizationId: number,
 ): Promise<GateResult> {
     if (!passcode) {
         return { ok: false, reason: "No passcode found in email body. Reply with: APPROVE <6-digit-code>" };
     }
 
-    // 1. Sender must be a known user
+    // 1. Sender must be a member of this organization, not merely a known user:
+    // a registered user of another tenant cannot decide this tenant's approvals.
     const [user] = await db
-        .select()
+        .select({ id: users.id })
         .from(users)
+        .innerJoin(userOrgs, and(eq(userOrgs.userId, users.id), eq(userOrgs.orgId, organizationId)))
         .where(eq(users.email, fromEmail))
         .limit(1);
 
     if (!user) {
-        logger.warn(`[AgentMail Gate] Unknown sender: ${fromEmail}`);
-        return { ok: false, reason: `Sender ${fromEmail} is not a registered Oddjob user.` };
+        logger.warn(`[AgentMail Gate] Sender is not a member of org ${organizationId}: ${fromEmail}`);
+        return { ok: false, reason: `Sender ${fromEmail} is not a member of this organization.` };
     }
 
     // 2. OTP passcode verification
@@ -156,45 +159,30 @@ export async function verifyHighRiskAction(
 }
 
 /**
- * LOW-RISK gate (steer / nudge):
- *   - Sender must be a known org member only
+ * Resolve the approval request ID + executionId from a request ID, within the
+ * organization whose inbox received the reply. An ID from another tenant is not found.
  */
-export async function verifyLowRiskAction(fromEmail: string): Promise<GateResult> {
-    const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, fromEmail))
-        .limit(1);
-
-    if (!user) {
-        return { ok: false, reason: `Sender ${fromEmail} is not a registered Oddjob user.` };
-    }
-
-    return { ok: true, userId: user.id, userEmail: fromEmail };
-}
-
-/**
- * Resolve the approval request ID + executionId from a request ID.
- */
-export async function getApprovalByRequestId(requestId: number) {
+export async function getApprovalByRequestId(requestId: number, organizationId: number) {
     const [req] = await db
         .select()
         .from(approvalRequests)
-        .where(eq(approvalRequests.id, requestId))
+        .where(and(eq(approvalRequests.id, requestId), eq(approvalRequests.organizationId, organizationId)))
         .limit(1);
     return req ?? null;
 }
 
 /**
- * Find the most recent pending approval assigned to an email address.
+ * Find the most recent pending approval assigned to an email address, within the
+ * organization whose inbox received the reply.
  * Used when the email doesn't contain a Request ID.
  */
-export async function getLatestPendingApprovalForEmail(email: string) {
+export async function getLatestPendingApprovalForEmail(email: string, organizationId: number) {
     const [req] = await db
         .select()
         .from(approvalRequests)
         .where(
             and(
+                eq(approvalRequests.organizationId, organizationId),
                 eq(approvalRequests.approverEmail, email),
                 eq(approvalRequests.status, "pending"),
             )

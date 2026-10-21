@@ -48,6 +48,18 @@ export default defineConfig({
   cacheDir,
   plugins: [
     react(),
+    {
+      name: "browser-external-boundary",
+      generateBundle(_options, bundle) {
+        for (const output of Object.values(bundle)) {
+          if (output.type !== "chunk") continue;
+          for (const dependency of [...output.imports, ...output.dynamicImports]) {
+            if (bundle[dependency] || dependency.startsWith(".") || dependency.startsWith("/") || /^(https?|data|blob):/.test(dependency)) continue;
+            this.error(`Browser chunk ${output.fileName} contains unresolved server dependency: ${dependency}`);
+          }
+        }
+      },
+    },
     ...(process.env.NODE_ENV !== "production" &&
       process.env.REPL_ID !== undefined
       ? [
@@ -77,6 +89,9 @@ export default defineConfig({
       "@domain-ui": path.resolve(__dirname, "server", "domain"),
       "@assets": path.resolve(__dirname, "attached_assets"),
       "@oddjob/shared-utils": path.resolve(__dirname, "packages", "shared-utils", "src"),
+      // The CommonJS package root eagerly imports CronFileParser and fs/promises.
+      // Shared calendar logic needs only expression parsing in browser builds.
+      "cron-parser": path.resolve(__dirname, "node_modules", "cron-parser", "dist", "CronExpressionParser.js"),
     },
   },
   optimizeDeps: {
@@ -333,60 +348,9 @@ export default defineConfig({
         },
         chunkFileNames: "assets/js/[name]-[hash].js",
         entryFileNames: "assets/js/[name]-[hash].js",
-        manualChunks(id) {
-          // Bundler runtime helpers get a chunk of their own. Left unassigned,
-          // Rollup hoists them into whichever chunk first needs them — it chose
-          // vendor-maps, so every chunk with a dynamic import() statically
-          // imported 1.8MB of mapbox-gl and every page loaded it.
-          if (id.includes('vite/preload-helper') || id.includes('commonjsHelpers')) {
-            return 'vendor-runtime';
-          }
-          // A stylesheet from a vendor package (mapbox-gl.css) is not vendor JS.
-          // Assigned to vendor-maps, it made every importer statically load the
-          // whole map library just to get the CSS.
-          if (/\.css($|\?)/.test(id)) {
-            return undefined;
-          }
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'vendor-react';
-          }
-          if (id.includes('node_modules/@radix-ui/')) {
-            return 'vendor-radix';
-          }
-          if (id.includes('node_modules/recharts/') || id.includes('node_modules/d3')) {
-            return 'vendor-charts';
-          }
-          if (id.includes('node_modules/vis-network') || id.includes('node_modules/vis-data')) {
-            return 'vendor-vis';
-          }
-          if (id.includes('node_modules/mapbox-gl') || id.includes('node_modules/react-map-gl')) {
-            return 'vendor-maps';
-          }
-          if (id.includes('node_modules/reactflow') || id.includes('node_modules/@reactflow')) {
-            return 'vendor-reactflow';
-          }
-          if (id.includes('node_modules/@tanstack/')) {
-            return 'vendor-query';
-          }
-          if (id.includes('node_modules/lucide-react')) {
-            return 'vendor-icons';
-          }
-          if (id.includes('node_modules/date-fns')) {
-            return 'vendor-dates';
-          }
-          if (id.includes('node_modules/zod') || id.includes('node_modules/react-hook-form')) {
-            return 'vendor-forms';
-          }
-          if (id.includes('node_modules/react-markdown') || id.includes('node_modules/remark')) {
-            return 'vendor-markdown';
-          }
-          if (id.includes('node_modules/framer-motion')) {
-            return 'vendor-motion';
-          }
-          if (id.includes('node_modules/')) {
-            return 'vendor-common';
-          }
-        },
+        // Let Rollup group dependency graphs. Hand-splitting interdependent
+        // vendor packages creates circular chunks and browser TDZ failures.
+
       },
     },
   },

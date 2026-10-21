@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { pipelineService } from "../../../pipeline/core/pipeline.service.js";
 import type { ToolDefinition, ToolContext } from "./types.js";
+import { requireToolOrgId } from "./org-context.js";
 import { JOB_SCHEMAS } from "../../../../config/jobs/schemas.js";
 import { retrieveSimilarDocuments } from "@domain/knowledge/core/rag-langchain.service.js";
 import { topicService } from "../../../../domain/knowledge/core/topic-service.js";
@@ -51,11 +52,15 @@ export const CORE_TOOLS: Record<string, ToolDefinition> = {
         execute: async ({ topicId, topicName, documentId }: any, context: ToolContext) => {
             try {
                 const results: string[] = [];
+                // The caller's organization, never null and never super-admin: with
+                // a null organization and a super-admin flag the services below
+                // skip their org filter, and this tool reported every tenant's
+                // jobs, documents and pipelines.
                 const orgContext: any = {
                     userId: context?.userId || "unknown",
-                    organizationId: context?.organizationId || null,
+                    organizationId: requireToolOrgId(context),
                     isAdmin: !!context?.isAdmin,
-                    isSuperAdmin: !!context?.isSuperAdmin,
+                    isSuperAdmin: false,
                     isOrgAdmin: !!context?.isOrgAdmin
                 };
 

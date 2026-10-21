@@ -1,6 +1,7 @@
 
 import { z } from "zod";
 import { recentDegradation } from "../../../ai/core/ai-degradation.js";
+import { requireToolOrgId } from "./org-context.js";
 
 /**
  * Mirrors isQuotaError in rag-langchain.service.ts — the search tool needs the
@@ -58,9 +59,9 @@ export const search_unified_knowledge: ToolDefinition = {
         updated_after: z.string().optional().describe("Only return items UPDATED AFTER this date.")
     }),
     execute: async ({ query, filter_source, limit, before, after, since, updated_before, updated_after } = {}, context) => {
-        const { organizationId } = context ?? {};
-        
         try {
+            // Throws without one; the catch below returns it as the tool's answer.
+            const organizationId = requireToolOrgId(context);
             const searchQuery = typeof query === 'string' ? query.trim() : '';
             if (!searchQuery) {
                 return "Please provide a search query. Example: 'What are the application requirements?'";
@@ -71,16 +72,14 @@ export const search_unified_knowledge: ToolDefinition = {
             const { searchService } = await import("../../../knowledge/core/search/search-service.js");
             const { SemanticCacheService } = await import("../../../ai/core/semantic-cache.service.js");
 
-            if (organizationId) {
-                try {
-                    const cached = await SemanticCacheService.get(searchQuery, organizationId);
-                    if (cached) {
-                        console.log(`[Unified Search Tool] Cache hit for "${searchQuery}"`);
-                        return cached;
-                    }
-                } catch (cacheErr: any) {
-                    console.warn("[Unified Search Tool] Cache check skipped:", cacheErr?.message);
+            try {
+                const cached = await SemanticCacheService.get(searchQuery, organizationId);
+                if (cached) {
+                    console.log(`[Unified Search Tool] Cache hit for "${searchQuery}"`);
+                    return cached;
                 }
+            } catch (cacheErr: any) {
+                console.warn("[Unified Search Tool] Cache check skipped:", cacheErr?.message);
             }
 
             // Map filter_source to queryType if needed, but 'unknown' allows the service to classify
@@ -98,7 +97,7 @@ export const search_unified_knowledge: ToolDefinition = {
 
             for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
                 try {
-                    results = await searchService.executeUnifiedSearch(searchQuery, queryType, organizationId || null, {
+                    results = await searchService.executeUnifiedSearch(searchQuery, queryType, organizationId, {
                         limit: limit || 10,
                         before,
                         after: after || since,
@@ -171,8 +170,8 @@ export const search_unified_knowledge: ToolDefinition = {
                 : "";
             const response = `${degradedWarning}Found ${results.length} relevant items in the knowledge base (Operational Truth):\n\n${formatted}\n\n*Note: You can request more specific details for any item if needed.*`;
 
-            if (organizationId && results.length > 0) {
-                SemanticCacheService.set(searchQuery, response, organizationId || null).catch(e => console.warn("[Unified Search Tool] Cache set failed:", e));
+            if (results.length > 0) {
+                SemanticCacheService.set(searchQuery, response, organizationId).catch(e => console.warn("[Unified Search Tool] Cache set failed:", e));
             }
 
             return response;

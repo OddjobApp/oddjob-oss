@@ -51,7 +51,10 @@ class LoginViewModel(private val api: OddjobApi, private val session: SessionSto
     private val _state = MutableStateFlow(LoginUiState())
     val state: StateFlow<LoginUiState> = _state
 
-    val initialServer: String get() = session.serverUrl ?: BuildConfig.DEFAULT_SERVER_URL
+    /** Release builds talk to one server, so the form asks only who you are. */
+    val serverFixed: Boolean = BuildConfig.SERVER_URL_FIXED
+    val initialServer: String get() =
+        if (serverFixed) BuildConfig.DEFAULT_SERVER_URL else session.serverUrl ?: BuildConfig.DEFAULT_SERVER_URL
     val initialUser: String get() = session.username.orEmpty()
 
     init {
@@ -79,7 +82,8 @@ class LoginViewModel(private val api: OddjobApi, private val session: SessionSto
 
     fun signIn(server: String, identifier: String, password: String) {
         if (server.isBlank() || identifier.isBlank() || password.isEmpty()) {
-            _state.update { it.copy(error = "Server, username and password are all required.") }
+            val missing = if (serverFixed) "Username and password are both required." else "Server, username and password are all required."
+            _state.update { it.copy(error = missing) }
             return
         }
         _state.update { it.copy(busy = true, error = null) }
@@ -127,15 +131,17 @@ fun LoginScreen(viewModel: LoginViewModel, state: LoginUiState) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            OutlinedTextField(
-                value = server,
-                onValueChange = { server = it },
-                label = { Text("Server") },
-                supportingText = { Text("The emulator reaches your computer at 10.0.2.2") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next),
-                modifier = Modifier.fillMaxWidth(),
-            )
+            if (!viewModel.serverFixed) {
+                OutlinedTextField(
+                    value = server,
+                    onValueChange = { server = it },
+                    label = { Text("Server") },
+                    supportingText = { Text("The emulator reaches your computer at 10.0.2.2") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             OutlinedTextField(
                 value = user,
                 onValueChange = { user = it },

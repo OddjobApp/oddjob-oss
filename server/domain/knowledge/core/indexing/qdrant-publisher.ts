@@ -84,6 +84,10 @@ export class QdrantPublisher {
     async publishGraphNode(nodeId: number): Promise<void> {
         const [node] = await db.select().from(knowledgeNodes).where(eq(knowledgeNodes.id, nodeId)).limit(1);
         if (!node) return;
+        // Org-less nodes are XRay's index of the platform's own code. They have no
+        // organization to file under, and the shared default collection is closed
+        // to new writes (requireVectorOrgId), so they are not vector-indexed.
+        if (node.organizationId == null) return;
 
         const source: RagContentSource = {
             id: node.id,

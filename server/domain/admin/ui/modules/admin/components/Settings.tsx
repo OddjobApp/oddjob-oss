@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { OrgAgentMailSettings } from '@/modules/operations/components/OrgAgentMailSettings';
 import { useLocation } from "wouter";
 import { Settings as SettingsIcon, Database, Bell, Shield, Clock, Save, Users as UsersIcon, Mail, BookOpen, Network, Sparkles, Monitor, BellRing, KeyRound, CreditCard } from 'lucide-react';
 
@@ -333,6 +334,7 @@ export default function Settings() {
 
           <div className="grid gap-6">
             <GranolaConnectionCard />
+            {orgSettings?.organizationId && <OrgAgentMailSettings key={`agentmail-${orgSettings.organizationId}`} organizationId={orgSettings.organizationId} />}
 
             <GeneralSettingsCard
               setSystemTimezone={setSystemTimezone}

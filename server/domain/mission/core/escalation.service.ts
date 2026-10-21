@@ -164,6 +164,8 @@ export class EscalationService {
 
             if (channel === "email") {
                 try {
+                    const { agentMailService } = await import("@server/domain/integrations/core/agentmail.service.js");
+                    const mail = await agentMailService.forOrg(Number(run.organizationId));
                     // Find recipient emails
                     const emailRecipients = new Set<string>();
 
@@ -172,7 +174,7 @@ export class EscalationService {
                     if (requestIds.length > 0) {
                         const approvers = await db.select({ email: approvalRequests.approverEmail })
                             .from(approvalRequests)
-                            .where(inArray(approvalRequests.id, requestIds));
+                            .where(and(inArray(approvalRequests.id, requestIds), eq(approvalRequests.organizationId, run.organizationId)));
                         for (const app of approvers) {
                             if (app.email) emailRecipients.add(app.email);
                         }
@@ -189,11 +191,9 @@ export class EscalationService {
 
                     if (emailRecipients.size > 0) {
                         const recipients = Array.from(emailRecipients);
-                        const { agentMailService } = await import("@server/domain/integrations/core/agentmail.service.js");
-
-                        if (agentMailService.isConfigured()) {
+                        if (mail.isConfigured()) {
                             for (const email of recipients) {
-                                await agentMailService.send({
+                                await mail.send({
                                     to: [email],
                                     subject: `[Escalation Alert] ${mission.name} Stalled`,
                                     text: message,
