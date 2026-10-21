@@ -14,6 +14,19 @@
 import { describe, it, expect } from "vitest";
 import { calculateAiCost, providerForModel } from "./cost-registry.js";
 
+describe("Claude on Bedrock", () => {
+    it("is priced as the same Anthropic model", () => {
+        expect(calculateAiCost("us.anthropic.claude-sonnet-4-6", 1_000_000, 1_000_000))
+            .toBe(calculateAiCost("claude-sonnet-4-6", 1_000_000, 1_000_000));
+        expect(calculateAiCost("global.anthropic.claude-sonnet-4-6", 1_000_000, 0)).toBe(3);
+    });
+    it("is attributed to Bedrock, which bills it", () => {
+        expect(providerForModel("us.anthropic.claude-sonnet-4-6")).toBe("bedrock");
+        expect(providerForModel("anthropic.claude-3-5-sonnet-20240620-v1:0")).toBe("bedrock");
+        expect(providerForModel("claude-sonnet-4-6")).toBe("anthropic");
+    });
+});
+
 describe("providerForModel", () => {
     it("attributes Gemini models to Google, not the old OpenAI default", () => {
         expect(providerForModel("gemini-2.0-flash")).toBe("google");

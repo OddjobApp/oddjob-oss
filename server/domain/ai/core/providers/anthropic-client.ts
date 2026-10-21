@@ -10,7 +10,44 @@ import { TraceContext } from "@domain/core/infrastructure/tracing/trace-context.
  * suffix.
  */
 function samplingParamsDeprecated(model: string): boolean {
-    return /^claude-(?:opus|sonnet|haiku|fable)-5(?:-|$)/.test(model);
+    return /^claude-(?:opus|sonnet|haiku|fable)-5(?:-|$)/.test(claudeModelName(model));
+}
+
+/** The Anthropic model name inside a Bedrock ID: us.anthropic.claude-x-v1:0 -> claude-x. */
+function claudeModelName(model: string): string {
+    return model.replace(/^(?:[a-z]+\.)?anthropic\./, "").replace(/-v\d+(?::\d+)?$/, "");
+}
+
+/** Where a Messages request goes and how it is authenticated. */
+export interface AnthropicTransport {
+    provider: string;
+    label: string;
+    url(model: string): string;
+    headers(apiKey: string): Record<string, string>;
+    body(request: Record<string, unknown>): Record<string, unknown>;
+}
+
+export const ANTHROPIC_DIRECT: AnthropicTransport = {
+    provider: "anthropic",
+    label: "Anthropic",
+    url: () => "https://api.anthropic.com/v1/messages",
+    headers: apiKey => ({ "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" }),
+    body: request => request,
+};
+
+/**
+ * The same Messages body on Amazon Bedrock's InvokeModel: the model moves into
+ * the path, the API version into the body, and a Bedrock API key authenticates.
+ * `runtimeUrl` comes from the provider registry, never from a caller.
+ */
+export function bedrockTransport(runtimeUrl: string): AnthropicTransport {
+    return {
+        provider: "bedrock",
+        label: "Amazon Bedrock",
+        url: model => `${runtimeUrl}/model/${encodeURIComponent(model)}/invoke`,
+        headers: apiKey => ({ "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` }),
+        body: ({ model: _model, stream: _stream, ...rest }) => ({ anthropic_version: "bedrock-2023-05-31", ...rest }),
+    };
 }
 
 /**
@@ -51,6 +88,8 @@ function toAnthropicTools(config: AIApiCallConfig): Array<{ name: string; descri
 }
 
 export class AnthropicClient implements AIClient {
+    constructor(private readonly transport: AnthropicTransport = ANTHROPIC_DIRECT) {}
+
     async execute(
         config: AIApiCallConfig,
         input: string | undefined,
@@ -153,14 +192,10 @@ export class AnthropicClient implements AIClient {
                 requestBody.tool_choice = { type: "auto" };
             }
 
-            const response = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
+            const response = await fetchWithRetry(this.transport.url(config.model), {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-api-key": apiKey,
-                    "anthropic-version": "2023-06-01",
-                },
-                body: JSON.stringify(requestBody),
+                headers: this.transport.headers(apiKey),
+                body: JSON.stringify(this.transport.body(requestBody)),
             });
 
             const latencyMs = Date.now() - startTime;
@@ -169,10 +204,10 @@ export class AnthropicClient implements AIClient {
                 const errorText = await response.text();
                 return {
                     success: false,
-                    error: `Anthropic API error (${response.status}): ${errorText}`,
+                    error: `${this.transport.label} API error (${response.status}): ${errorText}`,
                     metadata: {
                         model: config.model,
-                        provider: "anthropic",
+                        provider: this.transport.provider,
                         latencyMs,
                     },
                 };
@@ -204,7 +239,7 @@ export class AnthropicClient implements AIClient {
                 output,
                 metadata: {
                     model: config.model,
-                    provider: "anthropic",
+                    provider: this.transport.provider,
                     tokensUsed: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0),
                     promptTokens: data.usage?.input_tokens ?? 0,
                     completionTokens: data.usage?.output_tokens ?? 0,
@@ -223,7 +258,7 @@ export class AnthropicClient implements AIClient {
                 error: error instanceof Error ? error.message : String(error),
                 metadata: {
                     model: config.model,
-                    provider: "anthropic",
+                    provider: this.transport.provider,
                     latencyMs,
                 },
             };
@@ -237,6 +272,15 @@ export class AnthropicClient implements AIClient {
         _fileAttachments?: GeminiFileAttachment[],
         _traceContext?: TraceContext
     ): AsyncIterable<string> {
+        // Bedrock streams in AWS event-stream framing, not SSE. Organization calls
+        // never stream (OrganizationAIClient meters one complete response), so
+        // answer in one chunk rather than parse a second wire format.
+        if (this.transport !== ANTHROPIC_DIRECT) {
+            const response = await this.execute(config, input, apiKey, _fileAttachments, _traceContext);
+            if (!response.success) throw new Error(response.error || `${this.transport.label} request failed`);
+            if (response.output) yield response.output;
+            return;
+        }
         const userPrompt = config.userPrompt;
         const systemPrompt = config.systemPrompt;
 

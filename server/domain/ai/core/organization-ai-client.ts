@@ -26,6 +26,12 @@ export async function executeOnConnection(connection: OrgModelConnection, organi
         const { AnthropicClient } = await import("./providers/anthropic-client.js");
         return new AnthropicClient().execute({ ...call, baseUrl: undefined } as AIApiCallConfig, input, connection.apiKey, attachments, traceContext);
     }
+    if (connection.provider === "bedrock") {
+        if (!connection.baseUrl) throw new Error("Amazon Bedrock connection has no Region endpoint");
+        const { AnthropicClient, bedrockTransport } = await import("./providers/anthropic-client.js");
+        return new AnthropicClient(bedrockTransport(connection.baseUrl))
+            .execute({ ...call, baseUrl: undefined } as AIApiCallConfig, input, connection.apiKey, attachments, traceContext);
+    }
     const { OpenAIClient } = await import("./providers/openai-client.js");
     return new OpenAIClient({ baseUrl: connection.baseUrl })
         .execute({ ...call, baseUrl: connection.baseUrl } as AIApiCallConfig, input, connection.apiKey, attachments, traceContext);

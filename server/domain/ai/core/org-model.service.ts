@@ -13,8 +13,10 @@ import {
 
 const logger = createLogger("OrgModel");
 
+// The widest key any provider uses; save() then holds each provider to its own shape.
+const DEFAULT_KEY_PATTERN = /^[A-Za-z0-9_-]+$/;
 const storedSchema = z.object({
-    apiKey: z.string().trim().min(20).max(512).regex(/^[A-Za-z0-9_-]+$/),
+    apiKey: z.string().trim().min(20).max(1024).regex(/^[A-Za-z0-9_+/=-]+$/),
     model: z.string().trim().min(1).max(120),
     region: z.string().max(20).optional(),
     isDefault: z.boolean().optional(),
@@ -37,7 +39,7 @@ export interface OrgModelConnection {
     provider: OrgAiProviderId;
     apiKey: string;
     model: string;
-    /** The OpenAI-compatible endpoint; undefined for Gemini and Anthropic. */
+    /** The OpenAI-compatible or Bedrock runtime endpoint; undefined for Gemini and Anthropic. */
     baseUrl?: string;
     credentialId: 0;
 }
@@ -135,6 +137,19 @@ async function verify(provider: OrgAiProviderId, apiKey: string, model: string, 
         if (!response.ok) throw rejected(response.status);
         return;
     }
+    if (provider === "bedrock") {
+        // Look the model up on the control plane of the runtime's Region: an
+        // inference profile (us.…, global.…) or a base model ID.
+        const runtime = new URL(orgAiProviderBaseUrl(provider, region)!);
+        const control = runtime.origin.replace("://bedrock-runtime.", "://bedrock.");
+        const kind = /^[a-z]+\.anthropic\./.test(model) ? "inference-profiles" : "foundation-models";
+        const response = await reach(`${control}/${kind}/${encodeURIComponent(model)}`, { Authorization: `Bearer ${apiKey}` });
+        if (response.status === 404 || response.status === 400) {
+            throw new BadRequestError(`${label} does not offer the model "${model}" in this Region.`);
+        }
+        if (!response.ok) throw rejected(response.status);
+        return;
+    }
     // OpenAI-compatible: list the models the key can use. A provider that
     // lists models must list this one; one that returns no list is trusted.
     const response = await reach(`${orgAiProviderBaseUrl(provider, region)}/models`, { Authorization: `Bearer ${apiKey}` });
@@ -186,6 +201,11 @@ export const orgModelService = {
         const { provider, apiKey, model, makeDefault } = parsed.data;
         const spec = ORG_AI_PROVIDERS[provider];
         if (!spec.modelPattern.test(model)) throw new BadRequestError(`Enter a valid ${spec.label} model ID`);
+        if (!(spec.keyPattern ?? DEFAULT_KEY_PATTERN).test(apiKey)) {
+            throw new BadRequestError(provider === "bedrock"
+                ? "Enter a long-term Amazon Bedrock API key (it starts with ABSK)"
+                : `Enter a valid ${spec.label} API key`);
+        }
         const region = spec.regions && spec.regions.length > 1
             ? (spec.regions.find(r => r.id === parsed.data.region) ?? spec.regions[0]).id
             : undefined;

@@ -136,6 +136,55 @@ describe("organization Gemini connections", () => {
             expect(options?.headers).toEqual({ "x-api-key": "sk-ant-organization-key-1234", "anthropic-version": "2023-06-01" });
         });
 
+        it("checks a Bedrock key on its Region's control plane, stores the Region, and resolves the runtime", async () => {
+            vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({}) } as Response);
+            const key = "ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=";
+            const result = await orgModelService.save(7, { provider: "bedrock", apiKey: key, model: "us.anthropic.claude-sonnet-4-6", region: "us-west-2" });
+            const [url, options] = vi.mocked(fetch).mock.calls[0];
+            expect(url).toBe("https://bedrock.us-west-2.amazonaws.com/inference-profiles/us.anthropic.claude-sonnet-4-6");
+            expect(options?.headers).toEqual({ Authorization: `Bearer ${key}` });
+            expect(JSON.stringify(result)).not.toContain(key);
+            const stored = mocks.insert.mock.calls[0][0];
+            expect(stored.credentialType).toBe("bedrock");
+            const sealed = JSON.parse(decrypt(stored.encryptedData, "organization_ai:7:bedrock"));
+            expect(sealed).toMatchObject({ apiKey: key, model: "us.anthropic.claude-sonnet-4-6", region: "us-west-2" });
+
+            mocks.rows = [seal("bedrock", sealed)];
+            expect(await orgModelService.resolve(7, "bedrock")).toMatchObject({
+                provider: "bedrock", model: "us.anthropic.claude-sonnet-4-6", baseUrl: "https://bedrock-runtime.us-west-2.amazonaws.com" });
+        });
+
+        it("looks a base Bedrock model up as a foundation model, and an unknown Region falls back to Ohio", async () => {
+            vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({}) } as Response);
+            await orgModelService.save(7, { provider: "bedrock", apiKey: "ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", model: "anthropic.claude-3-5-sonnet-20240620-v1:0", region: "https://evil.example" });
+            expect(vi.mocked(fetch).mock.calls[0][0]).toBe("https://bedrock.us-east-2.amazonaws.com/foundation-models/anthropic.claude-3-5-sonnet-20240620-v1%3A0");
+        });
+
+        it("refuses short-term and malformed Bedrock keys, and non-Claude models, before contacting AWS", async () => {
+            const save = (apiKey: string, model = "us.anthropic.claude-sonnet-4-6") => orgModelService.save(7, { provider: "bedrock", apiKey, model });
+            await expect(save("bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29tLz9BY3Rpb249Q2FsbFdpdGhCZWFyZXJUb2tlbg==")).rejects.toThrow("long-term Amazon Bedrock API key");
+            await expect(save("ABSK key with spaces 1234567890")).rejects.toThrow("valid API key");
+            await expect(save("ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", "amazon.nova-pro-v1:0")).rejects.toThrow("valid Amazon Bedrock (Claude) model ID");
+            await expect(save("ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", "us.anthropic.claude-x/../../admin")).rejects.toThrow("model ID");
+            expect(fetch).not.toHaveBeenCalled();
+        });
+
+        it("says which model Bedrock does not offer rather than blaming the key", async () => {
+            vi.mocked(fetch).mockResolvedValue({ ok: false, status: 404 } as Response);
+            await expect(orgModelService.save(7, { provider: "bedrock", apiKey: "ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", model: "us.anthropic.claude-sonnet-9-9" }))
+                .rejects.toThrow('does not offer the model "us.anthropic.claude-sonnet-9-9" in this Region');
+            vi.mocked(fetch).mockResolvedValue({ ok: false, status: 403 } as Response);
+            await expect(orgModelService.save(7, { provider: "bedrock", apiKey: "ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", model: "us.anthropic.claude-sonnet-4-6" }))
+                .rejects.toThrow("HTTP 403");
+            expect(mocks.transaction).not.toHaveBeenCalled();
+        });
+
+        it("still holds the other providers to letters, digits, _ and -", async () => {
+            await expect(orgModelService.save(7, { provider: "anthropic", apiKey: "sk-ant-organization+key/12=", model: "claude-sonnet-4-6" }))
+                .rejects.toThrow("valid Anthropic Claude API key");
+            expect(fetch).not.toHaveBeenCalled();
+        });
+
         it("stores the chosen Qwen region and never accepts a URL", async () => {
             vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({}) } as Response);
             await orgModelService.save(7, { provider: "qwen", apiKey: "sk-qwen-organization-key-1", model: "qwen-plus", region: "cn" });

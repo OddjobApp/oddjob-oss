@@ -54,10 +54,18 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
 };
 
 /**
+ * The Anthropic name inside a Bedrock model ID, so Claude on Bedrock is priced as
+ * the same model: us.anthropic.claude-sonnet-4-6 -> claude-sonnet-4-6.
+ */
+function bedrockClaudeName(model: string): string {
+    return model.replace(/^(?:[a-z]+\.)?anthropic\./, "").replace(/-v\d+(?::\d+)?$/, "");
+}
+
+/**
  * Calculate the cost of an AI operation in USD.
  */
 export function calculateAiCost(model: string, inputTokens: number = 0, outputTokens: number = 0): number {
-    const pricing = MODEL_PRICING[model] || MODEL_PRICING["default"];
+    const pricing = MODEL_PRICING[model] || MODEL_PRICING[bedrockClaudeName(model)] || MODEL_PRICING["default"];
     const inputCost = (inputTokens / 1_000_000) * pricing.input1M;
     const outputCost = (outputTokens / 1_000_000) * pricing.output1M;
     return inputCost + outputCost;
@@ -76,6 +84,7 @@ export function calculateAiCost(model: string, inputTokens: number = 0, outputTo
 export function providerForModel(model: string | null | undefined): string {
     const m = (model ?? "").toLowerCase();
     if (!m) return "unknown";
+    if (/^(?:[a-z]+\.)?anthropic\.claude-/.test(m)) return "bedrock";
     if (m.startsWith("gemini")) return "google";
     if (m.startsWith("gpt") || m.startsWith("o1") || m.startsWith("o3")) return "openai";
     if (m.startsWith("claude")) return "anthropic";

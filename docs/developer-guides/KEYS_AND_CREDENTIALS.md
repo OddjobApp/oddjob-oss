@@ -34,6 +34,31 @@ Gemini with a non-generating request before it is saved, sent only in the
   org's slot fails to decrypt. Keys saved before sealing are re-sealed on first
   read.
 
+#### Amazon Bedrock (Claude)
+
+An organization can run Claude through its own AWS account instead of
+Anthropic's API (provider `bedrock`, sealed to `organization_ai:<org>:bedrock`).
+
+- **Key:** a long-term Amazon Bedrock API key (`ABSK…`), created in the
+  Bedrock console and owned by an IAM user in the organization's AWS account.
+  Short-term keys expire within 12 hours and are refused. Long-term keys expire
+  on the date chosen at creation (90 days by default): rotate the key in
+  Organization Settings before then, or every call fails.
+- **Model:** a Claude model ID or inference profile, e.g. the default
+  `us.anthropic.claude-sonnet-4-6`. Recent Claude models are offered only
+  through an inference profile, which may process a request in another Region
+  of that geography (`us.` → us-east-1, us-east-2 or us-west-2).
+- **Region:** US East (Ohio) by default, or US East (N. Virginia) or US West
+  (Oregon). Endpoints are fixed in `shared/org-ai-providers.ts`; an organization
+  never supplies a URL.
+- **Check on save:** the key is sent as a bearer token to the Region's
+  control plane to look up the model (`GetInferenceProfile` or
+  `GetFoundationModel`). Nothing is generated.
+- **Calls:** `AnthropicClient` over `bedrockTransport` — the same Messages body
+  on `InvokeModel`, with `anthropic_version: bedrock-2023-05-31`. Responses are
+  not streamed token by token. Cost is recorded at the Anthropic model's price
+  and attributed to `bedrock`; AWS bills it through AWS Marketplace.
+
 ### Reading a key in code
 
 | You are… | Use |

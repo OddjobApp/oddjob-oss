@@ -6,7 +6,7 @@
  * supplies a key and a model ID, never a URL, so a stored connection cannot
  * point the server at an arbitrary host.
  */
-export const ORG_AI_PROVIDER_IDS = ["google", "anthropic", "openai", "xai", "qwen", "muse"] as const;
+export const ORG_AI_PROVIDER_IDS = ["google", "anthropic", "openai", "xai", "qwen", "muse", "bedrock"] as const;
 export type OrgAiProviderId = (typeof ORG_AI_PROVIDER_IDS)[number];
 
 export interface OrgAiProviderRegion {
@@ -24,7 +24,12 @@ export interface OrgAiProvider {
     modelPattern: RegExp;
     keyUrl: string;
     keyHelp: string;
-    /** OpenAI-compatible chat endpoint; absent for providers with their own client. */
+    /** The shape of a key. Absent: letters, digits, `_` and `-`. */
+    keyPattern?: RegExp;
+    /**
+     * The provider's endpoint per region: OpenAI-compatible chat for most, the
+     * Bedrock runtime for Bedrock. Absent where the client fixes its own host.
+     */
     regions?: readonly OrgAiProviderRegion[];
 }
 
@@ -67,6 +72,22 @@ export const ORG_AI_PROVIDERS: Record<OrgAiProviderId, OrgAiProvider> = {
         defaultModel: "muse-spark-1.3", modelPattern: MODEL_ID,
         keyUrl: "https://llama.developer.meta.com", keyHelp: "the Meta developer portal",
         regions: [{ id: "default", label: "Global", baseUrl: "https://api.meta.ai/v1" }],
+    },
+    // Claude through the organization's own AWS account. The key is a long-term
+    // Bedrock API key (ABSK…); short-term keys expire within hours and are refused.
+    // Recent Claude models are offered only through an inference profile (us.…,
+    // global.…), which may process a request in another Region of that geography.
+    bedrock: {
+        id: "bedrock", label: "Amazon Bedrock (Claude)", credentialType: "bedrock",
+        defaultModel: "us.anthropic.claude-sonnet-4-6",
+        modelPattern: /^(?:(?:us|eu|apac|au|jp|global)\.)?anthropic\.claude-[a-z0-9.-]{1,90}(?::[0-9]{1,3})?$/,
+        keyUrl: "https://console.aws.amazon.com/bedrock/home#/api-keys/long-term/create", keyHelp: "the Amazon Bedrock console",
+        keyPattern: /^ABSK[A-Za-z0-9+/=]{20,1020}$/,
+        regions: [
+            { id: "us-east-2", label: "US East (Ohio)", baseUrl: "https://bedrock-runtime.us-east-2.amazonaws.com" },
+            { id: "us-east-1", label: "US East (N. Virginia)", baseUrl: "https://bedrock-runtime.us-east-1.amazonaws.com" },
+            { id: "us-west-2", label: "US West (Oregon)", baseUrl: "https://bedrock-runtime.us-west-2.amazonaws.com" },
+        ],
     },
 };
 
