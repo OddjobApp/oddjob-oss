@@ -1,6 +1,9 @@
 /** @vitest-environment node */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const accountSend = vi.hoisted(() => vi.fn());
+vi.mock("../core/outbound-email-accounts.service.js", () => ({ outboundEmailAccounts: { projectForRoom: vi.fn(async () => 7), send: accountSend } }));
+vi.mock("@server/database_service.js", () => ({ db: { update: () => ({ set: () => ({ where: vi.fn(async () => undefined) }) }) } }));
 const sendExecute = vi.hoisted(() => vi.fn());
 const sendMessage = vi.hoisted(() => vi.fn());
 const listWorkspaces = vi.hoisted(() => vi.fn());
@@ -8,7 +11,7 @@ const findSession = vi.hoisted(() => vi.fn());
 const postTurn = vi.hoisted(() => vi.fn());
 
 vi.mock("@domain/tools/v1/capabilities/index.js", () => ({
-    getAgentTools: () => ({ send_email: { name: "send_email", execute: sendExecute } }),
+    getAgentTools: () => ({ send_agentmail: { name: "send_agentmail", execute: sendExecute } }),
 }));
 vi.mock("../core/slack.service.js", () => ({
     slackService: { listWorkspaces, sendMessage },
@@ -27,6 +30,7 @@ const emailRequest = {
     modifiedOutput: {
         kind: "outbound_message",
         channel: "email",
+        sendTool: "send_agentmail",
         to: ["dana@northwind.io"],
         from: "sam@x.ai",
         subject: "Three infra roles and a migration",
@@ -38,6 +42,7 @@ const emailRequest = {
 describe("outboundMessageService.onOutboundMessageDecision", () => {
     beforeEach(() => {
         sendExecute.mockReset();
+        accountSend.mockReset().mockResolvedValue({ sent: true, result: "Google accepted email", preferenceSaved: true });
         sendMessage.mockReset();
         listWorkspaces.mockReset();
         // findSession/postTurn hit the database in this env; default to "no
@@ -61,6 +66,20 @@ describe("outboundMessageService.onOutboundMessageDecision", () => {
         expect(outcome).toMatchObject({ handled: true, sent: false, discarded: true });
         expect(sendExecute).not.toHaveBeenCalled();
         expect(sendMessage).not.toHaveBeenCalled();
+    });
+
+    it("sends authored email through the confirmed account and scopes a saved preference to the actor", async () => {
+        const choice = { connectorId: 11, email: "me@example.com", provider: "google" as const, remember: true };
+        const authored = { ...emailRequest, modifiedOutput: { ...emailRequest.modifiedOutput, sendTool: null, cc: ["cc@example.com"], bcc: ["bcc@example.com"] } };
+        const result = await outboundMessageService.onOutboundMessageDecision(authored, "approved", actor, { emailAccount: choice, body: "Edited body" });
+        expect(result.sent).toBe(true);
+        expect(accountSend).toHaveBeenCalledWith(291, "u1", choice, expect.objectContaining({ to: ["dana@northwind.io"], body: "Edited body", bcc: ["bcc@example.com"] }), 7);
+        expect(sendExecute).not.toHaveBeenCalled();
+    });
+    it("does not fall back to AgentMail for an authored email without sender confirmation", async () => {
+        const authored = { ...emailRequest, modifiedOutput: { ...emailRequest.modifiedOutput, sendTool: null } };
+        expect(await outboundMessageService.onOutboundMessageDecision(authored, "approved", actor)).toMatchObject({ sent: false, error: expect.stringContaining("Confirm a connected") });
+        expect(sendExecute).not.toHaveBeenCalled(); expect(accountSend).not.toHaveBeenCalled();
     });
 
     it("sends the stored email draft on approve", async () => {
@@ -180,7 +199,7 @@ describe("outboundMessageService.onOutboundMessageDecision", () => {
             expect.objectContaining({
                 speakerType: "agent",
                 content: expect.stringMatching(/sent/i),
-                toolsUsed: [expect.objectContaining({ name: "send_email", ok: true })],
+                toolsUsed: [expect.objectContaining({ name: "send_agentmail", ok: true })],
                 artifacts: [expect.objectContaining({
                     payload: expect.objectContaining({ proposalId: 55301, status: "approved" }),
                 })],

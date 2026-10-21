@@ -29,6 +29,8 @@ export interface OutboundMessageMeta {
     subject?: string | null;
     body?: string;
     cc?: string[] | null;
+    bcc?: string[] | null;
+    bodyFormat?: "plain" | "html";
     workspace?: string | null;
     threadTs?: string | null;
     thread?: string | null;
@@ -37,10 +39,12 @@ export interface OutboundMessageMeta {
     sessionKey?: string | null;
     agentCardId?: number | null;
     agentName?: string | null;
+    emailAccount?: { connectorId: number; email: string; provider: "google" | "microsoft"; remember?: boolean };
 }
 
 interface SendOutcome {
     sent: boolean;
+    outcomeUnknown?: boolean;
     result?: string;
     error?: string;
 }
@@ -52,7 +56,7 @@ export const outboundMessageService = {
         actor: { userId: string; email: string | null },
         /** Reviewer edits. Only body/subject are honored — recipients and
          * channel always come from the stored proposal. */
-        edits?: { body?: string; subject?: string } | null,
+        edits?: { body?: string; subject?: string; emailAccount?: { connectorId: number; email: string; provider: "google" | "microsoft"; remember?: boolean } } | null,
     ): Promise<{ handled: boolean; sent?: boolean; discarded?: boolean; error?: string }> {
         const meta = (request.modifiedOutput ?? request.toolArgs ?? {}) as OutboundMessageMeta;
         if (meta?.kind !== "outbound_message") return { handled: false };
@@ -64,6 +68,7 @@ export const outboundMessageService = {
         // on body/subject; everything else is the stored proposal verbatim.
         const effective: OutboundMessageMeta = {
             ...meta,
+            ...(edits?.emailAccount ? { emailAccount: edits.emailAccount, from: edits.emailAccount.email, sendTool: "send_email" } : {}),
             body: typeof edits?.body === "string" && edits.body.trim() ? edits.body : meta.body,
             subject: typeof edits?.subject === "string" && edits.subject.trim() ? edits.subject : meta.subject,
         };
@@ -86,7 +91,7 @@ export const outboundMessageService = {
             }
         } catch (err: any) {
             logger.error("Outbound message send failed", { approvalId: request.id, channel: effective.channel, error: err?.message });
-            outcome = { sent: false, error: err?.message || String(err) };
+            outcome = { sent: false, ...(err?.outcomeUnknown ? { outcomeUnknown: true } : {}), error: err?.message || String(err) };
         }
 
         await this.recordSendResult(request.id, effective, outcome);
@@ -97,7 +102,7 @@ export const outboundMessageService = {
     /** The decision row already recorded approved/rejected; this keeps the
      * delivery outcome next to it so a reloaded card can say "sent" truthfully
      * instead of implying approval and delivery are the same thing. */
-    async recordSendResult(requestId: number, effective: OutboundMessageMeta, outcome: { sent: boolean; discarded?: boolean; result?: string; error?: string }) {
+    async recordSendResult(requestId: number, effective: OutboundMessageMeta, outcome: { sent: boolean; outcomeUnknown?: boolean; discarded?: boolean; result?: string; error?: string }) {
         try {
             const { db } = await import("@server/database_service.js");
             const { approvalRequests } = await import("@shared/schema/index.js");
@@ -105,6 +110,7 @@ export const outboundMessageService = {
             const sendResult = {
                 sent: outcome.sent,
                 discarded: outcome.discarded === true,
+                ...(outcome.outcomeUnknown ? { outcomeUnknown: true } : {}),
                 result: outcome.result ?? null,
                 error: outcome.error ?? null,
                 at: new Date().toISOString(),
@@ -136,6 +142,8 @@ export const outboundMessageService = {
             const content =
                 decision === "rejected"
                     ? `The ${channel} draft to ${to} was discarded.`
+                    : outcome.outcomeUnknown
+                        ? `The ${channel} was approved, but delivery status is unknown. Check Sent Items before retrying.`
                     : outcome.sent
                         ? `The ${channel} to ${to} was sent from the review card.`
                         : `The ${channel} to ${to} was approved but delivery failed: ${outcome.error ?? "unknown error"}.`;
@@ -153,7 +161,7 @@ export const outboundMessageService = {
                         ...meta,
                         proposalId: approvalId,
                         status: decision === "rejected" ? "rejected" : "approved",
-                        sendResult: { sent: outcome.sent, error: outcome.error ?? null },
+                        sendResult: { sent: outcome.sent, outcomeUnknown: outcome.outcomeUnknown, error: outcome.error ?? null },
                     },
                 }],
             });
@@ -163,6 +171,12 @@ export const outboundMessageService = {
     },
 
     async sendEmail(organizationId: number, meta: OutboundMessageMeta, actor: { userId: string }): Promise<SendOutcome> {
+        if (!["send_agentmail", "reply_agentmail"].includes(meta.sendTool ?? "")) {
+            const { outboundEmailAccounts } = await import("./outbound-email-accounts.service.js");
+            if (!meta.emailAccount) throw new Error("Confirm a connected Google or Microsoft sender; AgentMail is reserved for notifications");
+            const projectId = await outboundEmailAccounts.projectForRoom(organizationId, meta.sessionKey);
+            return outboundEmailAccounts.send(organizationId, actor.userId, meta.emailAccount, { to: meta.to ?? [], cc: meta.cc, bcc: meta.bcc, bodyFormat: meta.bodyFormat, subject: meta.subject ?? "", body: meta.body ?? "" }, projectId);
+        }
         const toolName = meta.sendTool && ["send_email", "send_agentmail", "gmail_send", "reply_agentmail"].includes(meta.sendTool)
             ? meta.sendTool
             : "send_email";
@@ -186,6 +200,8 @@ export const outboundMessageService = {
                 text: meta.body ?? "",
                 body: meta.body ?? "",
                 cc: meta.cc ?? undefined,
+                bcc: meta.bcc ?? undefined,
+                ...(meta.bodyFormat === "html" ? { html: meta.body ?? "" } : {}),
             },
             // sessionKey lets send_agentmail thread-link the sent email back to
             // the room it was drafted in.

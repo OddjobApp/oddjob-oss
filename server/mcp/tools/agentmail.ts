@@ -21,7 +21,7 @@ export const agentMailToolDefinitions: Tool[] = [
     {
         name: "agentmail_send",
         description:
-            "Send an email from the current organization’s AgentMail inbox. " +
+            "Send an Oddjob or room notification email from the current organization’s AgentMail inbox. " +
             "Use this to notify humans, request approvals, deliver mission results, or initiate " +
             "agent-to-agent communication over email. Replies to this inbox are automatically " +
             "processed — recipients can reply APPROVE/REJECT <passcode> to resolve HIL requests, " +

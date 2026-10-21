@@ -13,6 +13,7 @@ vi.mock("@domain/core/auth/security.service.js", () => ({
 
 vi.mock("@server/utils/auth-context.js", () => ({
   getUserOrgContext: vi.fn(async () => ({ organizationId: 1 })),
+  requireOrgId: (context: any) => context.organizationId,
 }));
 
 vi.mock("@server/utils/organization-permissions.js", () => ({
@@ -62,6 +63,9 @@ vi.mock("@domain/mission/core/skill-generator.service.js", () => ({
   skillGeneratorService: { synthesizeFromIntervention },
 }));
 
+const accounts = vi.hoisted(() => ({ options: vi.fn(), clearPreference: vi.fn(), projectForRoom: vi.fn() }));
+vi.mock("../core/outbound-email-accounts.service.js", () => ({ outboundEmailAccounts: accounts }));
+
 async function buildApp() {
   const { default: router } = await import("./approvals.js");
   const app = express();
@@ -71,6 +75,24 @@ async function buildApp() {
 }
 
 describe("approvals route table", () => {
+  it("authorizes the approval before offering scoped sender identities", async () => {
+    approvalService.getById.mockResolvedValueOnce({ id: 99, toolArgs: { kind: "outbound_message", channel: "email", sessionKey: "room-a" } } as any);
+    accounts.projectForRoom.mockResolvedValue(7); accounts.options.mockResolvedValue({ accounts: [], preferredConnectorId: null });
+    const response = await request(await buildApp()).get("/api/approvals/99/email-accounts?organizationId=1");
+    expect(response.status).toBe(200); expect(response.headers["cache-control"]).toBe("no-store");
+    expect(approvalService.getById).toHaveBeenCalledWith(99, 1, "approver@example.com", 1, expect.anything());
+    expect(accounts.options).toHaveBeenCalledWith(1, "1", 7);
+  });
+  it("never offers sender accounts when approval access is denied", async () => {
+    approvalService.getById.mockRejectedValueOnce(Object.assign(new Error("Forbidden"), { status: 403 }));
+    const response = await request(await buildApp()).get("/api/approvals/99/email-accounts?organizationId=1");
+    expect(response.status).toBe(403); expect(accounts.options).not.toHaveBeenCalled();
+  });
+  it("forgets only the signed-in user's preference in the selected organization", async () => {
+    expect((await request(await buildApp()).delete("/api/approvals/email-sender/preference?organizationId=1")).status).toBe(204);
+    expect(accounts.clearPreference).toHaveBeenCalledWith(1, "1");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });

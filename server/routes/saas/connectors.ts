@@ -225,6 +225,7 @@ router.get("/connectors/microsoft/oauth/initiate", requireAuth, asyncHandler(asy
     const { url } = await microsoftOAuthAdapter.getAuthorizationUrl({
         organizationId,
         projectId,
+        ...(req.query.for === "email" ? { scopes: ["openid", "profile", "offline_access", "User.Read", "Files.ReadWrite.All", "Sites.ReadWrite.All", "Mail.Send"] } : {}),
         req,
         returnTo,
         customRedirectUri: connectorCallbackUri(req, MICROSOFT_OAUTH_CALLBACK),

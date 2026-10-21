@@ -94,18 +94,8 @@ export const GOOGLE_WORKSPACE_TOOLS: Record<string, ToolDefinition> = {
             is_html: z.boolean().optional().default(false).describe("Whether body is HTML"),
         }),
         execute: async (params, context) => {
-            const token = await getGoogleWorkspaceToken(context?.organizationId, context?.projectId, 'gmail_send');
-            if (!token) throw new Error("Gmail sending is not connected. Use connect_platform with platform gmail, or connect Gmail in Integrations.");
-            const contentType = params.is_html ? "text/html" : "text/plain";
-            const headers = [
-                `To: ${params.to}`,
-                `Subject: ${params.subject}`,
-                `Content-Type: ${contentType}; charset=utf-8`,
-                params.cc ? `Cc: ${params.cc}` : "",
-            ].filter(Boolean).join("\r\n");
-            const raw = Buffer.from(`${headers}\r\n\r\n${params.body}`).toString("base64url");
-            const data = await gmailRequest(token, "/users/me/messages/send", "POST", { raw });
-            return JSON.stringify({ id: data.id, threadId: data.threadId, sent: true });
+            const { CREW_TASK_PROPOSAL_TOOLS } = await import("./crew-task-proposal-tools.js");
+            return CREW_TASK_PROPOSAL_TOOLS.propose_outbound_message.execute({ channel: "email", to: params.to.split(",").map((v: string) => v.trim()), subject: params.subject, body: params.body, bodyFormat: params.is_html ? "html" : "plain", cc: params.cc?.split(",").map((v: string) => v.trim()), sendTool: "gmail_send", sensitivity: "requested_review", reason: "Confirm the Google or Microsoft account for this email." }, context);
         },
     },
 

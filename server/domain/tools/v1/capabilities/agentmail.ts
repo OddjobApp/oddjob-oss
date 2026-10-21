@@ -10,7 +10,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         idempotency: "none",
         label: "Send AgentMail Email",
         group: "Integrations",
-        description: "Send an outbound email from the configured AgentMail inbox. Supports rich styling, CC/BCC, and labels.",
+        description: "Send an Oddjob or room notification from its AgentMail inbox. For user-authored correspondence use send_email and confirm a Google or Microsoft sender.",
         parameters: z.object({
             to: z.union([z.string(), z.array(z.string())]).describe("Recipient email address or list of addresses"),
             subject: z.string().describe("Email subject line"),
@@ -69,7 +69,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         idempotency: "none",
         label: "Send Outbound Email",
         group: "Integrations",
-        description: "Send an outbound email via AgentMail. Specify recipient (to), subject, and body/text.",
+        description: "Draft a user-authored email for confirmation from a connected Google or Microsoft account. AgentMail is reserved for Oddjob and room notifications.",
         parameters: z.object({
             to: z.union([z.string(), z.array(z.string())]).describe("Recipient email address or list of addresses"),
             subject: z.string().describe("Email subject line"),
@@ -81,7 +81,8 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
             bcc: z.union([z.string(), z.array(z.string())]).optional().describe("BCC recipients")
         }),
         execute: async (params, context) => {
-            return AGENTMAIL_TOOLS.send_agentmail.execute(params, context);
+            const { CREW_TASK_PROPOSAL_TOOLS } = await import("./crew-task-proposal-tools.js");
+            return CREW_TASK_PROPOSAL_TOOLS.propose_outbound_message.execute({ channel: "email", to: params.to, subject: params.subject, body: params.html || params.text || params.body || params.message || "", bodyFormat: params.html ? "html" : "plain", cc: params.cc, bcc: params.bcc, sensitivity: "requested_review", reason: "Confirm the connected sender before sending; optionally remember this account." }, context);
         }
     },
     reply_agentmail: {

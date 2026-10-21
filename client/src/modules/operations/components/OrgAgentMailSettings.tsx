@@ -36,7 +36,7 @@ export function OrgAgentMailSettings({ organizationId }: { organizationId: numbe
         <CardHeader>
             <CardTitle>AgentMail</CardTitle>
             <p className="text-sm text-muted-foreground">Assign dedicated inboxes from the CREW room’s Integrations control. Room inboxes use explicit reads or heartbeat polling; the organization webhook covers the default inbox.</p>
-            <CardDescription>Connect a dedicated inbox for this organization’s agents. Email tools, replies to agents’ emails and heartbeat polling use this connection.</CardDescription>
+            <CardDescription>Connect the inbox and outbox for Oddjob and room notifications. User-authored email uses a confirmed Google or Microsoft account.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
             {status.isLoading && <p role="status">Loading AgentMail connection…</p>}

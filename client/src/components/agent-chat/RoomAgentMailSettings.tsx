@@ -24,7 +24,7 @@ export function RoomAgentMailSettings({ organizationId, sessionKey }: { organiza
             {status.isLoading && <p role="status">Loading inbox…</p>}
             {status.isError && <p role="alert">Unable to load this room’s inbox.</p>}
             {status.data && <p role="status" className="text-sm">{status.data.configured ? `Connected: ${status.data.inboxId}` : "No active inbox assigned"}</p>}
-            <p className="text-xs text-muted-foreground">This room uses its dedicated inbox. Credentials stay in Organization Settings. Assigning or removing an inbox does not create or delete it in AgentMail.</p>
+            <p className="text-xs text-muted-foreground">This inbox and outbox handle Oddjob and room notifications. User-authored email confirms a Google or Microsoft sender. Credentials stay in Organization Settings. Assigning or removing an inbox does not create or delete it in AgentMail.</p>
             {status.data?.canManage && (status.data.organizationConnected ? <form className="space-y-2" onSubmit={event => { event.preventDefault(); change.mutate("assign"); }}>
                 <label className="block text-sm">Inbox ID<Input value={inboxId} onChange={event => setInboxId(event.target.value)} required maxLength={320} placeholder="room@agentmail.to" /></label>
                 <p className="text-xs">Create a dedicated inbox in your <a className="underline" href="https://console.agentmail.to" target="_blank" rel="noreferrer">AgentMail account</a>, then paste its ID here. The organization key must have access to this inbox.</p>

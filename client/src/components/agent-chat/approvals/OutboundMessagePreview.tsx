@@ -14,7 +14,7 @@ export interface OutboundMessagePreviewProps {
   setIsEditingDraft: (editing: boolean) => void;
   isSubmitting: boolean;
   reason?: string;
-  outboundOutcome: { sent?: boolean; discarded?: boolean; error?: string } | null;
+  outboundOutcome: { sent?: boolean; discarded?: boolean; outcomeUnknown?: boolean; error?: string } | null;
 }
 
 export function OutboundMessagePreview({
@@ -57,6 +57,8 @@ export function OutboundMessagePreview({
                 <span className="text-xs text-foreground">{payload.cc.join(', ')}</span>
               </div>
             )}
+            {payload.bcc?.length > 0 && <div className="flex gap-3 px-3 py-2"><span className="w-12 shrink-0 text-muted-foreground">Bcc</span><span className="text-xs text-foreground">{payload.bcc.join(', ')}</span></div>}
+            {payload.bodyFormat === 'html' && <p className="px-3 py-2 text-xs text-muted-foreground">HTML email · source shown below for review</p>}
             <div className="flex gap-3 px-3 py-2">
               <span className="w-12 shrink-0 text-muted-foreground">Subject</span>
               {isEditingDraft && decision === 'pending' ? (
@@ -130,8 +132,9 @@ export function OutboundMessagePreview({
           </button>
         )}
       </div>
+      {(outboundOutcome as any)?.warning && <p role="status" className="mt-2 text-sm">{(outboundOutcome as any).warning}</p>}
       {outboundOutcome?.sent === false && (
-        <p role="alert" className="mt-2 text-red-700 dark:text-red-300">Delivery failed: {outboundOutcome.error}</p>
+        <p role="alert" className="mt-2 text-red-700 dark:text-red-300">{outboundOutcome.outcomeUnknown ? "Delivery status unknown: " : "Delivery failed: "}{outboundOutcome.error}</p>
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+import { EmailSenderPicker, type EmailSenderChoice } from "./approvals/EmailSenderPicker";
 import React, { useEffect, useState } from 'react';
 import { Gavel, ShieldCheck, X, Mail, Hash, Send, Calendar, CalendarCheck, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -74,7 +75,7 @@ export function InlineApprovalCard({
 
   /** Result of an approved outbound send, from the decision response or the
    * persisted row's sendResult after a reload. */
-  const [outboundOutcome, setOutboundOutcome] = useState<{ sent?: boolean; discarded?: boolean; error?: string } | null>(null);
+  const [outboundOutcome, setOutboundOutcome] = useState<{ sent?: boolean; discarded?: boolean; outcomeUnknown?: boolean; error?: string } | null>(null);
   /** A proposed pipeline run: running, then succeeded or failed (pipeline-run-proposals.ts). */
   const [pipelineRunOutcome, setPipelineRunOutcome] = useState<{ state?: string; status?: string; executionId?: number | null; error?: string } | null>(null);
   /** App record action execution result */
@@ -85,7 +86,7 @@ export function InlineApprovalCard({
   const [editedBody, setEditedBody] = useState<string | null>(null);
   const [editedSubject, setEditedSubject] = useState<string | null>(null);
   /** Draft fields as persisted on the approval row (post-edit), when fetched. */
-  const [serverDraft, setServerDraft] = useState<{ body?: string | null; subject?: string | null } | null>(null);
+  const [serverDraft, setServerDraft] = useState<{ body?: string | null; subject?: string | null; emailAccount?: EmailSenderChoice } | null>(null);
 
   const captchaScreenshot = context.screenshot || payload.screenshot;
   const kind = payload.kind || (isCaptcha ? 'captcha_solution' : (payload.type === 'mission_proposal' ? 'mission_proposal' : 'approval_request'));
@@ -95,6 +96,8 @@ export function InlineApprovalCard({
   const awaitingExecutive = kind === 'quickbooks_action' && payload.needsExecutiveApproval === true;
   const isOwnExecutiveRequest = awaitingExecutive && currentUserId != null && String(payload.proposedBy ?? '') === String(currentUserId);
   const isOutboundMessage = kind === 'outbound_message';
+  const isAuthoredEmail = isOutboundMessage && payload.channel !== 'slack' && !['send_agentmail', 'reply_agentmail'].includes(payload.sendTool ?? '');
+  const [emailAccount, setEmailAccount] = useState<EmailSenderChoice | null>(null);
   const outboundChannel = payload.channel === 'slack' ? 'slack' : 'email';
   const sensitivityLabels: Record<string, string> = {
     routine: 'Routine',
@@ -147,7 +150,7 @@ export function InlineApprovalCard({
         }
         if (stored?.kind === 'pipeline_run' && stored.outcome) setPipelineRunOutcome(stored.outcome);
         if (stored?.kind === 'outbound_message') {
-          setServerDraft({ body: stored.body, subject: stored.subject });
+          setServerDraft({ body: stored.body, subject: stored.subject, emailAccount: stored.emailAccount });
         }
       } catch {
         // The artifact's frozen state is better than an error banner here.
@@ -199,8 +202,10 @@ export function InlineApprovalCard({
           designStyleId: themeChoice.designStyleId,
           aiEmbellishment: themeChoice.aiEmbellishment,
         };
-      } else if (isOutboundMessage && dec === 'approved' && draftEdited) {
+      } else if (isOutboundMessage && dec === 'approved' && (draftEdited || isAuthoredEmail)) {
+        if (isAuthoredEmail && !emailAccount) { setError('Choose and confirm a connected sender before sending.'); setIsSubmitting(false); return; }
         modifiedOutput = {
+          ...(isAuthoredEmail ? { emailAccount } : {}),
           ...(editedBody != null && editedBody !== displayBody ? { body: editedBody } : {}),
           ...(editedSubject != null && editedSubject !== displaySubject ? { subject: editedSubject } : {}),
         };
@@ -314,7 +319,9 @@ export function InlineApprovalCard({
       ? 'Ready to send'
       : decision === 'rejected'
         ? 'Discarded'
-        : outboundOutcome?.sent === false
+        : outboundOutcome?.outcomeUnknown
+          ? 'Check Sent Items'
+          : outboundOutcome?.sent === false
           ? 'Send failed'
           : 'Sent'
     : decision === 'pending'
@@ -361,9 +368,10 @@ export function InlineApprovalCard({
       />
 
       <CrewCardBody>
+        {isAuthoredEmail && decision === 'pending' && persistedProposalId != null && <EmailSenderPicker key={`${persistedProposalId}:${approvalOrgId}:${currentUserId}`} url={approvalUrl('/email-accounts')} onChange={setEmailAccount} disabled={isSubmitting} />}
         {isOutboundMessage && (
           <OutboundMessagePreview
-            payload={payload}
+            payload={isAuthoredEmail ? { ...payload, from: emailAccount?.email ?? serverDraft?.emailAccount?.email ?? 'Choose a connected account' } : payload}
             outboundChannel={outboundChannel}
             decision={decision}
             displaySubject={displaySubject}
@@ -491,7 +499,7 @@ export function InlineApprovalCard({
             <Button
               type="button"
               size="sm"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (isAuthoredEmail && !emailAccount)}
               onClick={() => handleDecision('approved')}
               data-testid="approve-proposal-button"
             >

@@ -2,7 +2,7 @@
 import express from 'express';
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ configured: vi.fn(), authorize: vi.fn(), callback: vi.fn(), project: vi.fn() }));
+const mocks = vi.hoisted(() => ({ configured: vi.fn(), authorize: vi.fn(), callback: vi.fn(), project: vi.fn(), microsoft: vi.fn() }));
 vi.mock('@server/utils/auth-context.js', () => ({ getUserOrgContext: async () => ({ organizationId: 7 }), requireOrgId: (ctx: any) => ctx.organizationId }));
 vi.mock('@domain/core/auth/security.service.js', () => ({ requireAuth: (_req: any, _res: any, next: any) => next() }));
 vi.mock('@server/database_service.js', () => ({ db: {} }));
@@ -12,7 +12,7 @@ vi.mock('@domain/core/infrastructure/redis/redis-client.js', () => ({ redis: nul
 vi.mock('@server/middleware/project-scope.js', () => ({ resolveProjectScope: mocks.project }));
 vi.mock('@domain/integrations/core/oauth/google-oauth.adapter.js', () => ({ googleOAuthAdapter: { isConfigured: mocks.configured, getAuthorizationUrl: mocks.authorize, handleCallback: mocks.callback } }));
 vi.mock('@domain/integrations/core/oauth/jira-oauth.adapter.js', () => ({ jiraOAuthAdapter: {} }));
-vi.mock('@domain/integrations/core/oauth/microsoft-oauth.adapter.js', () => ({ microsoftOAuthAdapter: {} }));
+vi.mock('@domain/integrations/core/oauth/microsoft-oauth.adapter.js', () => ({ microsoftOAuthAdapter: { getAuthorizationUrl: mocks.microsoft } }));
 import router from './connectors.js';
 function app() {
   const server = express();
@@ -21,9 +21,18 @@ function app() {
   return server;
 }
 describe('Mounted Google adapter flow', () => {
+  it('requests Microsoft Mail.Send only through explicit email consent', async () => {
+    expect((await request(app()).get('/api/saas/connectors/microsoft/oauth/initiate?for=email')).status).toBe(302);
+    expect(mocks.microsoft).toHaveBeenCalledWith(expect.objectContaining({ organizationId: 7, scopes: expect.arrayContaining(['Mail.Send', 'User.Read', 'Files.ReadWrite.All']) }));
+  });
+  it('leaves the default Microsoft document consent unchanged', async () => {
+    expect((await request(app()).get('/api/saas/connectors/microsoft/oauth/initiate')).status).toBe(302);
+    expect(mocks.microsoft.mock.calls[0][0]).not.toHaveProperty('scopes');
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.configured.mockReturnValue(true);
+    mocks.microsoft.mockResolvedValue({ url: "https://login.microsoftonline.com/consent" });
     mocks.authorize.mockResolvedValue({ url: 'https://accounts.google.com/consent' });
     mocks.project.mockResolvedValue({ id: 12 });
     mocks.callback.mockResolvedValue({ returnTo: '/projects/billing' });

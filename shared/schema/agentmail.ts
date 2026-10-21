@@ -1,6 +1,7 @@
 import { crewSessions } from "./crew.js";
 import { pgTable, integer, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
-import { orgs } from "./auth.js";
+import { saasConnectors } from "./integrations.js";
+import { users, orgs } from "./auth.js";
 
 /** Public connection metadata only. Secrets live in encrypted_credentials. */
 export const agentmailConnections = pgTable("agentmail_connections", {
@@ -31,3 +32,13 @@ export const agentmailRoomInboxes = pgTable("agentmail_room_inboxes", {
     inboxId: text("inbox_id").notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, table => ({ inboxUnique: uniqueIndex("agentmail_room_inboxes_inbox_unique").on(table.inboxId) }));
+
+/** User consent to reuse a sender, scoped to this organization; never consent to auto-send. */
+export const outboundEmailPreferences = pgTable("outbound_email_preferences", {
+    organizationId: integer("organization_id").notNull().references(() => orgs.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    connectorId: integer("connector_id").references(() => saasConnectors.id, { onDelete: "set null" }),
+    email: text("email").notNull(),
+    provider: text("provider").$type<"google" | "microsoft">().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, t => ({ pk: primaryKey({ columns: [t.organizationId, t.userId] }) }));
