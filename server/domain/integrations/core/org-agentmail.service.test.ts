@@ -55,6 +55,15 @@ describe("organization AgentMail boundary", () => {
         await expect(orgAgentMailService.connect(9, { inboxId: "nine@agentmail.to", apiKey: "invalid-key" })).rejects.toThrow("verify access");
         expect(mocks.transaction).not.toHaveBeenCalled();
     });
+    it("rejects invalid header characters before sending or storing a key", async () => {
+        await expect(orgAgentMailService.connect(9, { inboxId: "nine@agentmail.to", apiKey: "private-key\r\ninjected" })).rejects.toThrow("valid AgentMail");
+        expect(mocks.fetch).not.toHaveBeenCalled(); expect(mocks.transaction).not.toHaveBeenCalled();
+    });
+    it("never forwards transport errors that might contain a credential", async () => {
+        mocks.fetch.mockRejectedValue(new Error("Bearer private-key is an invalid header value"));
+        await expect(orgAgentMailService.connect(9, { inboxId: "nine@agentmail.to", apiKey: "private-key" })).rejects.toThrow("connection check failed");
+        expect(mocks.transaction).not.toHaveBeenCalled();
+    });
     it("rejects an API response for a different inbox", async () => {
         mocks.fetch.mockResolvedValue({ ok: true, json: async () => ({ inbox_id: "other@agentmail.to" }) });
         await expect(orgAgentMailService.connect(9, { inboxId: "nine@agentmail.to", apiKey: "key" })).rejects.toThrow("different inbox");

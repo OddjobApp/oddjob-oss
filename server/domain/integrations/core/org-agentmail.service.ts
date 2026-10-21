@@ -8,7 +8,7 @@ import { BadRequestError } from "@server/utils/errors.js";
 
 const inputSchema = z.object({
     inboxId: z.string().trim().min(1).max(320).regex(/^[a-zA-Z0-9@._+-]+$/),
-    apiKey: z.string().trim().min(1).max(16_384),
+    apiKey: z.string().trim().min(1).max(16_384).regex(/^[\x21-\x7e]+$/),
 }).strict();
 
 export function requireAgentMailOrg(organizationId: unknown): number {
@@ -52,11 +52,18 @@ export const orgAgentMailService = {
         if (!parsed.success) throw new BadRequestError("Enter a valid AgentMail inbox ID and API key");
         const { inboxId, apiKey } = parsed.data;
         // Verify access without sending mail, provisioning billable resources, or trusting a supplied URL.
-        const response = await fetch(`https://api.agentmail.to/v0/inboxes/${encodeURIComponent(inboxId)}`, {
-            headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(15_000),
-        });
+        let response: Response;
+        try {
+            response = await fetch(`https://api.agentmail.to/v0/inboxes/${encodeURIComponent(inboxId)}`, {
+                headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(15_000),
+            });
+        } catch {
+            throw new BadRequestError("AgentMail connection check failed; check your credentials and retry");
+        }
         if (!response.ok) throw new BadRequestError("AgentMail could not verify access to this inbox");
-        const inbox = await response.json() as { inbox_id?: unknown };
+        let inbox: { inbox_id?: unknown };
+        try { inbox = await response.json() as { inbox_id?: unknown }; }
+        catch { throw new BadRequestError("AgentMail returned an invalid inbox response"); }
         if (inbox.inbox_id !== inboxId) throw new BadRequestError("AgentMail returned a different inbox ID");
         const encryptedData = encrypt(apiKey, encryptedCredentialOwner(ref(orgId))!);
         try {

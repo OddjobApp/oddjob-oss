@@ -135,11 +135,11 @@ export class AgentMailService {
             signal: AbortSignal.timeout(15_000),
         });
 
-        const json = await res.json() as any;
         if (!res.ok) {
             throw new Error(`AgentMail API error [${res.status}]`);
         }
-        return json as T;
+        try { return await res.json() as T; }
+        catch { throw new Error("AgentMail returned an invalid response"); }
     }
 
     // ── Send ────────────────────────────────────────────────────────────────
