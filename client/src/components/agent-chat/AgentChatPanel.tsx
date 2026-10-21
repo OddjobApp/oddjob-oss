@@ -1,3 +1,4 @@
+import { RoomAgentMailSettings } from "./RoomAgentMailSettings";
 import { CrewContextTray } from './CrewContextTray';
 import { GoogleWorkspaceIcon } from './GoogleWorkspaceIcon';
 import { activeAgentSelectionKey, loadActiveAgentSelection } from './active-agent-selection';
@@ -1238,7 +1239,7 @@ export function AgentChatPanel({
     >
       {/* Crew Header (Agent Bar & Participants) — rendered in normal flow within the main layout scroller so it tracks left navigation expand/collapse transitions synchronously without layout lag or overlap. */}
       <CrewHeaderBar
-        appStudioControl={<BlueprintStudioLauncher organizationId={appStudioOrgId} onMount={(apps) => { setBlueprintStudioApps(apps); setActiveCanvasAppId(apps[0].id); setIsTabbedRailCollapsed(true); setIsMediaRailCollapsed(true); setIsCanvasOpen(true); }} />}
+        appStudioControl={<>{session?.organizationId != null && <RoomAgentMailSettings key={`${session.organizationId}:${currentRoomKey}`} organizationId={session.organizationId} sessionKey={currentRoomKey} />}<BlueprintStudioLauncher organizationId={appStudioOrgId} onMount={(apps) => { setBlueprintStudioApps(apps); setActiveCanvasAppId(apps[0].id); setIsTabbedRailCollapsed(true); setIsMediaRailCollapsed(true); setIsCanvasOpen(true); }} /></>}
         headerRef={headerRef}
         breakoutLineage={breakoutLineage}
         cycleFleetData={cycleFleetData}

@@ -26,7 +26,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params: any, context?: any) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const mail = await agentMailService.forContext(requireToolOrgId(context), context?.sessionKey);
                 const toList = Array.isArray(params.to) ? params.to : [params.to];
                 const contentText = params.text || params.body || params.message || "";
 
@@ -101,7 +101,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params, context) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const mail = await agentMailService.forContext(requireToolOrgId(context), context?.sessionKey);
                 const result = await mail.reply(params.messageId, {
                     text: params.text,
                     html: params.html,
@@ -129,7 +129,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params, context) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const mail = await agentMailService.forContext(requireToolOrgId(context), context?.sessionKey);
                 const result = await mail.listThreads(params.limit);
                 return JSON.stringify(result, null, 2);
             } catch (err: any) {
@@ -150,7 +150,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params, context) => {
             try {
-                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const mail = await agentMailService.forContext(requireToolOrgId(context), context?.sessionKey);
                 const result = await mail.getThread(params.threadId);
                 return JSON.stringify(result, null, 2);
             } catch (err: any) {

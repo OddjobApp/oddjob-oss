@@ -1,3 +1,4 @@
+import { crewSessions } from "./crew.js";
 import { pgTable, integer, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { orgs } from "./auth.js";
 
@@ -22,3 +23,11 @@ export const agentmailWebhookEvents = pgTable("agentmail_webhook_events", {
 }, (table) => ({
     pk: primaryKey({ columns: [table.organizationId, table.eventId] }),
 }));
+
+/** A mailbox is assigned to exactly one room; credentials stay organization-owned. */
+export const agentmailRoomInboxes = pgTable("agentmail_room_inboxes", {
+    sessionId: integer("session_id").primaryKey().references(() => crewSessions.id, { onDelete: "cascade" }),
+    organizationId: integer("organization_id").notNull().references(() => orgs.id, { onDelete: "cascade" }),
+    inboxId: text("inbox_id").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => ({ inboxUnique: uniqueIndex("agentmail_room_inboxes_inbox_unique").on(table.inboxId) }));

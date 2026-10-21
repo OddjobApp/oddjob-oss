@@ -48,3 +48,14 @@ The former shared `/api/integrations/agentmail/webhook` endpoint returns 410 in 
 Organization selection goes through `getUserOrgContext` and membership authorization. A supplied org ID is never treated as authorization by itself.
 
 Provider references: [AgentMail multi-tenancy](https://www.agentmail.to/docs/multi-tenancy), [get inbox](https://docs.agentmail.to/api-reference/inboxes/get), [get inbox thread](https://docs.agentmail.to/api-reference/inboxes/threads/get), [create webhook](https://docs.agentmail.to/api-reference/webhooks/create), [webhook events](https://docs.agentmail.to/events), [webhook verification](https://docs.agentmail.to/webhook-verification).
+
+## Dedicated room inboxes
+
+1. An organization administrator connects its own AgentMail key and default inbox in **Settings → AgentMail**. Use an account/Pod limited to this organization. A key limited to one inbox cannot access additional room inboxes.
+2. Create a separate inbox explicitly in the AgentMail console. Oddjob does not automatically create provider resources.
+3. Open the saved CREW room and choose **Integrations** in the chat header. Enter that inbox ID and choose **Verify and assign**. The server verifies access using the encrypted organization key.
+4. Room email tools use that assigned inbox. An unassigned room fails closed rather than using the default inbox. Non-room tools continue using the organization default. Heartbeat polling can select the same mapping with `sourceConfig.sessionKey`; this does not automatically create a heartbeat trigger or ingest replies into the room.
+
+Only organization administrators can change assignments. Room reads reuse CREW's organization/project access checks. No secret is exposed in the room UI. Each inbox can belong to only one room and cannot also be an organization default. Removing an assignment does not delete the inbox or its mail at AgentMail. Disconnecting organization credentials disables all room mail access until the organization reconnects.
+
+Apply `0156_room_agentmail.sql` after `0155_org_agentmail_webhooks.sql`. The migration journal includes both. Database triggers enforce exclusive mailbox ownership across organization defaults and room mappings, including concurrent writes. The existing organization webhook remains limited to the organization default inbox; room inboxes use explicit reads or heartbeat polling. Automatic room-inbox delivery is not enabled by this change.

@@ -1,3 +1,4 @@
+import { roomAgentMailService } from "@domain/integrations/core/room-agentmail.service.js";
 import { workspaceContextMessage } from '@shared/crew-workspace-results.js';
 import { financialSnapshotsService } from '../core/financial-snapshots.service.js';
 import { resolveWorkspaceSelection } from '../core/crew-workspace-results.js';
@@ -67,6 +68,31 @@ const attachmentUpload = multer({
 });
 
 router.use(requireAuth);
+// Reuse the room/project authorization boundary for every mailbox operation.
+router.get('/:sessionKey/integrations/agentmail', asyncHandler(async (req: Request, res: Response) => {
+    const context = await getUserOrgContext(req);
+    const orgId = requireOrgId(context);
+    await authorizeRoom(req, orgId, req.params.sessionKey);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ ...await roomAgentMailService.status(orgId, req.params.sessionKey), canManage: context.isOrgAdmin || context.isSuperAdmin });
+}));
+router.put('/:sessionKey/integrations/agentmail', asyncHandler(async (req: Request, res: Response) => {
+    const context = await getUserOrgContext(req);
+    const orgId = requireOrgId(context);
+    await authorizeRoom(req, orgId, req.params.sessionKey);
+    if (!context.isOrgAdmin && !context.isSuperAdmin) throw new ForbiddenError('Organization administrator required');
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(await roomAgentMailService.assign(orgId, req.params.sessionKey, req.body));
+}));
+router.delete('/:sessionKey/integrations/agentmail', asyncHandler(async (req: Request, res: Response) => {
+    const context = await getUserOrgContext(req);
+    const orgId = requireOrgId(context);
+    await authorizeRoom(req, orgId, req.params.sessionKey);
+    if (!context.isOrgAdmin && !context.isSuperAdmin) throw new ForbiddenError('Organization administrator required');
+    await roomAgentMailService.disconnect(orgId, req.params.sessionKey);
+    res.status(204).send();
+}));
+
 router.get('/:sessionKey/development-binding', asyncHandler(async (req: Request, res: Response) => {
     const orgId = requireOrgId(await getUserOrgContext(req));
     const room = await authorizeRoom(req, orgId, req.params.sessionKey);

@@ -90,6 +90,12 @@ export class AgentMailService {
         return new AgentMailService(await orgAgentMailService.resolve(organizationId));
     }
 
+    async forContext(organizationId: number, sessionKey?: string): Promise<AgentMailService> {
+        if (sessionKey === undefined) return this.forOrg(organizationId);
+        const { roomAgentMailService } = await import("./room-agentmail.service.js");
+        return new AgentMailService(await roomAgentMailService.resolve(organizationId, sessionKey));
+    }
+
     getInboxId(): string { return this.inbox; }
 
     async getInboxAddress(): Promise<string> {
