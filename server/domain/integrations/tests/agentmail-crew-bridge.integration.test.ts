@@ -1,12 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { agentMailThreadSync } from "../core/agentmail-thread-sync.service.js";
 import { db } from "@server/database_service.js";
 import { crewSessions, crewTurns } from "@shared/schema/index.js";
 import { eq } from "drizzle-orm";
+import { ensureFixtureOrgs } from "../../../../tests/helpers/fixture-orgs.js";
 
 // Delivery itself (per-organization webhooks, signatures, the retired shared
 // endpoint) is covered by org-agentmail-webhook.integration.test.ts.
 describe("AgentMail to CREW Bridge", () => {
+    // A linked thread is recorded against its organization, which must exist.
+    beforeAll(() => ensureFixtureOrgs([[342, "AgentMail CREW bridge"]]));
+
     it("links thread to CREW session, finds it, and routes an inbound email reply", async () => {
         const testSessionKey = `test-crew-email-${Date.now()}`;
         const testThreadId = `test-thread-${Date.now()}`;

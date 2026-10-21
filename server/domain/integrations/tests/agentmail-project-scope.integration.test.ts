@@ -166,6 +166,19 @@ describe("AgentMail threads are scoped to their project", () => {
         expect(rows[0].projectId).toBe(privateProject);
     });
 
+    it("reports a send that went out as sent, even if its project could not be recorded", async () => {
+        sent.length = 0;
+        const record = vi.spyOn(agentMailThreadScope, "record").mockRejectedValueOnce(new Error("database unavailable"));
+        const result = await AGENTMAIL_TOOLS.send_agentmail.execute(
+            { to: "x@example.com", subject: "s", text: "t" },
+            { ...member, projectId: privateProject },
+        );
+        record.mockRestore();
+        // Reporting it as failed would invite the agent to send the same email again.
+        expect(result).toMatch(/^Email sent successfully/);
+        expect(sent).toHaveLength(1);
+    });
+
     it("migration backfills threads already linked to project rooms", async () => {
         const [room] = await db.insert(crewSessions).values({
             organizationId: ORG, sessionKey: `old-room-${randomUUID()}`, title: "Old room", status: "active", mode: "explore",

@@ -206,7 +206,7 @@ export class EscalationService {
                                 });
                                 // The alert is about this mission, so its thread is the mission's project's.
                                 if (sent?.thread_id) {
-                                    await agentMailThreadScope.recordForMissionRun(Number(run.organizationId), sent.thread_id, run.id);
+                                    await agentMailThreadScope.recordAfterSend(Number(run.organizationId), sent.thread_id, { missionRunId: run.id });
                                 }
                             }
                             logger.info(`[EscalationService] Emails sent via AgentMail to: ${recipients.join(", ")}`);

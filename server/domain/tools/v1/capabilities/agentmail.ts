@@ -54,13 +54,13 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
 
                 // A thread started from a project's room or mission is that project's.
                 if (result.thread_id && context?.projectId) {
-                    await agentMailThreadScope.record(orgId, result.thread_id, {
+                    await agentMailThreadScope.recordAfterSend(orgId, result.thread_id, {
                         projectId: Number(context.projectId),
                         crewSessionId: context?.sessionId ?? null,
                         missionRunId: context?.missionRunId ?? null,
                     });
                 } else if (result.thread_id && context?.missionRunId) {
-                    await agentMailThreadScope.recordForMissionRun(orgId, result.thread_id, Number(context.missionRunId));
+                    await agentMailThreadScope.recordAfterSend(orgId, result.thread_id, { missionRunId: Number(context.missionRunId) });
                 }
 
                 if (context?.sessionKey && result.thread_id) {

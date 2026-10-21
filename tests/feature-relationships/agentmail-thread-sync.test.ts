@@ -29,6 +29,11 @@ vi.mock('@domain/mission/core/mission-run.service.js', () => ({
     },
 }));
 
+const mockScope = vi.hoisted(() => ({ recordForMissionRun: vi.fn(), recordForCrewSession: vi.fn() }));
+vi.mock('../../server/domain/integrations/core/agentmail-thread-scope.service.js', () => ({
+    agentMailThreadScope: mockScope,
+}));
+
 vi.mock('@domain/mission/infrastructure/rolling-wave-queue.js', () => ({
     scheduleMissionWave: vi.fn().mockResolvedValue(undefined),
 }));
@@ -39,7 +44,16 @@ describe('AgentMail Thread Sync Service', () => {
     });
 
     describe('linkThreadToMission', () => {
+        const missionOwner = (rows: Array<{ organizationId: number | null }>) => mockDbSelect.mockReturnValue({
+            from: vi.fn().mockReturnValue({
+                innerJoin: vi.fn().mockReturnValue({
+                    where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue(rows) }),
+                }),
+            }),
+        });
+
         it('should update mission context with thread-mission link', async () => {
+            missionOwner([{ organizationId: 7 }]);
             mockDbUpdate.mockReturnValue({
                 set: vi.fn().mockReturnValue({
                     where: vi.fn().mockResolvedValue(undefined),
@@ -48,7 +62,19 @@ describe('AgentMail Thread Sync Service', () => {
 
             await agentMailThreadSync.linkThreadToMission('thread_123', 5, 'user@example.com');
 
-            expect(mockDbUpdate).toHaveBeenCalled();
+            // The thread is placed in the mission's project before the link is written.
+            expect(mockScope.recordForMissionRun).toHaveBeenCalledWith(7, 'thread_123', 5);
+            expect(mockScope.recordForMissionRun.mock.invocationCallOrder[0])
+                .toBeLessThan(mockDbUpdate.mock.invocationCallOrder[0]);
+        });
+
+        it('should not link a thread to a mission run with no organization', async () => {
+            missionOwner([]);
+
+            await agentMailThreadSync.linkThreadToMission('thread_123', 5, 'user@example.com');
+
+            expect(mockScope.recordForMissionRun).not.toHaveBeenCalled();
+            expect(mockDbUpdate).not.toHaveBeenCalled();
         });
 
         it('should update mission blackboard with thread info', async () => {

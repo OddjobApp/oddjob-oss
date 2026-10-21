@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ forOrg: vi.fn(), send: vi.fn(), listThreads: v
 vi.mock("../../domain/integrations/core/agentmail.service.js", () => ({ agentMailService: { forOrg: mocks.forOrg } }));
 // Project scoping has its own integration suite; here every thread is readable.
 vi.mock("../../domain/integrations/core/agentmail-thread-scope.service.js", () => ({
-    agentMailThreadScope: { assertReadable: vi.fn(), filterThreads: vi.fn(async (_ctx: unknown, threads: unknown[]) => threads), readableFilter: vi.fn(async () => () => true), record: vi.fn(), recordForMissionRun: vi.fn() },
+    agentMailThreadScope: { assertReadable: vi.fn(), filterThreads: vi.fn(async (_ctx: unknown, threads: unknown[]) => threads), readableFilter: vi.fn(async () => () => true), record: vi.fn(), recordForMissionRun: vi.fn(), recordAfterSend: vi.fn() },
     threadScopeCtx: (_context: unknown, organizationId: number) => ({ organizationId }),
 }));
 import { handleAgentMailSend, handleAgentMailListThreads, handleAgentMailGetThread } from "./agentmail.js";

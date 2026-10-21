@@ -70,6 +70,20 @@ export const agentMailThreadScope = {
             });
     },
 
+    /**
+     * record() for a thread whose mail has already gone out. The send stands either
+     * way, so a failure here must not be reported as a failed send (an agent would
+     * send it again); it is logged as an error, because the thread is left unscoped.
+     */
+    async recordAfterSend(organizationId: number, threadId: string, link: ThreadLink | { missionRunId: number }): Promise<void> {
+        try {
+            if ("projectId" in link && link.projectId != null) await this.record(organizationId, threadId, link);
+            else if (link.missionRunId != null) await this.recordForMissionRun(organizationId, threadId, link.missionRunId);
+        } catch (err: any) {
+            logger.error(`[ThreadScope] Sent on thread ${threadId} but could not record its project; it is visible org-wide: ${err.message}`);
+        }
+    },
+
     /** Record a thread started from a CREW room, under the room's project. */
     async recordForCrewSession(organizationId: number, threadId: string, sessionId: number): Promise<void> {
         const orgId = assertOrgId(organizationId);
