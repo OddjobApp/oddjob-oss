@@ -16,6 +16,8 @@ export function encryptedCredentialOwner(row: {
     credentialType: string;
 }): string | null {
     switch (row.entityType) {
+        case "organization_agentmail":
+            return `organization_agentmail:${row.organizationId}:${row.credentialType}`;
         // Org AI connections: Gemini (org-model.service) and fal.ai (org-fal-key.service).
         case "organization_ai":
             return `organization_ai:${row.organizationId}:${row.credentialType}`;

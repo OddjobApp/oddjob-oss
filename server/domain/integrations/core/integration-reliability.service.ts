@@ -10,13 +10,13 @@ function build(input: Omit<IntegrationAssessment, "health">): IntegrationAssessm
   return { ...input, health: !input.configured ? "unavailable" : input.checks.every((check) => check.passed) ? "healthy" : "attention" };
 }
 export class IntegrationReliabilityService {
-  getAssessments(): IntegrationAssessment[] {
+  getAssessments(agentmailConfigured = false): IntegrationAssessment[] {
     const credentialAction = { label: "Manage credentials", href: "/connections/credentials" };
     const connectorAction = { label: "Configure connector", href: "/connections/saas" };
     const slack = hasAny("SLACK_BOT_TOKEN", "SLACK_CLIENT_ID");
     const teams = hasAny("MICROSOFT_APP_ID", "TEAMS_APP_ID");
     const discord = hasAny("DISCORD_PUBLIC_KEY", "DISCORD_BOT_TOKEN");
-    const agentmail = hasAny("AGENTMAIL_API_KEY");
+    const agentmail = agentmailConfigured;
     const jira = hasAny("JIRA_API_TOKEN", "ATLASSIAN_API_TOKEN");
     const github = hasAny("GITHUB_TOKEN", "GITHUB_APP_ID");
     return [
@@ -32,10 +32,9 @@ export class IntegrationReliabilityService {
         { label: "Credentials", passed: discord, detail: discord ? "Application credentials detected" : "Add Discord application credentials" },
         { label: "Signature verification", passed: false, detail: "Ed25519 verification is not production-ready" },
       ], nextAction: credentialAction }),
-      build({ id: "agentmail", name: "AgentMail", category: "productivity", configured: agentmail, security: agentmail && hasAny("AGENTMAIL_WEBHOOK_SECRET") ? "verified" : agentmail ? "partial" : "not-configured", capabilities: ["Inbound email", "Approval replies", "Thread sync"], checks: [
-        { label: "API access", passed: agentmail, detail: agentmail ? "API key detected" : "Add an AgentMail API key" },
-        { label: "Webhook verification", passed: hasAny("AGENTMAIL_WEBHOOK_SECRET"), detail: hasAny("AGENTMAIL_WEBHOOK_SECRET") ? "HMAC secret configured" : "Add a webhook secret" },
-      ], nextAction: credentialAction }),
+      build({ id: "agentmail", name: "AgentMail", category: "productivity", configured: agentmail, security: agentmail ? "verified" : "not-configured", capabilities: ["Email tools", "Organization inbox polling"], checks: [
+        { label: "Organization connection", passed: agentmail, detail: agentmail ? "Dedicated inbox connected with encrypted credentials" : "Connect this organization's inbox in Settings" },
+      ], nextAction: { label: "Configure AgentMail", href: "/settings" } }),
       build({ id: "jira", name: "Jira", category: "productivity", configured: jira, security: jira ? "verified" : "not-configured", capabilities: ["Issues", "Projects", "Workflow actions"], checks: [
         { label: "API access", passed: jira, detail: jira ? "API credentials detected" : "Add Atlassian API credentials" },
       ], nextAction: connectorAction }),

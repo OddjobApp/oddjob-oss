@@ -13,6 +13,7 @@ import { TrycuaSessionViewer } from "./TrycuaSessionViewer";
 import { BillingSettingsSection } from "./BillingSettingsSection";
 import { OrgModelSettings } from "./OrgModelSettings";
 import { OrgFalSettings } from "./OrgFalSettings";
+import { OrgAgentMailSettings } from "./OrgAgentMailSettings";
 import { useAuth } from "@domain-ui/auth/ui/modules/auth/hooks/use-auth";
 
 export function SettingsPanel() {
@@ -77,6 +78,7 @@ export function SettingsPanel() {
 
             {/* Commercial Billing & Subscription Section */}
             <BillingSettingsSection />
+            {settings?.organizationId && <OrgAgentMailSettings key={`agentmail-${settings.organizationId}`} organizationId={settings.organizationId} />}
             {settings?.organizationId && <OrgModelSettings key={settings.organizationId} organizationId={settings.organizationId} />}
             {settings?.organizationId && <OrgFalSettings key={`fal-${settings.organizationId}`} organizationId={settings.organizationId} />}
 

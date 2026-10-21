@@ -28,23 +28,22 @@ export interface HeartbeatItem {
 export async function pollAgentMailInbox(
     lastItemId: string | null,
     config: Record<string, unknown>,
+    organizationId?: number | null,
 ): Promise<HeartbeatItem[]> {
     const { agentMailService } = await import(
         "../domain/integrations/core/agentmail.service.js"
     );
-    if (!agentMailService.isConfigured()) {
-        logger.warn("email heartbeat trigger active but AgentMail is not configured");
-        return [];
+    if (!Number.isSafeInteger(organizationId) || !organizationId || organizationId <= 0) {
+        throw new Error("Organization context required for AgentMail polling");
     }
-
-    const limit = Number(config.limit) || 25;
-    const { messages } = await agentMailService.listMessages(limit);
-    const ownAddress = (process.env.AGENTMAIL_INBOX ?? "").toLowerCase();
-
+    const mail = await agentMailService.forOrg(organizationId);
+    const limit = Math.min(100, Math.max(1, Number(config.limit) || 25));
+    const { messages } = await mail.listMessages(limit);
+    const ownAddress = await mail.getInboxAddress();
     const watermark = lastItemId ?? fallbackSince(config);
     const fresh = (messages ?? [])
         // Inbound only — our own outbound sends are not work items.
-        .filter((m) => m.from?.toLowerCase() !== ownAddress)
+        .filter((m) => (m.from?.match(/<([^>]+)>/)?.[1] ?? m.from)?.trim().toLowerCase() !== ownAddress)
         .filter((m) => !watermark || m.created_at > watermark)
         .map((m) => ({
             id: m.created_at,
@@ -188,7 +187,7 @@ export async function pollHeartbeatSource(
 ): Promise<HeartbeatItem[]> {
     switch (sourceType) {
         case "email":
-            return pollAgentMailInbox(lastItemId, sourceConfig);
+            return pollAgentMailInbox(lastItemId, sourceConfig, orgId);
         case "rss":
             return pollRssFeed(lastItemId, sourceConfig);
         case "jira":

@@ -30,13 +30,11 @@ export async function registerIntegrationRoutes(app: Express) {
     app.use("/api/integrations/jira", jiraRouter);
 
     // --- AgentMail (inbound email + HIL reply processing) ---
+    const { default: orgAgentMailRouter } = await import("../../domain/integrations/routes/org-agentmail.js");
+    app.use("/api/integrations/agentmail", orgAgentMailRouter);
+    app.use("/api/agentmail", orgAgentMailRouter);
     const { default: agentMailRouter } = await import("../../domain/integrations/routes/agentmail.js");
-    // Capture raw body for HMAC signature verification before JSON parsing
-    app.use("/api/integrations/agentmail/webhook", (req, _res, next) => {
-        let data = Buffer.alloc(0);
-        req.on("data", (chunk: Buffer) => { data = Buffer.concat([data, chunk]); });
-        req.on("end", () => { (req as any).rawBody = data; next(); });
-    });
+    // The global JSON parser already captures rawBody; do not consume an ended stream here.
     app.use("/api/integrations/agentmail", agentMailRouter);
 
     // --- Trycua computer-use sessions ---

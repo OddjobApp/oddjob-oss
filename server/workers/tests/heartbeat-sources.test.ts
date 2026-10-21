@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@server/database_service.js", () => ({ db: {} }));
 vi.mock("../../domain/integrations/core/agentmail.service.js", () => ({
     agentMailService: {
+        forOrg: vi.fn(async () => agentMailService),
+        getInboxAddress: vi.fn(async () => "oddjobapp@agentmail.to"),
         isConfigured: vi.fn(() => true),
         listMessages: vi.fn(),
     },
@@ -64,12 +66,12 @@ describe("pollAgentMailInbox", () => {
             count: 3,
             messages: [
                 { message_id: "m3", thread_id: "t", from: "dana@x.io", to: [], subject: "New", created_at: "2025-10-02T00:00:00Z" },
-                { message_id: "m2", thread_id: "t", from: "oddjobapp@agentmail.to", to: [], subject: "Our reply", created_at: "2025-10-01T12:00:00Z" },
+                { message_id: "m2", thread_id: "t", from: "Oddjob <oddjobapp@agentmail.to>", to: [], subject: "Our reply", created_at: "2025-10-01T12:00:00Z" },
                 { message_id: "m1", thread_id: "t", from: "dana@x.io", to: [], subject: "Old", created_at: "2025-10-01T00:00:00Z" },
             ],
         } as any);
 
-        const items = await pollAgentMailInbox("2025-10-01T00:00:00Z", {});
+        const items = await pollAgentMailInbox("2025-10-01T00:00:00Z", {}, 7);
         expect(items).toHaveLength(1);
         expect(items[0].id).toBe("2025-10-02T00:00:00Z");
         expect(items[0].subject).toBe("New");

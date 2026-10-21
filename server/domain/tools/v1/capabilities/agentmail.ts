@@ -26,14 +26,11 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         }),
         execute: async (params: any, context?: any) => {
             try {
-                if (!agentMailService.isConfigured()) {
-                    return "Error: AgentMail is not configured (missing AGENTMAIL_API_KEY or AGENTMAIL_INBOX).";
-                }
-
+                const mail = await agentMailService.forOrg(requireToolOrgId(context));
                 const toList = Array.isArray(params.to) ? params.to : [params.to];
                 const contentText = params.text || params.body || params.message || "";
 
-                const result = await agentMailService.send({
+                const result = await mail.send({
                     to: toList,
                     subject: params.subject,
                     text: contentText,
@@ -62,7 +59,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
 
                 return `Email sent successfully to ${toList.join(", ")}. Message ID: ${result.message_id}, Thread ID: ${result.thread_id}`;
             } catch (err: any) {
-                return `Failed to send email via AgentMail: ${err.message}`;
+                return `Error: Failed to send email via AgentMail: ${err.message}`;
             }
         }
     },
@@ -102,9 +99,10 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
             replyAll: z.boolean().optional().describe("Whether to reply to all original recipients"),
             clientId: z.string().optional().describe("Optional unique client ID for idempotency")
         }),
-        execute: async (params) => {
+        execute: async (params, context) => {
             try {
-                const result = await agentMailService.reply(params.messageId, {
+                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const result = await mail.reply(params.messageId, {
                     text: params.text,
                     html: params.html,
                     cc: params.cc,
@@ -114,7 +112,7 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
                 });
                 return `Reply sent successfully. Message ID: ${result.message_id}, Thread ID: ${result.thread_id}`;
             } catch (err: any) {
-                return `Failed to reply via AgentMail: ${err.message}`;
+                return `Error: Failed to reply via AgentMail: ${err.message}`;
             }
         }
     },
@@ -129,12 +127,13 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         parameters: z.object({
             limit: z.number().optional().default(10).describe("Number of threads to retrieve")
         }),
-        execute: async (params) => {
+        execute: async (params, context) => {
             try {
-                const result = await agentMailService.listThreads(params.limit);
+                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const result = await mail.listThreads(params.limit);
                 return JSON.stringify(result, null, 2);
             } catch (err: any) {
-                return `Failed to list AgentMail threads: ${err.message}`;
+                return `Error: Failed to list AgentMail threads: ${err.message}`;
             }
         }
     },
@@ -149,12 +148,13 @@ export const AGENTMAIL_TOOLS: Record<string, ToolDefinition> = {
         parameters: z.object({
             threadId: z.string().describe("The ID of the thread to retrieve")
         }),
-        execute: async (params) => {
+        execute: async (params, context) => {
             try {
-                const result = await agentMailService.getThread(params.threadId);
+                const mail = await agentMailService.forOrg(requireToolOrgId(context));
+                const result = await mail.getThread(params.threadId);
                 return JSON.stringify(result, null, 2);
             } catch (err: any) {
-                return `Failed to get AgentMail thread: ${err.message}`;
+                return `Error: Failed to get AgentMail thread: ${err.message}`;
             }
         }
     }

@@ -12,6 +12,14 @@ afterEach(() => {
 });
 
 describe("IntegrationReliabilityService", () => {
+  it("uses the resolved organization connection for AgentMail", () => {
+    const service = new IntegrationReliabilityService();
+    expect(service.getAssessments(false).find(item => item.id === "agentmail")?.configured).toBe(false);
+    const mail = service.getAssessments(true).find(item => item.id === "agentmail");
+    expect(mail?.configured).toBe(true);
+    expect(mail?.capabilities).not.toContain("Approval replies");
+    expect(mail?.nextAction.href).toBe("/settings");
+  });
   it("does not expose credential values and marks missing integrations unavailable", () => {
     for (const key of keys) delete process.env[key];
     const slack = new IntegrationReliabilityService().getAssessments().find((item) => item.id === "slack");

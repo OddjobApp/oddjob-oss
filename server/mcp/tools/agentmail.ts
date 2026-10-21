@@ -21,7 +21,7 @@ export const agentMailToolDefinitions: Tool[] = [
     {
         name: "agentmail_send",
         description:
-            "Send an email from the configured AgentMail inbox (AGENTMAIL_INBOX). " +
+            "Send an email from the current organization’s AgentMail inbox. " +
             "Use this to notify humans, request approvals, deliver mission results, or initiate " +
             "agent-to-agent communication over email. Replies to this inbox are automatically " +
             "processed — recipients can reply APPROVE/REJECT <passcode> to resolve HIL requests, " +
@@ -41,7 +41,7 @@ export const agentMailToolDefinitions: Tool[] = [
     {
         name: "agentmail_list_threads",
         description:
-            "List recent email threads in the Oddjob agentmail inbox. " +
+            "List recent email threads in the current organization’s AgentMail inbox. " +
             "Use this to check for pending replies, review conversation history, or audit inbound messages.",
         inputSchema: {
             type: "object",

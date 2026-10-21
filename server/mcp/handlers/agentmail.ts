@@ -1,40 +1,35 @@
+import { requireToolOrgId } from "../../domain/tools/v1/capabilities/org-context.js";
 import { agentMailService } from "../../domain/integrations/core/agentmail.service.js";
 import { AgentMailSendInput, AgentMailListThreadsInput, AgentMailGetThreadInput } from "../tools/agentmail.js";
 import { successResponse, errorResponse, type ToolContext } from "./utils.js";
 
-export async function handleAgentMailSend(args: unknown, _context?: ToolContext) {
+export async function handleAgentMailSend(args: unknown, context?: ToolContext) {
     try {
         const input = AgentMailSendInput.parse(args);
-        if (!agentMailService.isConfigured()) {
-            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY and AGENTMAIL_INBOX in environment.");
-        }
-        const result = await agentMailService.send(input);
+        const mail = await agentMailService.forOrg(requireToolOrgId(context));
+        const result = await mail.send(input);
         return successResponse(result, `Email sent to ${input.to.join(", ")} (thread: ${result.thread_id})`);
     } catch (err: any) {
         return errorResponse(err.message);
     }
 }
 
-export async function handleAgentMailListThreads(args: unknown, _context?: ToolContext) {
+export async function handleAgentMailListThreads(args: unknown, context?: ToolContext) {
     try {
         const input = AgentMailListThreadsInput.parse(args ?? {});
-        if (!agentMailService.isConfigured()) {
-            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY and AGENTMAIL_INBOX in environment.");
-        }
-        const result = await agentMailService.listThreads(input.limit);
+        const mail = await agentMailService.forOrg(requireToolOrgId(context));
+        const result = await mail.listThreads(input.limit);
         return successResponse(result, `Found ${result.count} thread(s)`);
     } catch (err: any) {
         return errorResponse(err.message);
     }
 }
 
-export async function handleAgentMailGetThread(args: unknown, _context?: ToolContext) {
+export async function handleAgentMailGetThread(args: unknown, context?: ToolContext) {
     try {
         const input = AgentMailGetThreadInput.parse(args);
-        if (!agentMailService.isConfigured()) {
-            return errorResponse("AgentMail is not configured. Set AGENTMAIL_API_KEY and AGENTMAIL_INBOX in environment.");
-        }
-        const result = await agentMailService.getThread(input.thread_id);
+        const mail = await agentMailService.forOrg(requireToolOrgId(context));
+        const result = await mail.getThread(input.thread_id);
         return successResponse(result, `Thread ${input.thread_id} retrieved`);
     } catch (err: any) {
         return errorResponse(err.message);

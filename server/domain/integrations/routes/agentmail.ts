@@ -37,13 +37,19 @@ const router = Router();
 router.post(
     "/webhook",
     asyncHandler(async (req: Request, res: Response) => {
+        if (process.env.NODE_ENV === "production") {
+            return res.status(410).json({ error: "Shared AgentMail webhooks are disabled. Use organization inbox polling." });
+        }
         // 1. HMAC verification using raw body (set by express.raw middleware upstream)
         const rawBody: Buffer = (req as any).rawBody ?? Buffer.from(JSON.stringify(req.body));
         const svixId        = req.headers["svix-id"] as string        ?? "";
         const svixTimestamp = req.headers["svix-timestamp"] as string ?? "";
         const svixSignature = req.headers["svix-signature"] as string ?? "";
 
-        if (svixId && svixTimestamp && svixSignature) {
+        if (!svixId || !svixTimestamp || !svixSignature || !rawBody.length) {
+            return res.status(401).json({ error: "Webhook signature required" });
+        }
+        {
             const valid = agentMailService.verifyWebhookSignature(rawBody, svixId, svixTimestamp, svixSignature);
             if (!valid) {
                 logger.warn("[AgentMail] Webhook HMAC verification failed — rejected");
