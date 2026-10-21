@@ -69,7 +69,7 @@ describe("AgentMail to CREW Bridge", () => {
         }
     });
 
-    it("processes webhook POST /api/integrations/agentmail/webhook and routes to CREW session", async () => {
+    it("rejects unsigned webhook requests without writing to the linked CREW session", async () => {
         const testSessionKey = `test-webhook-crew-${Date.now()}`;
         const testThreadId = `test-webhook-thread-${Date.now()}`;
 
@@ -108,10 +108,8 @@ describe("AgentMail to CREW Bridge", () => {
                     },
                 });
 
-            expect(res.status).toBe(200);
-            expect(res.body.ok).toBe(true);
-            expect(res.body.destination).toBe("crew");
-            expect(res.body.sessionKey).toBe(testSessionKey);
+            expect(res.status).toBe(401);
+            expect(res.body.error).toBe("Webhook signature required");
 
             // Verify turn created
             const turns = await db
@@ -119,9 +117,7 @@ describe("AgentMail to CREW Bridge", () => {
                 .from(crewTurns)
                 .where(eq(crewTurns.sessionId, session.id));
 
-            expect(turns.length).toBeGreaterThan(0);
-            expect(turns[0].content).toContain("Inbound Email Reply from owner@example.com");
-            expect(turns[0].content).toContain("Hi! Received the welcome email");
+            expect(turns).toHaveLength(0);
         } finally {
             await db.delete(crewTurns).where(eq(crewTurns.sessionId, session.id));
             await db.delete(crewSessions).where(eq(crewSessions.id, session.id));
