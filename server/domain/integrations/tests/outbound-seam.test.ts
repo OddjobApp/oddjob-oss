@@ -39,7 +39,7 @@ vi.mock("@server/database_service.js", () => ({
     },
 }));
 vi.mock("@domain/tools/v1/capabilities/index.js", () => ({
-    getAgentTools: () => ({ send_email: { name: "send_email", execute: sendExecute } }),
+    getAgentTools: () => ({ send_agentmail: { name: "send_email", execute: sendExecute } }),
 }));
 vi.mock("@domain/crew/core/crew-repository.js", () => ({
     crewRepository: { findSession, postTurn },
@@ -58,6 +58,7 @@ const crewContext = {
 
 const draft = {
     channel: "email" as const,
+    sendTool: "send_agentmail",
     to: ["dana@northwind.io"],
     subject: "Migration timeline",
     body: "Hi Dana — the window we discussed opens Monday.",

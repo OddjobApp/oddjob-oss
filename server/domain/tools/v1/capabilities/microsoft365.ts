@@ -179,12 +179,8 @@ export const MICROSOFT365_TOOLS: Record<string, ToolDefinition> = {
             isHtml: z.boolean().optional().describe("Whether the body is HTML"),
         }),
         execute: async (params, context) => {
-            const { getMicrosoft365Client } = await import("../../../integrations/microsoft365-service.js");
-            const credentialId = await resolveM365Credential(context?.organizationId);
-            if (!credentialId) return JSON.stringify({ error: "No Microsoft 365 credential configured." });
-            const client = await getMicrosoft365Client(credentialId, context?.organizationId || null);
-            await client.sendEmail(params.to, params.subject, params.body, params.isHtml);
-            return JSON.stringify({ status: "sent", recipients: params.to });
+            const { CREW_TASK_PROPOSAL_TOOLS } = await import("./crew-task-proposal-tools.js");
+            return CREW_TASK_PROPOSAL_TOOLS.propose_outbound_message.execute({ channel: "email", to: params.to, subject: params.subject, body: params.body, bodyFormat: params.isHtml ? "html" : "plain", sendTool: "outlook_send_email", sensitivity: "requested_review", reason: "Confirm the Google or Microsoft account for this email." }, context);
         },
     },
 };

@@ -6,7 +6,7 @@ import { BadRequestError } from "@server/utils/errors.js";
 import { validateIdParam } from "@server/utils/api-utils.js";
 
 import { approvalService } from "../core/approval.service.js";
-import { getUserOrgContext } from "@server/utils/auth-context.js";
+import { getUserOrgContext, requireOrgId } from "@server/utils/auth-context.js";
 import { requireOrganizationPermission } from "@server/utils/organization-permissions.js";
 import { db } from "@server/database_service.js";
 import { approvalRequests, missions } from "@shared/schema/index.js";
@@ -341,6 +341,25 @@ router.get("/:id", requireAuth, asyncHandler(async (req: any, res: Response) => 
     const orgContext = await getUserOrgContext(req);
     const detail = await approvalService.getById(requestId, userId, userEmail, orgContext.organizationId ?? undefined, req.user.adminRole);
     res.json(detail);
+}));
+
+// Sender identities are loaded only after the existing approval-view authorization.
+router.get("/:id/email-accounts", requireAuth, asyncHandler(async (req: any, res: Response) => {
+    const id = validateIdParam(req.params.id, "approval ID");
+    const context = await getUserOrgContext(req);
+    const detail = await approvalService.getById(id, req.user.id, req.user.email, context.organizationId ?? undefined, req.user.adminRole);
+    const meta = detail.toolArgs as any;
+    if (meta?.kind !== "outbound_message" || meta.channel !== "email" || ["send_agentmail", "reply_agentmail"].includes(meta.sendTool ?? "")) throw new BadRequestError("This is not a user-authored email draft");
+    const { outboundEmailAccounts } = await import("../core/outbound-email-accounts.service.js");
+    const orgId = requireOrgId(context);
+    const projectId = await outboundEmailAccounts.projectForRoom(orgId, meta.sessionKey);
+    res.setHeader("Cache-Control", "no-store");
+    res.json(await outboundEmailAccounts.options(orgId, String(req.user.id), projectId));
+}));
+router.delete("/email-sender/preference", requireAuth, asyncHandler(async (req: any, res: Response) => {
+    const { outboundEmailAccounts } = await import("../core/outbound-email-accounts.service.js");
+    await outboundEmailAccounts.clearPreference(requireOrgId(await getUserOrgContext(req)), String(req.user.id));
+    res.status(204).send();
 }));
 
 // POST /api/approvals/:id/decision - Approve or Reject

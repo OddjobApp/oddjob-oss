@@ -339,6 +339,7 @@ describe('CREW Inline Approval Card & Requester Permission Inheritance (Tier 3.5
                         type: 'approval_request',
                         kind: 'outbound_message',
                         channel: 'email',
+                        sendTool: 'send_agentmail',
                         proposalId: 55301,
                         title: 'New email to dana@northwind.io',
                         from: 'sam@x.ai',

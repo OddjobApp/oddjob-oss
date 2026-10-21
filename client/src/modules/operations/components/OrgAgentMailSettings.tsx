@@ -35,7 +35,8 @@ export function OrgAgentMailSettings({ organizationId }: { organizationId: numbe
     return <Card>
         <CardHeader>
             <CardTitle>AgentMail</CardTitle>
-            <CardDescription>Connect a dedicated inbox for this organization’s agents. Email tools, replies to agents’ emails and heartbeat polling use this connection.</CardDescription>
+            <p className="text-sm text-muted-foreground">Assign dedicated inboxes from the CREW room’s Integrations control. Room inboxes use explicit reads or heartbeat polling; the organization webhook covers the default inbox.</p>
+            <CardDescription>Connect the inbox and outbox for Oddjob and room notifications. User-authored email uses a confirmed Google or Microsoft account.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
             {status.isLoading && <p role="status">Loading AgentMail connection…</p>}
@@ -44,7 +45,7 @@ export function OrgAgentMailSettings({ organizationId }: { organizationId: numbe
             {status.data?.configured && <p className="text-sm text-muted-foreground">{status.data.inboundMode === "webhook"
                 ? "Replies arrive through this organization’s own webhook and go back to the room, mission or approval they answer."
                 : "Replies are read by polling only: no webhook is registered, because this server has no public https address (APP_URL)."}</p>}
-            <p className="text-sm text-muted-foreground">Use a separate AgentMail inbox and an inbox-scoped API key for each organization. Connecting registers a webhook for that inbox alone, with its own signing secret. Keys and secrets are encrypted and never displayed.</p>
+            <p className="text-sm text-muted-foreground">Use a separate AgentMail account or Pod for each organization. Room inbox assignments require a key with access to those inboxes. Connecting registers a webhook for that inbox alone, with its own signing secret. Keys and secrets are encrypted and never displayed.</p>
             {canManage ? <form className="space-y-4" onSubmit={event => { event.preventDefault(); change.mutate("connect"); }}>
                 <div className="space-y-2"><Label htmlFor="agentmail-inbox">AgentMail inbox ID</Label>
                     <Input id="agentmail-inbox" value={inboxId} onChange={event => setInboxId(event.target.value)} placeholder={status.data?.inboxId ?? "your-inbox@agentmail.to"} required maxLength={320} /></div>

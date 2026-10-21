@@ -1100,6 +1100,20 @@
       "when": 1793000000010,
       "tag": "0155_org_agentmail_webhooks",
       "breakpoints": true
+    },
+    {
+      "idx": 157,
+      "version": "7",
+      "when": 1793000000011,
+      "tag": "0156_room_agentmail",
+      "breakpoints": true
+    },
+    {
+      "idx": 158,
+      "version": "7",
+      "when": 1793000000012,
+      "tag": "0157_outbound_email_preferences",
+      "breakpoints": true
     }
   ]
 }

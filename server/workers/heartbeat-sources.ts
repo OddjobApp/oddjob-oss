@@ -36,7 +36,10 @@ export async function pollAgentMailInbox(
     if (!Number.isSafeInteger(organizationId) || !organizationId || organizationId <= 0) {
         throw new Error("Organization context required for AgentMail polling");
     }
-    const mail = await agentMailService.forOrg(organizationId);
+    const roomKey = config.sessionKey;
+    if (roomKey !== undefined && (typeof roomKey !== "string" || !roomKey)) throw new Error("Invalid AgentMail room context");
+    const mail = roomKey === undefined ? await agentMailService.forOrg(organizationId)
+        : await agentMailService.forContext(organizationId, roomKey);
     const limit = Math.min(100, Math.max(1, Number(config.limit) || 25));
     const { messages } = await mail.listMessages(limit);
     const ownAddress = await mail.getInboxAddress();

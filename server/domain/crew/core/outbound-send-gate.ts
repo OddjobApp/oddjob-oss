@@ -35,7 +35,7 @@ const logger = createLogger("OutboundSendGate");
  *   - anything else                     → direct send
  */
 
-export const GATED_SEND_TOOLS = new Set(["send_email", "send_agentmail", "gmail_send", "reply_agentmail", "slack_post_message"]);
+export const GATED_SEND_TOOLS = new Set(["send_email", "send_agentmail", "gmail_send", "outlook_send_email", "reply_agentmail", "slack_post_message"]);
 
 const SLACK_TOOLS = new Set(["slack_post_message"]);
 
@@ -156,7 +156,7 @@ async function reviewReason(
     context: any,
 ): Promise<GateVerdict | null> {
     const subject = firstText(args.subject);
-    const body = firstText(args.body, args.text, args.message, args.html);
+    const body = firstText(args.html, args.body, args.text, args.message);
     const summary = `${subject} ${body}`;
 
     // The card's durable boundary outranks every turn-level rule, including
@@ -184,6 +184,13 @@ async function reviewReason(
         if (/(always|all|every|any)\b[^.]*\b(approv|review|confirm|sign[- ]?off)/i.test(boundary)) {
             return { sensitivity: "requested_review", why: `${boundaryNote}` };
         }
+    }
+
+    // Authoring mail always confirms the connected sender, even for verbatim text.
+    if (["send_email", "gmail_send", "outlook_send_email"].includes(toolName)) {
+        return COMMITMENT_LANGUAGE.test(summary)
+            ? { sensitivity: "commitment_or_legal", why: "the draft contains commitment, pricing, or legal language" }
+            : { sensitivity: "requested_review", why: "confirm the Google or Microsoft sender and optionally remember it" };
     }
 
     // The user dictated the content — re-reviewing their own words adds
@@ -276,7 +283,7 @@ export async function maybeGateOutboundSend(
         ? [firstText(args.channel, args.channelName, args.to) || "#channel"]
         : collectEmails(args);
     const subject = firstText(args.subject);
-    const body = firstText(args.body, args.text, args.message, args.html);
+    const body = firstText(args.html, args.body, args.text, args.message);
 
     try {
         const { CREW_TASK_PROPOSAL_TOOLS } = await import("@domain/tools/v1/capabilities/crew-task-proposal-tools.js");
@@ -288,6 +295,8 @@ export async function maybeGateOutboundSend(
                 subject,
                 body,
                 cc: args.cc,
+                bcc: args.bcc,
+                bodyFormat: args.is_html || args.isHtml || args.html ? "html" : "plain",
                 workspace: args.workspace ?? args.workspaceName,
                 sendTool: isSlack || toolName === "send_email" ? null : toolName,
                 trigger: context?.named?.message

@@ -47,7 +47,7 @@ describe("outbound send gate", () => {
             expect.objectContaining({
                 channel: "email",
                 to: ["dana@northwind.io"],
-                sensitivity: "external_first_contact",
+                sensitivity: "requested_review",
             }),
             baseContext,
         );
@@ -81,18 +81,18 @@ describe("outbound send gate", () => {
         );
     });
 
-    it("lets internal-domain routine mail send directly", async () => {
+    it("confirms the sender for internal-domain authored mail", async () => {
         const gated = await maybeGateOutboundSend(
             "send_email",
             { ...externalSend, to: "dana@x.ai" },
             baseContext,
             Date.now(),
         );
-        expect(gated).toBeNull();
-        expect(proposeExecute).not.toHaveBeenCalled();
+        expect(gated).not.toBeNull();
+        expect(proposeExecute).toHaveBeenCalledWith(expect.objectContaining({ sensitivity: "requested_review" }), baseContext);
     });
 
-    it("lets a verbatim-dictated body send directly", async () => {
+    it("confirms the sender even for verbatim-dictated authored mail", async () => {
         const dictation = `Send exactly this: ${externalSend.body}`;
         const gated = await maybeGateOutboundSend(
             "send_email",
@@ -100,7 +100,7 @@ describe("outbound send gate", () => {
             { ...baseContext, named: { message: dictation } },
             Date.now(),
         );
-        expect(gated).toBeNull();
+        expect(gated).not.toBeNull();
     });
 
     it("ignores non-send tools", async () => {
@@ -169,7 +169,7 @@ describe("outbound send gate", () => {
         expect(proposeExecute).not.toHaveBeenCalled();
     });
 
-    it("still lets the same agent send internally under a never-external boundary", async () => {
+    it("requires sender confirmation for permitted internal authored mail under a never-external boundary", async () => {
         selectLimit.mockResolvedValue([{ approvalBoundary: "Never contact customers or external partners." }]);
         const gated = await maybeGateOutboundSend(
             "send_email",
@@ -177,7 +177,7 @@ describe("outbound send gate", () => {
             { ...baseContext, agentCardId: 7 },
             Date.now(),
         );
-        expect(gated).toBeNull();
+        expect(gated).not.toBeNull();
     });
 
     it("gates every send when the boundary says review everything", async () => {

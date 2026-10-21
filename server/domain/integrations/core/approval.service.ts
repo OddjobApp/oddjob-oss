@@ -336,6 +336,15 @@ export const approvalService = {
             throw new BadRequestError("Fill in this form stage to complete it. Approving it without answers would skip the stage.");
         }
 
+        // Validate a reviewed sender BEFORE claiming the decision, so missing or stale
+        // authorization leaves the draft pending and cannot consume its approval.
+        let confirmedEmailAccount: { connectorId: number; email: string; provider: "google" | "microsoft"; remember?: boolean } | undefined;
+        if (decision === "approved" && outboundMeta?.channel === "email" && !["send_agentmail", "reply_agentmail"].includes(outboundMeta.sendTool ?? "")) {
+            const { outboundEmailAccounts } = await import("./outbound-email-accounts.service.js");
+            const projectId = await outboundEmailAccounts.projectForRoom(requiredApprovalOrg(request), outboundMeta.sessionKey);
+            confirmedEmailAccount = await outboundEmailAccounts.confirm(requiredApprovalOrg(request), String(userId), modifiedOutput?.emailAccount, projectId);
+        }
+
         // Update record. Conditional on still being pending: two concurrent
         // decisions both pass the status check above, and the side effects
         // below (an outbound send, a pipeline resume) must run once.
@@ -610,7 +619,8 @@ export const approvalService = {
                 // come from the stored proposal or the card could be redirected.
                 const edits = modifiedOutput && typeof modifiedOutput === "object"
                     ? { body: typeof modifiedOutput.body === "string" ? modifiedOutput.body : undefined,
-                        subject: typeof modifiedOutput.subject === "string" ? modifiedOutput.subject : undefined }
+                        subject: typeof modifiedOutput.subject === "string" ? modifiedOutput.subject : undefined,
+                        emailAccount: confirmedEmailAccount }
                     : undefined;
                 const outcome = await outboundMessageService.onOutboundMessageDecision(
                     { id: request.id, organizationId: request.organizationId, modifiedOutput: (request.modifiedOutput as any)?.kind === "outbound_message" ? request.modifiedOutput : request.toolArgs },
