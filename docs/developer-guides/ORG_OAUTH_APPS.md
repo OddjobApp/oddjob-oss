@@ -36,3 +36,49 @@ QuickBooks app credentials cover consent, refresh, and revocation. Webhook
 verification remains deployment-managed (`QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN`);
 configure the provider's webhook integration separately. This screen does not
 provision developer-console apps or webhook subscriptions.
+
+## Google setup walkthrough
+
+The Google card includes this walkthrough next to the credential fields.
+
+1. Open [Google Cloud console](https://console.cloud.google.com/) and select or
+   create a project owned by your organization. Use the same project throughout.
+2. In **Google Auth platform → Branding**, complete **Get started**, including
+   app name, support email, and contact email. Choose the audience: **Internal**
+   for your Google Workspace organization when available, or **External** for
+   other accounts. For an External app in Testing, add the signing-in account
+   under **Audience → Test users**.
+3. In **APIs & Services → Library**, enable the APIs you will use:
+
+   | Connection | APIs |
+   | --- | --- |
+   | Gmail | Gmail API |
+   | Drive and document editing | Google Drive API, Google Docs API |
+   | Calendar | Google Calendar API |
+   | YouTube | YouTube Data API v3 |
+   | Combined Gmail + Drive | Gmail, Drive, Docs, and Calendar APIs |
+
+4. In **Google Auth platform → Clients → Create client**, choose **Web
+   application**. Add the exact callback displayed by Oddjob to **Authorized
+   redirect URIs**, not JavaScript origins. For the production Oddjob site it is
+   `https://oddjob.app/api/saas/connectors/google/oauth/callback`; self-hosted
+   installations must use their own displayed URL.
+5. Copy the client ID and client secret into Oddjob and save. Keep the secret
+   private; an API key or service-account JSON file does not replace it.
+6. Click the desired **Connect** button and complete Google's account consent.
+   Saving the app alone does not authorize an account.
+
+For `redirect_uri_mismatch`, compare the complete redirect URI, including scheme,
+host, and path. For blocked access, check test users and Workspace administrator
+policy. For API errors, check API enablement in the client's project and the
+permissions requested by the chosen connection under **Data Access**.
+
+External apps in Testing that request these service permissions have refresh
+tokens that expire after seven days; reconnect as needed. Review Google's
+publishing and verification requirements before broader use. Sensitive or
+restricted scopes can require additional review. Replacing app credentials also
+requires reconnecting existing accounts.
+
+Official references: [consent screen and scopes](https://developers.google.com/workspace/guides/configure-oauth-consent),
+[web-server OAuth](https://developers.google.com/identity/protocols/oauth2/web-server),
+and [refresh token expiration](https://developers.google.com/identity/protocols/oauth2#expiration).
