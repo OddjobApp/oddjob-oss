@@ -170,6 +170,8 @@ describe("Agent deployment public routes", () => {
     expect(agentDeploymentService.upsert).toHaveBeenLastCalledWith(expect.objectContaining({ embedConfig: { allowChatInput: false } }));
     await request(makeApp()).post("/api/agents/deploy").send({ ...otherFields, embedConfig: { allowedEmbedOrigins: ["https://example.com"] } }).expect(200);
     expect(agentDeploymentService.upsert).toHaveBeenLastCalledWith(expect.objectContaining({ embedConfig: { allowChatInput: false, allowedEmbedOrigins: ["https://example.com"] } }));
+    await request(makeApp()).post("/api/agents/deploy").send({ ...otherFields, embedConfig: { allowChatInput: false, profileApiUrl: "" } }).expect(200);
+    expect(agentDeploymentService.upsert).toHaveBeenLastCalledWith(expect.objectContaining({ embedConfig: { allowChatInput: false, profileApiUrl: undefined } }));
   });
 
   it("does not expose inactive Agent AI deployments publicly", async () => {
