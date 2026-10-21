@@ -162,6 +162,8 @@ import { getRerankingService } from "@domain/ai/core/reranking/reranking.service
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
+const TEST_ORG_ID = 1;
+
 describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -234,6 +236,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
    */
   it("invokes rerankingService.rerank() when enableReranking is true", async () => {
     const results = await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       enableReranking: true,
       k: 5,
     });
@@ -256,6 +260,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
    */
   it("does NOT invoke reranking when enableReranking is false", async () => {
     const results = await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       enableReranking: false,
       k: 5,
     });
@@ -270,6 +276,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
    */
   it("does NOT invoke reranking when enableReranking is omitted (backward compatibility)", async () => {
     const results = await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       k: 5,
     });
 
@@ -283,6 +291,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
    */
   it("preserves originalScore (pre-rerank weighted fusion score) in results", async () => {
     const results = await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       enableReranking: true,
       k: 5,
     });
@@ -300,6 +310,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
    */
   it("passes document metadata through to the reranking service", async () => {
     await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       enableReranking: true,
       k: 5,
     });
@@ -318,6 +330,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
    */
   it("returns results in the reranked order when reranking is enabled", async () => {
     const results = await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       enableReranking: true,
       k: 5,
     });
@@ -336,6 +350,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
    */
   it("passes topK to the reranking service", async () => {
     await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       enableReranking: true,
       k: 2,
     });
@@ -352,6 +368,8 @@ describe("Hybrid Search Pipeline ↔ Reranking Service Integration", () => {
     mockRerank.mockRejectedValueOnce(new Error("Service unavailable"));
 
     const results = await retrieveSimilarDocuments("AI automation", {
+      // Retrieval always runs for an organization; without one it refuses.
+      organizationId: TEST_ORG_ID,
       enableReranking: true,
       k: 5,
     });
