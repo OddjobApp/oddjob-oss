@@ -12,6 +12,7 @@ import { eq, and } from "drizzle-orm";
 import { BadRequestError } from "@server/utils/errors.js";
 import * as fs from 'fs';
 import { AgentDeploymentService } from "@domain/agents/agent-deployment.service.js";
+import { allowsAgentChat, agentButton, type AgentInteractionConfig } from "@shared/agent-interaction.js";
 import { agentAccessAuditMiddleware, agentRateLimitMiddleware } from "../middleware/agent-access-audit.js";
 import { organizationService } from "@domain/org/core/organization.service.js";
 import { jobService } from "@domain/jobs/job.service.js";
@@ -362,7 +363,7 @@ export function registerAgentDeploymentRoutes(app: any) {
             maxFileSizeMb: validated.maxFileSizeMb,
             oceanTraits: (validated as any).oceanTraits ?? existing?.oceanTraits,
             soulArchetype: (validated as any).soulArchetype ?? existing?.soulArchetype,
-            embedConfig: (validated as any).embedConfig ?? existing?.embedConfig ?? {},
+            embedConfig: { ...((existing?.embedConfig as Record<string, unknown>) ?? {}), ...validated.embedConfig },
             createdBy: existing ? undefined : orgContext.userId!,
             updatedAt: existing ? new Date() : undefined
         });
@@ -452,6 +453,8 @@ export function registerAgentDeploymentRoutes(app: any) {
             allowedFileTypes: deployment.allowedFileTypes,
             maxFileSizeMb: deployment.maxFileSizeMb,
             allowedEmbedOrigins: embedConfig?.allowedEmbedOrigins ?? [],
+            allowChatInput: allowsAgentChat(deployment.embedConfig as AgentInteractionConfig | null),
+            buttons: ((deployment.embedConfig as AgentInteractionConfig | null)?.buttons ?? []).map(({ id, label }) => ({ id, label })),
         });
     }));
 
@@ -516,7 +519,8 @@ export function registerAgentDeploymentRoutes(app: any) {
     // Chat with agent
     publicRouter.post("/:slug/chat", asyncHandler(async (req: Request, res: Response) => {
         const slug = req.params.slug;
-        const { message, sessionId, token, accessToken, sessionToken, context } = req.body;
+        const { sessionId, token, accessToken, sessionToken } = req.body;
+        let { message, context } = req.body;
         const orgContext = await getUserOrgContext(req);
 
         const deployment = await getActivePublicDeployment(slug);
@@ -549,6 +553,29 @@ export function registerAgentDeploymentRoutes(app: any) {
         const finalSessionId = deployment.accessPolicy === 'internal_only'
             ? `internal-${orgContext.userId}`
             : finalUserId;
+
+        const interaction = deployment.embedConfig as AgentInteractionConfig | null;
+        const button = agentButton(interaction, req.body.buttonId);
+        if (req.body.buttonId !== undefined) {
+            if (!button) return res.status(400).json({ error: "invalid_button", message: "This button is no longer available." });
+            // The server owns the prompt and context. A forged message or attachment
+            // cannot turn an approved button into arbitrary free-text input.
+            message = button.message;
+            context = {};
+        } else if (!allowsAgentChat(interaction)) {
+            const submission = context?.pipelineExecution;
+            if (!submission || typeof submission.nonce !== "string" || !submission.inputData || typeof submission.inputData !== "object" || Array.isArray(submission.inputData)) {
+                return res.status(403).json({ error: "chat_input_disabled", message: "Use this agent’s buttons or forms to continue." });
+            }
+            const { agentNonceService } = await import("@domain/agents/agent-nonce.service.js");
+            const mapping = await agentNonceService.resolveWithContext(finalSessionId, submission.nonce);
+            const target = mapping?.pipelineId;
+            const manifest = (deployment.formManifest ?? {}) as Record<string, any>;
+            const permitted = target !== undefined && ((deployment.allowedPipelineIds ?? []).includes(Number(target)) || Object.hasOwn(manifest, String(target)));
+            if (!permitted) return res.status(403).json({ error: "invalid_form_submission", message: "This form is unavailable or its session has expired." });
+            context = { pipelineExecution: { nonce: submission.nonce, inputData: submission.inputData } };
+            message = `[FORM_SUBMISSION] Execute pipeline with nonce ${submission.nonce}. Input: ${JSON.stringify(submission.inputData)}`;
+        }
 
         // Profile pre-fetch for embed personalization
         let profile: object | null = null;

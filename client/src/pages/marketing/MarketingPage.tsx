@@ -1,226 +1,41 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { ArrowRight, BookOpen, Github, Layers, Route } from "lucide-react";
+import { HatIcon } from "@domain-ui/core/ui/components/shared/HatIcon";
 
-const pillars = [
-  {
-    name: "Missions",
-    headline: "Long-running autonomous work that keeps its state.",
-    detail:
-      "Generative Mission Synthesis scores, synthesizes, validates, executes, and evolves enterprise workflows instead of dropping fragile prompt chains into production.",
-  },
-  {
-    name: "Forge",
-    headline: "Internal apps for every recurring operation.",
-    detail:
-      "App Forge turns active missions into operator boards with tables, charts, controls, version history, and automated browser QA before publishing.",
-  },
-  {
-    name: "Knowledge",
-    headline: "A governed garden for enterprise memory.",
-    detail:
-      "Semantic search, a native knowledge graph, and human verification keep proprietary data grounded, curated, and isolated from public model training.",
-  },
-  {
-    name: "Control",
-    headline: "Policy gates, budgets, and replayable decisions.",
-    detail:
-      "Every tool call, computer-use session, credential touch, and high-risk action can be paused, redacted, approved, replayed, and audited.",
-  },
+const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-5 py-3 text-sm font-semibold transition hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary";
+const capabilities = [
+  { title: "A crew around your goal", icon: Route, text: "Bring people and agents together in a room. Give the work context, follow its progress, and review the result." },
+  { title: "Knowledge you can build on", icon: BookOpen, text: "Bring documents and connected sources into your organization’s knowledge, so useful context can carry into the next mission." },
+  { title: "Make recurring work an app", icon: Layers, text: "Use App Forge and Forms to turn repeatable workflows into interfaces your team can use and improve." },
 ];
 
-const proofPoints = [
-  "Human-in-the-loop approvals for risky actions",
-  "Agent salaries and token budgets by department",
-  "Redacted Trycua replays for legacy software sessions",
-  "Git-like rollback for generated apps",
-];
-
-const personas = [
-  {
-    role: "Technical Operations",
-    concern: "Integration debt, repetitive scripts, overloaded support queues.",
-    value:
-      "Oddjob converts goals into durable missions, builds the dashboard, and keeps the operator in control.",
-  },
-  {
-    role: "Security",
-    concern: "Shadow AI, audit gaps, policy drift, and data leakage.",
-    value:
-      "Every agent decision is logged, risk-scored, redacted, and routed through the right approval gate.",
-  },
-  {
-    role: "Finance",
-    concern: "Unbounded token spend and unclear ROI from agent projects.",
-    value:
-      "Agents become economic units with salaries, cost ceilings, run histories, and department-level ROI.",
-  },
-];
-
-function MarketingPage() {
-  const navigate = useNavigate();
-
-  return (
-    <>
-
-      <main className="min-h-screen overflow-hidden bg-[#f4f1ea] text-[#14120f]">
-        <section className="relative min-h-[86vh] border-b border-black/15 bg-[#f4f1ea]">
-          <div className="audit-grid absolute inset-0 opacity-70" />
-          <img
-            src="/assets/branding/bowler-hat.png"
-            alt=""
-            className="hat-mask pointer-events-none absolute bottom-10 right-[-12vw] w-[82vw] max-w-[980px] opacity-[0.26] mix-blend-multiply sm:bottom-[-3vw] sm:right-[-8vw]"
-          />
-          <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-            <a
-              href="#"
-              className="flex items-center gap-3"
-              aria-label="Oddjob home"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-black/20 bg-[#fffaf2]">
-                <img
-                  src="/assets/branding/bowler-hat.png"
-                  alt=""
-                  className="h-7 w-8 object-cover object-center"
-                />
-              </span>
-              <span className="text-base font-semibold">Oddjob</span>
-            </a>
-            <nav className="hidden items-center gap-6 text-sm font-medium text-black/65 md:flex">
-              <a href="#platform" className="hover:text-black">
-                Platform
-              </a>
-              <a href="#governance" className="hover:text-black">
-                Governance
-              </a>
-              <a href="#buyers" className="hover:text-black">
-                Buyers
-              </a>
-              <a href="#proof" className="hover:text-black">
-                Proof
-              </a>
-            </nav>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate("/login")}
-                className="hidden rounded-lg border border-black/20 bg-[#fffaf2] px-4 py-2 text-sm font-semibold text-[#14120f] shadow-sm transition hover:border-black/35 sm:inline-flex"
-              >
-                Log in
-              </button>
-              <button
-                onClick={() => navigate("/login")}
-                className="rounded-lg border border-black/20 bg-[#14120f] px-4 py-2 text-sm font-semibold text-[#fffaf2] shadow-sm transition hover:bg-[#2a241d]"
-              >
-                Sign up
-              </button>
-            </div>
-          </header>
-
-          <div className="relative z-10 mx-auto flex max-w-7xl flex-col px-5 pb-12 pt-12 sm:px-8 sm:pt-20 lg:pt-24">
-            <p className="mb-5 max-w-max border-l-4 border-[#d64b2a] bg-[#fffaf2]/80 py-2 pl-4 pr-5 text-xs font-bold uppercase text-black/70">
-              Governed Agentic Operations Engine
-            </p>
-            <h1 className="hero-text-shadow max-w-5xl text-6xl font-black leading-[0.88] sm:text-7xl lg:text-9xl">
-              Oddjob
-            </h1>
-            <p className="mt-8 max-w-3xl text-xl leading-8 text-black/76 sm:text-2xl sm:leading-10">
-              The enterprise system of record for autonomous work. Oddjob plans,
-              executes, governs, replays, and improves missions across agents,
-              tools, generated apps, and computer-use sessions.
-            </p>
-
-            <div className="mt-9 flex flex-wrap gap-3">
-              <button
-                onClick={() => navigate("/login")}
-                className="rounded-lg bg-[#d64b2a] px-5 py-3 text-sm font-bold text-foreground shadow-sm transition hover:bg-[#b63f25]"
-              >
-                Create account
-              </button>
-              <button
-                onClick={() => navigate("/login")}
-                className="rounded-lg border border-black/20 bg-[#fffaf2] px-5 py-3 text-sm font-bold text-[#14120f] shadow-sm transition hover:border-black/35"
-              >
-                Log in
-              </button>
-              <a
-                href="#platform"
-                className="rounded-lg border border-black/20 bg-[#f4f1ea]/80 px-5 py-3 text-sm font-bold text-[#14120f] shadow-sm transition hover:border-black/35"
-              >
-                Explore platform
-              </a>
-            </div>
-
-            <dl className="mt-12 grid max-w-4xl grid-cols-1 border-y border-black/15 bg-[#f4f1ea]/75 text-sm sm:grid-cols-3">
-              <div className="border-b border-black/15 p-4 sm:border-b-0 sm:border-r">
-                <dt className="font-mono text-xs uppercase text-black/50">
-                  Mission state
-                </dt>
-                <dd className="mt-2 font-semibold">Durable by default</dd>
-              </div>
-              <div className="border-b border-black/15 p-4 sm:border-b-0 sm:border-r">
-                <dt className="font-mono text-xs uppercase text-black/50">
-                  Risk actions
-                </dt>
-                <dd className="mt-2 font-semibold">Human gated</dd>
-              </div>
-              <div className="p-4">
-                <dt className="font-mono text-xs uppercase text-black/50">
-                  Spend
-                </dt>
-                <dd className="mt-2 font-semibold">Budget enforced</dd>
-              </div>
-            </dl>
-          </div>
-        </section>
-
-        <section className="border-b border-black/15 bg-[#14120f] text-[#fffaf2]">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-foreground/15 px-0 sm:grid-cols-4">
-            {pillars.map((pillar) => (
-              <a
-                key={pillar.name}
-                href="#platform"
-                className="bg-[#14120f] p-5 transition hover:bg-[#1f1a15]"
-              >
-                <p className="font-mono text-xs uppercase text-[#d39b32]">
-                  {pillar.name}
-                </p>
-                <p className="mt-3 text-base font-semibold leading-6">
-                  {pillar.headline}
-                </p>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        <section id="platform" className="bg-[#fffaf2] px-5 py-20 sm:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="max-w-3xl">
-              <p className="text-sm font-bold uppercase text-[#d64b2a]">
-                From goal to governed outcome
-              </p>
-              <h2 className="mt-4 text-4xl font-black leading-tight sm:text-6xl">
-                A complete operations stack for agents that actually do work.
-              </h2>
-            </div>
-
-            <div className="mt-12 grid gap-4 md:grid-cols-2">
-              {pillars.map((pillar) => (
-                <article
-                  key={pillar.name}
-                  className="rounded-lg border border-black/15 bg-[#f4f1ea] p-6"
-                >
-                  <div className="flex items-start justify-between gap-6">
-                    <div>
-                      <h3 className="text-2xl font-bold">{pillar.name}</h3>
-                      <p className="mt-2 text-black/70">{pillar.detail}</p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      </main>
-    </>
-  );
+/** Public homepage shared by the marketing, login and core SPA entries. */
+export default function MarketingPage() {
+  useEffect(() => { document.title = "Oddjob — Give your next big idea a crew"; }, []);
+  return <div className="min-h-screen bg-background text-foreground">
+    <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:bg-background focus:p-4">Skip to content</a>
+    <header className="border-b border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
+      <a href="/" className="flex min-h-11 items-center gap-2 text-xl font-bold" aria-label="Oddjob home"><HatIcon className="h-8 w-8" />Oddjob</a>
+      <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-5 text-sm font-medium"><a className="hover:underline" href="/use-cases">Use cases</a><a className="hover:underline" href="/getting-started">Get started</a><a className="hover:underline" href="#announcements">Announcements</a><a className={button} href="/auth/login">Sign in <ArrowRight className="h-4 w-4" aria-hidden="true" /></a></nav>
+    </div></header>
+    <main id="main" className="mx-auto max-w-6xl px-5 sm:px-8">
+      <section className="grid gap-12 py-16 sm:py-24 lg:grid-cols-2 lg:items-center"><div>
+        <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Open source. Built for work together.</p>
+        <h1 className="mt-5 text-5xl font-bold leading-tight tracking-tight sm:text-6xl">Give your next big idea a crew.</h1>
+        <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">Oddjob is a workspace for people and AI agents to turn goals into missions, work with shared knowledge, and build useful apps—with people involved at the decisions.</p>
+        <div className="mt-8 flex flex-wrap gap-3"><a href="/auth/signup" className={`${button} bg-primary text-primary-foreground hover:bg-primary/90`}>Start your first mission <ArrowRight className="h-4 w-4" aria-hidden="true" /></a><a href="https://github.com/OddjobApp/oddjob-oss" className={button}><Github className="h-4 w-4" aria-hidden="true" />Explore the source</a></div>
+      </div><aside className="rounded-3xl border border-border bg-card p-7 sm:p-10" aria-label="An example Oddjob workflow">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">One idea → a reviewable result</p><h2 className="mt-5 text-2xl font-semibold">“Help us prepare our next product launch.”</h2>
+        <ol className="mt-8 space-y-6">{[
+          ["Bring the context", "Add the brief, relevant documents, and configured connections."],
+          ["Give the crew a mission", "Set the goal and scope. Follow progress and respond to approval requests."],
+          ["Review what happened", "Inspect the output and execution evidence before putting it to use."],
+        ].map(([title, text], i) => <li key={title} className="flex gap-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold">{i + 1}</span><div><h3 className="font-semibold">{title}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p></div></li>)}</ol><p className="mt-7 text-xs text-muted-foreground">Illustrative workflow. Available actions depend on your configuration.</p>
+      </aside></section>
+      <section aria-label="Oddjob capabilities" className="grid gap-5 border-t border-border py-12 md:grid-cols-3">{capabilities.map(({ title, icon: Icon, text }) => <article key={title} className="rounded-2xl border border-border bg-card p-7"><Icon className="h-6 w-6" aria-hidden="true" /><h2 className="mt-5 text-xl font-semibold">{title}</h2><p className="mt-3 leading-7 text-muted-foreground">{text}</p></article>)}</section>
+      <section className="grid gap-6 py-10 md:grid-cols-2"><h2 className="max-w-md text-3xl font-bold tracking-tight">Your workspace.<br />Your context. Your decisions.</h2><div className="space-y-4 leading-7 text-muted-foreground"><p>Connect the tools your organization uses, bring your own AI provider credentials, and decide who can access the work.</p><p>Follow mission history and approval requests as work moves forward. Inspect the output and execution evidence before relying on the result.</p><p>Oddjob is open source under Apache 2.0. Explore the code, contribute, or run your own deployment.</p><a href="/overview" className="inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline underline-offset-4">Explore Oddjob <ArrowRight className="h-4 w-4" aria-hidden="true" /></a></div></section>
+      <section id="announcements" className="my-14 scroll-mt-6 rounded-3xl border border-border bg-card p-6 sm:p-10"><div className="max-w-2xl"><p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Follow the build</p><h2 className="mt-3 text-3xl font-bold tracking-tight">A little less noise. More Oddjob.</h2><p className="mt-4 leading-7 text-muted-foreground">Interested in product news and release announcements? Sign up through Oddjob’s published form agent. Your email and consent are stored in the Oddjob organization.</p><p className="mt-3 text-sm leading-6 text-muted-foreground">Read our <a href="/privacy" className="underline underline-offset-4">privacy policy</a>. No account is needed to sign up.</p></div><iframe src="/a/oddjob-announcements?embed=1" title="Sign up for Oddjob announcements" loading="lazy" className="mt-6 h-[640px] w-full rounded-2xl border border-border bg-background" /><a href="/a/oddjob-announcements" className={`${button} mt-4`}>Open the sign-up agent separately <ArrowRight className="h-4 w-4" aria-hidden="true" /></a></section>
+    </main>
+    <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5 px-5 py-8 text-sm text-muted-foreground sm:px-8"><p>Oddjob · Built in the open.</p><nav aria-label="Footer navigation" className="flex flex-wrap gap-5"><a href="/trust">Trust Center</a><a href="/contact">Support</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://github.com/OddjobApp/oddjob-oss">GitHub</a></nav></div></footer>
+  </div>;
 }
-
-export default MarketingPage;

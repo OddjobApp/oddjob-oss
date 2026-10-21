@@ -197,6 +197,12 @@ export const insertAgentDeploymentSchema = createInsertSchema(agentDeployments, 
     allowedTools: z.array(z.string()).optional(),
     formManifest: z.record(z.string(), z.any()).optional(), // pipelineId -> form schema
     embedConfig: z.object({
+        allowChatInput: z.boolean().optional(), // Missing means enabled for existing deployments.
+        buttons: z.array(z.object({
+            id: z.string().regex(/^[a-zA-Z0-9_-]+$/).max(80),
+            label: z.string().min(1).max(100),
+            message: z.string().min(1).max(2000),
+        })).max(12).optional(),
         profileApiUrl: z.string().url().optional(),
         profileApiMethod: z.string().optional(),
         profileApiTimeoutMs: z.number().int().positive().optional(),

@@ -123,6 +123,8 @@ export function AgentPublishTab({ jobId }: AgentPublishTabProps) {
         oceanTraits: { o: 50, c: 50, e: 50, a: 50, n: 50 },
         soulArchetype: "Lead Directive",
         embedConfig: {
+            allowChatInput: true,
+            buttons: [] as { id: string; label: string; message: string }[],
             profileApiUrl: "",
             profileApiMethod: "GET",
             profileApiTimeoutMs: 5000,
@@ -155,7 +157,7 @@ export function AgentPublishTab({ jobId }: AgentPublishTabProps) {
                 maxFileSizeMb: deployment.maxFileSizeMb || 10,
                 oceanTraits: deployment.oceanTraits || defaultForm.oceanTraits,
                 soulArchetype: deployment.soulArchetype || "Lead Directive",
-                embedConfig: deployment.embedConfig || defaultForm.embedConfig,
+                embedConfig: { ...defaultForm.embedConfig, ...deployment.embedConfig },
             });
         }
     }, [deployment, jobId]);
@@ -749,6 +751,23 @@ export function AgentPublishTab({ jobId }: AgentPublishTabProps) {
                                 ) : "Save Deployment"}
                             </Button>
                         </CardFooter>
+                    </Card>
+
+                    <Card className="border-border shadow-md">
+                        <CardHeader><CardTitle className="text-sm">Visitor interaction</CardTitle><CardDescription>Use buttons and forms for guided demos and sign-ups.</CardDescription></CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div><Label htmlFor="allow-chat-input">Allow chat input</Label><p className="text-xs text-muted-foreground">Turn off free-text messages and attachments. Forms and configured buttons remain available.</p></div>
+                                <Switch id="allow-chat-input" checked={form.embedConfig.allowChatInput !== false} onCheckedChange={value => setForm(f => ({ ...f, embedConfig: { ...f.embedConfig, allowChatInput: value } }))} />
+                            </div>
+                            {form.embedConfig.buttons.map((button, i) => <div key={button.id} className="space-y-2 rounded-lg border border-border p-3">
+                                <Label htmlFor={`agent-button-label-${i}`}>Button {i + 1} label</Label><Input id={`agent-button-label-${i}`} value={button.label} maxLength={100} onChange={e => setForm(f => ({ ...f, embedConfig: { ...f.embedConfig, buttons: f.embedConfig.buttons.map((b, j) => j === i ? { ...b, label: e.target.value } : b) } }))} />
+                                <Label htmlFor={`agent-button-message-${i}`}>Message sent when clicked</Label><Textarea id={`agent-button-message-${i}`} value={button.message} maxLength={2000} onChange={e => setForm(f => ({ ...f, embedConfig: { ...f.embedConfig, buttons: f.embedConfig.buttons.map((b, j) => j === i ? { ...b, message: e.target.value } : b) } }))} />
+                                <Button type="button" variant="outline" onClick={() => setForm(f => ({ ...f, embedConfig: { ...f.embedConfig, buttons: f.embedConfig.buttons.filter((_, j) => j !== i) } }))}>Remove button</Button>
+                            </div>)}
+                            <Button type="button" variant="outline" disabled={form.embedConfig.buttons.length >= 12} onClick={() => setForm(f => ({ ...f, embedConfig: { ...f.embedConfig, buttons: [...f.embedConfig.buttons, { id: crypto.randomUUID(), label: "", message: "" }] } }))}>Add button</Button>
+                            <Button type="button" disabled={saveMutation.isPending} onClick={() => saveMutation.mutate(form)}>Save interaction settings</Button>
+                        </CardContent>
                     </Card>
 
                     {/* Access Control */}
