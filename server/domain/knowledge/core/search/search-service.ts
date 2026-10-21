@@ -11,6 +11,7 @@ import {
 } from "@shared/schema/index.js";
 import { eq, or, ilike, and, sql, inArray } from "drizzle-orm";
 import { createLogger } from "../../../../utils/logger.js";
+import { getPlatformDocumentationLibrary } from "../platform-documentation.service.js";
 // Lazy load services to avoid circular dependencies if any
 // But for type safety we can import types if separated.
 // Using inline imports or lazy imports for now to match original logic style if needed,
@@ -25,7 +26,7 @@ const logger = createLogger("SearchService");
  *
  * Defaults to FALSE. scripts/backfill-security-classification.ts has stamped all
  * 517,125 points across 119 collections, so the strict filter now returns the same
- * results as the tolerant one — verified on the three queries that previously
+ * results as the tolerant one â€” verified on the three queries that previously
  * returned nothing at all.
  *
  * The escape hatch survives because the failure it covers is silent and total: a
@@ -137,7 +138,7 @@ export const searchService = {
             updated_before?: string;
             updated_after?: string;
             /**
-             * Project Space retrieval boundary (PROJECT_SPACES_DESIGN §6.4). When set,
+             * Project Space retrieval boundary (PROJECT_SPACES_DESIGN Â§6.4). When set,
              * results are narrowed to this project instead of searching org-wide.
              *
              * Opt-in: callers that pass nothing get exactly today's org-wide behaviour,
@@ -165,9 +166,14 @@ export const searchService = {
             console.log(`[SearchService] Executing Unified Search (${queryType}) for org: ${organizationId} | Clearance: ${securityClearance}`);
             const queryLower = query.toLowerCase();
 
+            // Available without tenant embeddings/BYOK; namespaced IDs never resolve as private documents.
+            if (queryType !== "dataset" && queryType !== "graph" && !options.before && !options.after && !options.updated_before && !options.updated_after) {
+                results.push(...getPlatformDocumentationLibrary().search(query, organizationId, options.limit || 5));
+            }
+
             // Define parallel sub-tasks using Promise.allSettled for maximum concurrency and resilience
 
-            // ── Task 1: Jobs & Pipelines ──────────────────────────────────────────
+            // â”€â”€ Task 1: Jobs & Pipelines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             const searchJobsAndPipelines = async (): Promise<SearchResult[]> => {
                 if (queryType === "dataset" || queryType === "graph") return [];
                 const res: SearchResult[] = [];
@@ -215,7 +221,7 @@ export const searchService = {
                 return res;
             };
 
-            // ── Task 2: Datasets & Examples ───────────────────────────────────────
+            // â”€â”€ Task 2: Datasets & Examples â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             const searchDatasetsAndExamples = async (): Promise<SearchResult[]> => {
                 if (queryType !== "keyword" && queryType !== "dataset" && queryType !== "unknown") return [];
                 const res: SearchResult[] = [];
@@ -293,7 +299,7 @@ export const searchService = {
                 return res;
             };
 
-            // ── Task 3: Knowledge Graph Nodes ─────────────────────────────────────
+            // â”€â”€ Task 3: Knowledge Graph Nodes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             const searchGraphNodes = async (): Promise<SearchResult[]> => {
                 if (queryType !== "graph" && queryType !== "unknown") return [];
                 const res: SearchResult[] = [];
@@ -334,7 +340,7 @@ export const searchService = {
                 return res;
             };
 
-            // ── Task 4: Vector Document RAG (with 3.5s timeout) ───────────────────
+            // â”€â”€ Task 4: Vector Document RAG (with 3.5s timeout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             const searchVectorDocs = async (): Promise<SearchResult[]> => {
                 if (queryType === "dataset" || queryType === "graph" || queryType === "keyword") return [];
                 const res: SearchResult[] = [];
@@ -349,14 +355,14 @@ export const searchService = {
                             since: options.after || options.updated_after,
                             filter: {
                                 must: [
-                                    // Escape hatch, OFF by default — see ALLOW_UNCLASSIFIED_CHUNKS.
+                                    // Escape hatch, OFF by default â€” see ALLOW_UNCLASSIFIED_CHUNKS.
                                     //
                                     // A bare `range` excludes any point LACKING the key, and
                                     // no indexed chunk ever carried securityClassification:
                                     // 0 of 7826 points matched in org 342, 0 of 5064 in org
                                     // 291. The same query without the filter returned 5
                                     // documents. So the vector arm of unified search returned
-                                    // nothing for every query in every org, silently — agents
+                                    // nothing for every query in every org, silently â€” agents
                                     // concluded the knowledge base held nothing about this
                                     // platform and fell back to searching the public web.
                                     //
@@ -390,7 +396,7 @@ export const searchService = {
                         //
                         // The Qdrant payload predates Project Spaces and carries no
                         // projectId, so filtering inside the vector query would match
-                        // nothing and silently return an EMPTY result set — a far worse
+                        // nothing and silently return an EMPTY result set â€” a far worse
                         // failure than searching too broadly. Instead map the hits back
                         // through rag_assets -> knowledge_documents.project_id, which is
                         // exact and needs no reindex.
@@ -480,7 +486,7 @@ export const searchService = {
                 return res;
             };
 
-            // ── Task 5: Past Missions ─────────────────────────────────────────────
+            // â”€â”€ Task 5: Past Missions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             const searchPastMissions = async (): Promise<SearchResult[]> => {
                 if (queryType !== "keyword" && queryType !== "unknown") return [];
                 const res: SearchResult[] = [];
@@ -537,8 +543,12 @@ export const searchService = {
                 }
             }
 
-            results.sort((a, b) => (b.score || 0) - (a.score || 0));
-            return results.slice(0, 15);
+            const unique = new Map<string, SearchResult>();
+            for (const result of results) {
+                const key = `${result.type}:${result.id}`;
+                if (!unique.has(key) || (result.score || 0) > (unique.get(key)!.score || 0)) unique.set(key, result);
+            }
+            return [...unique.values()].sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, options.limit || 15);
         } catch (error: any) {
             logger.error("[SearchService] Execution error", error);
             return results;

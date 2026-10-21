@@ -54,8 +54,8 @@ export const documentToolDefinitions = [
             type: "object" as const,
             properties: {
                 documentId: {
-                    type: "number",
-                    description: "Document ID",
+                    anyOf: [{ type: "number" }, { type: "string", pattern: "^platform:[a-z0-9-]+$" }],
+                    description: "Organization document ID or published platform documentation ID (platform:slug)",
                 },
             },
             required: ["documentId"],
@@ -117,6 +117,6 @@ export const ListDocumentsInput = z.object({
 });
 
 export const GetDocumentContentInput = z.object({
-    documentId: z.number(),
+    documentId: z.union([z.number(), z.string().regex(/^platform:[a-z0-9-]+$/)]),
 });
 

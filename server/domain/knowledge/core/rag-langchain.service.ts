@@ -21,6 +21,7 @@ import { eq } from "drizzle-orm";
 import { getAssetPlainText, buildRagContextString, type RagContentSource } from "./rag-utils.service.js";
 import { withEmbeddingRetry } from "@server/utils/embedding-retry.js";
 import { createLogger } from "@server/utils/logger.js";
+import { retrievePlatformDocumentation } from "./platform-documentation-retrieval.js";
 import crypto from "crypto";
 import { redisService } from "@domain/core/infrastructure/redis/redis-client.js";
 
@@ -97,19 +98,19 @@ async function ollamaEmbed(text: string, targetDim: number): Promise<number[]> {
  * An embedding call that "succeeded" with nothing in it.
  *
  * Under a Gemini spending cap the API answers 429, but the LangChain wrapper
- * does not surface that as a rejection — it resolves with a zero-length vector.
+ * does not surface that as a rejection â€” it resolves with a zero-length vector.
  * Every guard downstream then passed it along: the quota branch below never ran
  * (no error to inspect), Qdrant rejected the upsert with "expected dim: 768,
  * got 0", and that rejection was swallowed by a non-blocking catch. The document
  * row still carried a qdrant_point_id, so nothing anywhere recorded that the
- * document had not been indexed — it was simply unfindable, permanently.
+ * document had not been indexed â€” it was simply unfindable, permanently.
  *
  * Treating an empty vector as a failure is what lets the Ollama/deterministic
  * fallback below actually engage, which is what it was built for.
  */
 class EmptyEmbeddingError extends Error {
   constructor(label: string) {
-    super(`${label} returned an empty embedding (provider reported success) — treating as a quota failure`);
+    super(`${label} returned an empty embedding (provider reported success) â€” treating as a quota failure`);
     this.name = "EmptyEmbeddingError";
   }
 }
@@ -125,7 +126,7 @@ function isQuotaError(msg: string): boolean {
          m.includes("spending cap") || m.includes("monthly budget") || m.includes("project spend");
 }
 
-/** Fallback embedding: try Ollama, then L2-normalized deterministic vector (degraded RAG — no crash). */
+/** Fallback embedding: try Ollama, then L2-normalized deterministic vector (degraded RAG â€” no crash). */
 async function fallbackEmbed(text: string, targetDim: number, label: string): Promise<number[]> {
   try {
     logger.warn(`[LangChain] ${label} quota exhausted. Attempting Ollama fallback (${OLLAMA_EMBED_MODEL})...`);
@@ -137,7 +138,7 @@ async function fallbackEmbed(text: string, targetDim: number, label: string): Pr
     // An Ollama vector is in a different space than the stored Gemini vectors,
     // so nearest-neighbour results over the mix are degraded even though the
     // call "worked".
-    markDegradation("embeddings", `${label}: provider quota exhausted — serving Ollama (${OLLAMA_EMBED_MODEL}) fallback vectors`);
+    markDegradation("embeddings", `${label}: provider quota exhausted â€” serving Ollama (${OLLAMA_EMBED_MODEL}) fallback vectors`);
     return vec;
   } catch (ollamaErr: any) {
     // Last resort, and worth being loud about: a lexical hash is not in the same
@@ -146,15 +147,15 @@ async function fallbackEmbed(text: string, targetDim: number, label: string): Pr
     // it does not keep RAG working.
     logger.error(
       `[LangChain] ${label} Ollama fallback failed: ${ollamaErr.message}. ` +
-        `Falling back to a deterministic lexical vector — results from this embed are NOT semantically ` +
+        `Falling back to a deterministic lexical vector â€” results from this embed are NOT semantically ` +
         `comparable to stored vectors, and any search using it should be treated as unreliable.`,
     );
-    markDegradation("embeddings", `${label}: Ollama fallback failed (${ollamaErr.message}) — serving deterministic lexical vectors not comparable to stored embeddings`);
+    markDegradation("embeddings", `${label}: Ollama fallback failed (${ollamaErr.message}) â€” serving deterministic lexical vectors not comparable to stored embeddings`);
     return deterministicFallbackEmbedding(text, targetDim);
   }
 }
 
-// ── Two-Tier Query Embedding Cache (In-Memory LRU + Redis) ────────────
+// â”€â”€ Two-Tier Query Embedding Cache (In-Memory LRU + Redis) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface EmbedCacheEntry {
   vector: number[];
   expiresAt: number;
@@ -242,7 +243,7 @@ export function getEmbeddings() {
   if (hasAiOrganizationContext() || process.env.NODE_ENV === "production") return organizationEmbeddings();
   if (process.env.SKIP_GEMINI_EMBEDDINGS === "true") {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("SKIP_GEMINI_EMBEDDINGS must not be set in production — it produces zero vectors that corrupt Qdrant retrieval.");
+      throw new Error("SKIP_GEMINI_EMBEDDINGS must not be set in production â€” it produces zero vectors that corrupt Qdrant retrieval.");
     }
     logger.warn("[LangChain] SKIP_GEMINI_EMBEDDINGS is true (non-production). Returning dummy embeddings instance.");
     const qdrantVectorSize = Number(process.env.QDRANT_VECTOR_SIZE || 3072);
@@ -445,8 +446,8 @@ export async function assetToDocuments(
  * Enriches a text chunk using Gemini Flash to extract metadata
  */
 export async function enrichChunk(content: string, organizationId?: number | null): Promise<Partial<RagChunkMetadata>> {
-  // Gate on the organization's key. Gating on the platform GEMINI_API_KEY —
-  // never set in production — skipped enrichment for every customer.
+  // Gate on the organization's key. Gating on the platform GEMINI_API_KEY â€”
+  // never set in production â€” skipped enrichment for every customer.
   const apiKey = await resolveOrgGeminiKey(organizationId);
   if (!apiKey) return {};
 
@@ -559,7 +560,7 @@ export async function addDocumentsToVectorStore(docs: RagDocument[]): Promise<vo
         collectionName: collection,
         // Every chunk MUST carry this. search-service filters vector hits with
         // `must: [{ key: "securityClassification", range: { lte: clearance } }]`, and a
-        // Qdrant range filter excludes any point LACKING the field — so a chunk indexed
+        // Qdrant range filter excludes any point LACKING the field â€” so a chunk indexed
         // without it is not "unclassified", it is invisible. Nothing here ever set it,
         // which silently made the vector arm of unified search return zero for every
         // query in every org: 0 of 7826 points matched in org 342 and 0 of 5064 in org
@@ -628,6 +629,24 @@ interface RetrievedDocument {
 export const DEFAULT_SECURITY_CLASSIFICATION = 1;
 
 export async function retrieveSimilarDocuments(
+  query: string,
+  options: RetrieverOptions = {}
+): Promise<RetrievedDocument[]> {
+  const platform = retrievePlatformDocumentation(query, options);
+  let organization: RetrievedDocument[];
+  try {
+    organization = await retrieveOrganizationDocuments(query, options);
+  } catch (error) {
+    if (!platform.length) throw error;
+    logger.warn("[RAG] Organization retrieval failed; returning published platform documentation only", { error });
+    return platform;
+  }
+  return [...organization, ...platform]
+    .sort((a, b) => (b.adjustedScore ?? b.score ?? 0) - (a.adjustedScore ?? a.score ?? 0))
+    .slice(0, options.k ?? Number(process.env.RAG_RETRIEVAL_K || 5));
+}
+
+async function retrieveOrganizationDocuments(
   query: string,
   options: RetrieverOptions = {}
 ): Promise<RetrievedDocument[]> {

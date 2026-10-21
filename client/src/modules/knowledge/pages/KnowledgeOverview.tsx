@@ -72,6 +72,13 @@ function formatCount(value: unknown) {
 
 const knowledgeLinks: LinkItem[] = [
   {
+    title: "Platform documentation",
+    description: "Read-only Oddjob guides shared with every organization and available to agents.",
+    href: "/knowledge/platform-docs",
+    icon: BookOpen,
+    tone: "border-border bg-muted text-foreground",
+  },
+  {
     title: "Graph Explorer",
     description: "Entities, relationships, confidence, lineage, and semantic neighborhoods.",
     href: "/knowledge/graph",

@@ -10,16 +10,27 @@ import { and, eq, inArray } from "drizzle-orm";
 import { searchService, type SearchResult } from "../../domain/knowledge/core/search/search-service.js";
 import { successResponse, errorResponse, getOrgContext, type ToolContext } from "./utils.js";
 import { hasResourcePermission } from "@shared/schema/index.js";
+import { getPlatformDocumentationLibrary } from "../../domain/knowledge/core/platform-documentation.service.js";
+
+function platformDocumentsForContext(organizationId: number | null, context?: ToolContext) {
+    // Public availability does not override explicitly restricted tool scopes.
+    if (context?.allowedTopicIds?.length) return [];
+    const library = getPlatformDocumentationLibrary();
+    return library.list(organizationId)
+        .filter(doc => !context?.resourceScoping || hasResourcePermission(context.permissions || [], "document:read", doc.url, context.resourceScoping))
+        .map(doc => library.get(doc.id, organizationId)!);
+}
 
 export async function handleSearchDocuments(args: unknown, context?: ToolContext) {
     try {
         const input = SearchDocumentsInput.parse(args);
         const orgContext = getOrgContext(context);
 
-        const allDocuments = await documentService.listDocuments(orgContext, {
+        const privateDocuments = await documentService.listDocuments(orgContext, {
             limit: 500, // Fetch more docs to improve search accuracy
             topicIds: context?.allowedTopicIds || undefined
         });
+        const allDocuments = [...privateDocuments, ...platformDocumentsForContext(orgContext.organizationId, context)];
 
         // Apply resource scoping filter (New)
         let documents = allDocuments;
@@ -126,10 +137,11 @@ export async function handleListDocuments(args: unknown, context?: ToolContext) 
         const input = ListDocumentsInput.parse(args);
         const orgContext = getOrgContext(context);
 
-        const documents = await documentService.listDocuments(orgContext, {
+        const privateDocuments = await documentService.listDocuments(orgContext, {
             limit: input.limit,
             topicIds: context?.allowedTopicIds || undefined
         });
+        const documents = [...platformDocumentsForContext(orgContext.organizationId, context), ...privateDocuments];
 
         let filtered = documents;
         if (input.search) {
@@ -138,7 +150,7 @@ export async function handleListDocuments(args: unknown, context?: ToolContext) 
         }
 
         return successResponse(
-            filtered.map((d: any) => ({
+            filtered.slice(0, input.limit).map((d: any) => ({
                 id: d.id,
                 title: d.title,
                 url: d.url || `/knowledge/documents/${d.id}`, // Prefer direct URL column
@@ -157,7 +169,10 @@ export async function handleGetDocumentContent(args: unknown, context?: ToolCont
         const input = GetDocumentContentInput.parse(args);
         const orgContext = getOrgContext(context);
 
-        const document = await documentService.getDocumentById(input.documentId, orgContext);
+        const document = typeof input.documentId === "string"
+            ? platformDocumentsForContext(orgContext.organizationId, context).find(doc => doc.id === input.documentId)
+            : await documentService.getDocumentById(input.documentId, orgContext);
+        if (!document) return errorResponse("Document not found or access denied");
 
         // 1. Resource Scoping (New)
         if (context?.resourceScoping) {
