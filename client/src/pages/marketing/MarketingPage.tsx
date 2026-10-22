@@ -1,15 +1,12 @@
+import { CapabilityShowcase } from "@/components/CapabilityShowcase";
 import { ProductScreenshots } from '@/components/ProductScreenshots';
 import { AnnouncementsSignup } from '@/components/AnnouncementsSignup';
 import { useEffect } from "react";
-import { ArrowRight, BookOpen, Github, Layers, Route } from "lucide-react";
+import { ArrowRight, Github } from "lucide-react";
 import { HatIcon } from "@domain-ui/core/ui/components/shared/HatIcon";
 
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-5 py-3 text-sm font-semibold transition hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary";
-const capabilities = [
-  { title: "A crew around your goal", icon: Route, text: "Bring people and agents together in a room. Give the work context, follow its progress, and review the result." },
-  { title: "Knowledge you can build on", icon: BookOpen, text: "Bring documents and connected sources into your organization’s knowledge, so useful context can carry into the next mission." },
-  { title: "Make recurring work an app", icon: Layers, text: "Use App Forge and Forms to turn repeatable workflows into interfaces your team can use and improve." },
-];
+
 
 /** Public homepage shared by the marketing, login and core SPA entries. */
 export default function MarketingPage() {
@@ -35,7 +32,7 @@ export default function MarketingPage() {
         ].map(([title, text], i) => <li key={title} className="flex gap-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold">{i + 1}</span><div><h3 className="font-semibold">{title}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p></div></li>)}</ol><p className="mt-7 text-xs text-muted-foreground">Illustrative workflow. Available actions depend on your configuration.</p>
       </aside></section>
     <ProductScreenshots />
-      <section aria-label="Oddjob capabilities" className="grid gap-5 border-t border-border py-12 md:grid-cols-3">{capabilities.map(({ title, icon: Icon, text }) => <article key={title} className="rounded-2xl border border-border bg-card p-7"><Icon className="h-6 w-6" aria-hidden="true" /><h2 className="mt-5 text-xl font-semibold">{title}</h2><p className="mt-3 leading-7 text-muted-foreground">{text}</p></article>)}</section>
+      <CapabilityShowcase />
       <section className="grid gap-6 py-10 md:grid-cols-2"><h2 className="max-w-md text-3xl font-bold tracking-tight">Your workspace.<br />Your context. Your decisions.</h2><div className="space-y-4 leading-7 text-muted-foreground"><p>Connect the tools your organization uses, bring your own AI provider credentials, and decide who can access the work.</p><p>Follow mission history and approval requests as work moves forward. Inspect the output and execution evidence before relying on the result.</p><p>Oddjob is open source under Apache 2.0. Explore the code, contribute, or run your own deployment.</p><a href="/overview" className="inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline underline-offset-4">Explore Oddjob <ArrowRight className="h-4 w-4" aria-hidden="true" /></a></div></section>
       <AnnouncementsSignup className="my-14" />
     </main>

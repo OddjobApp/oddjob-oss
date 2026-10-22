@@ -1,3 +1,4 @@
+import { CapabilityShowcase } from "@/components/CapabilityShowcase";
 import { ProductScreenshots } from '@/components/ProductScreenshots';
 import { useEffect, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
@@ -44,7 +45,7 @@ export function Overview() {
   return <Shell title="Give autonomous work a place to run." intro="Plan, execute, approve, and replay operational work across agents, tools, knowledge, and internal apps.">
     <Actions />
     <ProductScreenshots />
-    <section aria-label="Capabilities" className="grid gap-5 md:grid-cols-2">{capabilities.map(({ title, detail, icon: Icon }) => <article key={title} className={panel}><Icon className="mb-5 h-6 w-6" aria-hidden="true" /><h2 className="text-xl font-semibold">{title}</h2><p className="mt-3 leading-7 text-muted-foreground">{detail}</p></article>)}</section>
+    <CapabilityShowcase />
     <section className={panel}><h2 className="text-2xl font-semibold">Start with a goal. Stay involved at the decisions.</h2><p className="mt-4 max-w-3xl leading-7 text-muted-foreground">Bring the context, define the expected outcome, and review the proposed work. Follow progress, respond to approval requests, and inspect the result before using it.</p><a href="/use-cases" className={`${link} mt-4`}>Explore example workflows <ArrowRight className="ml-2 h-4 w-4" /></a></section>
     <p className="text-sm leading-6 text-muted-foreground">Available tools, integrations, and actions depend on your deployment, organization permissions, and configured connections. Visit the <a className="underline underline-offset-4" href="/trust">Trust Center</a> for reported system status and evidence.</p>
   </Shell>;

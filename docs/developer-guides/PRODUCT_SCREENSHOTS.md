@@ -38,3 +38,26 @@ apply to deployments; configure a suitable tile service for sustained traffic.
 The public `/app/rescue-dispatch` route was stuck loading at capture time and had
 no running Forge runtime recorded. The showcase links to source rather than that
 route. It does not claim a deployed emergency service or verified dispatch actions.
+
+## Capability demonstrations (2026-10-22)
+
+The five capability cards on the homepage and overview use these captures:
+
+| Asset | Source | Evidence and limitations |
+| --- | --- | --- |
+| `durable-missions.jpg` | `/missions/1/runs/1?orgId=1`, Developer Mode / Activity | Saved demo mission 1 and run 1, explicitly paused; no pipelines executed |
+| `app-forge.jpg` | CREW `crew-1792681840650-p4jxk9s?studio=forge&orgId=1` | Actual specification UI with fictional requirements; generation was not started |
+| `organizational-knowledge.jpg` | Knowledge Store, document 2 | Synthetic playbook uploaded through the normal UI; cropped to the library and demo row, excluding other document content |
+| `approvals-replay.jpg` | Actual TimelineTab rendered in an isolated read-only UI preview | Data captured from the org-scoped evidence API for demo run 1, with payloads excluded; only real creation/pause events, no invented approvals or computer-use history |
+| `spatial-intelligence.jpg` | `/operations/spatial?orgId=1`, H3 palette | Draft sample selection on Esri satellite imagery; no Apply action |
+
+Mission/run records are explicitly named DEMO. Run context has `demo: true`,
+`seeded: true`, `environment: demo`, and `source: public-showcase-demo`, so it is
+classified as synthetic evidence rather than production reliability evidence.
+The run was created with no pipeline sequence and paused without execution.
+No approval requests, notification jobs, external communications, or dispatches
+were created. The knowledge document contains only fictional operational guidance.
+
+The Timeline tab now loads the existing org-scoped evidence endpoint instead of
+displaying a Gantt placeholder. Its local capture is labeled as a read-only UI
+preview. Captions distinguish demonstrated functionality from unexercised actions.

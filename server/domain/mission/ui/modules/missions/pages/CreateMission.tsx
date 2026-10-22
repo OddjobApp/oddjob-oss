@@ -28,7 +28,7 @@ import {
   ShieldCheck, LayoutDashboard
 } from "lucide-react";
 import { useToast } from "@domain-ui/core/ui/hooks/use-toast";
-import { formSchema, MissionMember } from '../types/index.js';
+import { formSchema, missionPlanResponseSchema, MissionMember } from '../types/index.js';
 import { EXAMPLE_PROMPTS, STEPS, DELIVERABLE_TYPES } from '../constants/index.js';
 import { MissionBriefStep } from '../components/MissionBriefStep.js';
 import type { ExecutionStrategy } from "@/modules/missions/config/mission-strategies.config";
@@ -227,7 +227,11 @@ export default function CreateMissionPage() {
                 const err = await res.json();
                 throw new Error(err.error || "Failed to generate strategic plan");
             }
-            return res.json();
+            // Reject incomplete generated plans before they overwrite the brief.
+            // Otherwise undefined objective/name values crash the next render.
+            const plan = await res.json();
+            missionPlanResponseSchema.parse(plan);
+            return plan;
         },
         onSuccess: (plan) => {
             form.setValue("name", plan.name);

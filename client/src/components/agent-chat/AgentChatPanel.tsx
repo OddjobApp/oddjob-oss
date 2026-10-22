@@ -550,7 +550,7 @@ export function AgentChatPanel({
     if (el && transcriptEl?.contains(el)) {
       const target = el.getBoundingClientRect();
       const viewport = transcriptEl.getBoundingClientRect();
-      transcriptEl.scrollTo({ top: transcriptEl.scrollTop + target.top - viewport.top - (transcriptEl.clientHeight - target.height) / 2, behavior: 'smooth' });
+      transcriptEl.scrollTo?.({ top: transcriptEl.scrollTop + target.top - viewport.top - (transcriptEl.clientHeight - target.height) / 2, behavior: 'smooth' });
     } else {
       // A windowed transcript has not mounted a turn that is off screen, so
       // there is no element to find; scroll the list to it instead.
@@ -797,12 +797,12 @@ export function AgentChatPanel({
       // Unmeasured rows are estimated, so the end marker's offset is a guess
       // until the last row mounts. Let the list land on it first.
       virtuosoRef.current.scrollToIndex({ index: 'LAST', align: 'end' });
-      const frame = requestAnimationFrame(() => transcriptEl?.scrollTo({ top: transcriptEl.scrollHeight, behavior: 'smooth' }));
+      const frame = requestAnimationFrame(() => transcriptEl?.scrollTo?.({ top: transcriptEl.scrollHeight, behavior: 'smooth' }));
       return () => cancelAnimationFrame(frame);
     }
     // scrollIntoView also moves overflow-hidden ancestors, clipping the entire
     // room above the composer. Only the transcript owns conversation scrolling.
-    transcriptEl?.scrollTo({ top: transcriptEl.scrollHeight, behavior: 'smooth' });
+    transcriptEl?.scrollTo?.({ top: transcriptEl.scrollHeight, behavior: 'smooth' });
   }, [turns.length, isSending, virtualizeTurns, transcriptEl]);
 
   const invite = useCallback(async () => {
