@@ -16,10 +16,10 @@ const examples = [
     detail: "Inspect actions, review approval requests, and follow execution evidence.",
     caption: "Read-only preview of the evidence UI using actual creation and pause records from the Oddjob demo run. No approval decision or computer-use replay was executed in this demonstration.",
     alt: "Oddjob evidence timeline preview displaying the recorded creation and pause of a synthetic demonstration run." },
-  { title: "Spatial intelligence", icon: MapPin, src: "spatial-intelligence.jpg", width: 1274, height: 717,
+  { title: "Spatial intelligence", icon: MapPin, src: "spatial-intelligence.jpg", width: 775, height: 320,
     detail: "Use location-bearing signals and geofences to add spatial context to operational work.",
-    caption: "The live H3 geofence editor with a sample cell selection and satellite basemap. This is a draft selection; no operational geofence was applied.",
-    alt: "Oddjob spatial editor displaying selected hexagonal cells over satellite imagery, with resolution and ring-radius controls." },
+    caption: "Detail from the live H3 editor’s draft sample selection; no operational geofence was applied. Imagery: Esri, Vantor, Earthstar Geographics, and the GIS User Community.",
+    alt: "Detail of Oddjob’s spatial editor showing sample selected hexagonal cells over satellite imagery, with paint and pan controls." },
 ];
 export function CapabilityShowcase() {
   return <section aria-label="Oddjob capabilities in practice" className="grid items-start gap-6 border-t border-border py-12 md:grid-cols-2">

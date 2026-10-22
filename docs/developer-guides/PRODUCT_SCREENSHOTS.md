@@ -49,7 +49,7 @@ The five capability cards on the homepage and overview use these captures:
 | `app-forge.jpg` | CREW `crew-1792681840650-p4jxk9s?studio=forge&orgId=1` | Actual specification UI with fictional requirements; generation was not started |
 | `organizational-knowledge.jpg` | Knowledge Store, document 2 | Synthetic playbook uploaded through the normal UI; cropped to the library and demo row, excluding other document content |
 | `approvals-replay.jpg` | Actual TimelineTab rendered in an isolated read-only UI preview | Data captured from the org-scoped evidence API for demo run 1, with payloads excluded; only real creation/pause events, no invented approvals or computer-use history |
-| `spatial-intelligence.jpg` | `/operations/spatial?orgId=1`, H3 palette | Draft sample selection on Esri satellite imagery; no Apply action |
+| `spatial-intelligence.jpg` | `/operations/spatial?orgId=1`, H3 palette | Map-detail crop of a draft sample selection on Esri satellite imagery; no Apply action |
 
 Mission/run records are explicitly named DEMO. Run context has `demo: true`,
 `seeded: true`, `environment: demo`, and `source: public-showcase-demo`, so it is
@@ -61,3 +61,8 @@ were created. The knowledge document contains only fictional operational guidanc
 The Timeline tab now loads the existing org-scoped evidence endpoint instead of
 displaying a Gantt placeholder. Its local capture is labeled as a read-only UI
 preview. Captions distinguish demonstrated functionality from unexercised actions.
+
+The spatial image is a focused browser crop of the captured map, excluding a
+transient help tooltip over the side controls. Imagery attribution is included in
+the public caption, using the provider's service metadata:
+https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer?f=pjson
