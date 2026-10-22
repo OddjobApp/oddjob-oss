@@ -1,4 +1,3 @@
-import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@domain-ui/core/ui/components/ui/card";
 import { Button } from "@domain-ui/core/ui/components/ui/button";
 import { Badge } from "@domain-ui/core/ui/components/ui/badge";
