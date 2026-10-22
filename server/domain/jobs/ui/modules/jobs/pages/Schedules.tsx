@@ -1,3 +1,4 @@
+import { Separator } from '@domain-ui/core/ui/components/ui/separator';
 import { PageShell } from "@domain-ui/core/ui/components/layout/PageShell";
 import { useState, useMemo } from 'react';
 import { ErrorBoundary } from '@domain-ui/core/ui/components/shared/ErrorBoundary';
