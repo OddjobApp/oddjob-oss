@@ -1310,6 +1310,26 @@ export async function runToolPasses(scope: {
     }
 
     result = await recoverMarkdownToolCalls({ card, result, availableTools, sink });
+    // A model can spend its output budget on column definitions and omit rows.
+    // Repair that display from the executed Gmail artifact, never from its prose.
+    if (toolsUsed.some(t => t.name === 'render_table' && !t.ok && t.error?.startsWith('invalid arguments')) &&
+        !toolsUsed.some(t => t.name === 'render_table' && t.ok) &&
+        availableTools.some(t => t.definition.name === 'render_table') && toolsUsed.length < MAX_TOOL_CALLS_PER_TURN) {
+        const source = [...artifacts].reverse().find(a => ['gmail_search', 'gmail_list_messages'].includes(a.tool) &&
+            a.payload?.type === 'google_workspace_results' && Array.isArray(a.payload.items) && a.payload.items.length);
+        if (source && Array.isArray(source.payload.items)) {
+            const rows = source.payload.items.slice(0, 20).map((item: any) => ({
+                sender: String(item.sender ?? ''), subject: String(item.title ?? ''),
+                received: String(item.date ?? ''), snippet: String(item.preview ?? ''),
+            }));
+            const [rendered] = await executeToolCalls([{ name: 'render_table', args: {
+                title: 'Gmail search results', description: 'Retrieved messages; received times retain the source time zone.',
+                columns: [{ key: 'sender', label: 'Sender' }, { key: 'subject', label: 'Subject' },
+                    { key: 'received', label: 'Received' }, { key: 'snippet', label: 'Snippet' }], rows,
+            } }], sink);
+            if (rendered.record.ok) result.content = `The Gmail search succeeded. The table shows ${rows.length} retrieved messages; additional results may be available.`;
+        }
+    }
     await dispatchFallbackEmail({ card, message, result, toolsUsed, sink });
 
     if (calendarPlanning && toolsUsed.some(call => call.name === 'gcal_create_event' && !call.ok) &&
