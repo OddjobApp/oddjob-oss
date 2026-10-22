@@ -438,6 +438,15 @@ router.delete("/documents/:id", requireAuth, asyncHandler(async (req: Request, r
     res.json({ success: true });
 }));
 
+// Read the text of uploaded documents saved without any, then index them.
+// Organization admins, for their own organization only.
+router.post("/documents/reextract", requireAuth, asyncHandler(async (req: Request, res: Response) => {
+    const orgContext = await getUserOrgContext(req);
+    if (!orgContext.isOrgAdmin && !orgContext.isSuperAdmin) throw new ForbiddenError("Admin access required");
+    const result = await knowledgeService.reextractDocuments(orgContext);
+    res.json(result);
+}));
+
 // Reindex all documents
 router.post("/documents/reindex", requireAuth, asyncHandler(async (req: Request, res: Response) => {
     let orgContext = await getUserOrgContext(req);
@@ -446,13 +455,10 @@ router.post("/documents/reindex", requireAuth, asyncHandler(async (req: Request,
     if (req.body.organizationId) {
         const targetOrgId = parseInt(req.body.organizationId, 10);
 
-        // Safety check: Only allow context switch if user is valid admin
-        if (!orgContext.isAdmin && !orgContext.isOrgAdmin) {
-            throw new ForbiddenError("Admin access required");
-        }
-
-        // If not super admin, ensure target matches current org (redundant but safe)
-        if (!orgContext.isAdmin && orgContext.organizationId !== targetOrgId) {
+        // isAdmin is an ORGANIZATION admin: only a platform super admin may act
+        // on another organization. (This compared isAdmin, so any org admin could
+        // re-index any organization.)
+        if (!orgContext.isSuperAdmin && orgContext.organizationId !== targetOrgId) {
             throw new ForbiddenError("Cannot reindex another organization");
         }
 

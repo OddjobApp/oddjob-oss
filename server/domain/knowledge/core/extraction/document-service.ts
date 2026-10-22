@@ -21,6 +21,18 @@ const reindexProgress = new Map<number, {
 }>();
 
 export const documentService = {
+    /**
+     * Read the text of this organization's uploads that were saved without any
+     * (uploads were never extracted before), then index them.
+     */
+    async reextractDocuments(orgContext: OrgContext) {
+        const organizationId = orgContext.organizationId;
+        if (!organizationId) throw new NotFoundError("Organization context required");
+        const { reextractUploadedDocuments } = await import("../document-text-extraction.js");
+        return reextractUploadedDocuments(organizationId, (documentId, patch) =>
+            this.updateDocument(documentId, patch, orgContext));
+    },
+
 
     /**
      * Get document topics map helper
@@ -186,6 +198,12 @@ export const documentService = {
         datasetItemId?: number | null;
     }, orgContext: OrgContext): Promise<any> {
         return withQueryTracking("documentService.createDocument", async () => {
+            // An upload is searchable only once it has text; read it from the file.
+            if ((input.sourceType || "upload") === "upload" && input.fileData && !input.textContent?.trim()) {
+                const { extractUploadedText, extractionMetadata } = await import("../document-text-extraction.js");
+                const result = await extractUploadedText({ fileData: input.fileData, contentType: input.contentType, title: input.title }, orgContext.organizationId ?? null);
+                input = { ...input, textContent: result.text, metadata: { ...(input.metadata ?? {}), extraction: extractionMetadata(result) } };
+            }
             // Get user for createdBy
             let createdBy: string | null = null;
             if (orgContext.userId) {
@@ -502,6 +520,15 @@ export const documentService = {
             // Check existence
             const [existing] = await db.select().from(knowledgeDocuments).where(and(...conditions)).limit(1);
             if (!existing) throw new NotFoundError("Document not found");
+
+            // A replaced file without new text is read again.
+            if (input.fileData && input.textContent === undefined) {
+                const { extractUploadedText, extractionMetadata } = await import("../document-text-extraction.js");
+                const result = await extractUploadedText({
+                    fileData: input.fileData, contentType: input.contentType ?? existing.contentType, title: input.title ?? existing.title,
+                }, orgContext.organizationId ?? null);
+                input = { ...input, textContent: result.text, metadata: { ...((input.metadata ?? existing.metadata) as Record<string, any> ?? {}), extraction: extractionMetadata(result) } };
+            }
 
             const updateData: any = { updatedAt: new Date() };
             if (input.title !== undefined) updateData.title = input.title;

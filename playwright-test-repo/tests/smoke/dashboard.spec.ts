@@ -5,8 +5,9 @@ test.describe('Dashboard Smoke Tests', () => {
     // @behavior platform.shell-navigation.dashboard-sidebar-visible
     // @tag smoke navigation critical
 
-    console.log('[Smoke] Opening main page...');
-    await page.goto('/');
+    // `/` is the public site; the signed-in workspace lives at /dashboard.
+    console.log('[Smoke] Opening the dashboard...');
+    await page.goto('/dashboard');
 
     console.log('[Smoke] Verifying title...');
     await expect(page).toHaveTitle(/Oddjob/);
