@@ -90,6 +90,7 @@ providers either move to Gemini or refuse in production:
 | Structured planning, forge repair and hot-reload patches | Gemini, org key | `orgJsonCompletion` (`server/domain/ai/core/org-json-completion.ts`) |
 | `generate_image` tool | Gemini image, org key | Falls back to an org's own stored OpenAI/DALL-E credential |
 | Video generation (Media Studio) | fal.ai (Seedance), org key | Organization Settings → Video rendering (`/api/org-model/fal`); `FAL_KEY` refused at boot |
+| Knowledge embeddings and search | Gemini, else Amazon Titan Text Embeddings V2 on the org's Bedrock connection | `organizationEmbeddings` (`server/domain/ai/core/org-embeddings.ts`). Titan is in-Region on-demand, 1024 dimensions, zero-padded to the collection size (cosine-preserving). Gemini wins whenever a Gemini key exists, so an index stays one vector space; an org that switches provider must re-index (`POST /api/knowledge/documents/reindex`). |
 
 ### fal.ai key
 

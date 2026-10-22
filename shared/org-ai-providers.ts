@@ -103,4 +103,5 @@ export function orgAiProviderBaseUrl(provider: OrgAiProviderId, region?: string)
 }
 
 /** Features that only run on Gemini, and so need a Gemini key whatever the default is. */
-export const GEMINI_ONLY_FEATURES = "knowledge search and embeddings, image generation and speech-to-text";
+/** Knowledge search and embeddings run on Gemini or, without it, Amazon Bedrock (Titan). */
+export const GEMINI_ONLY_FEATURES = "image generation and speech-to-text";
