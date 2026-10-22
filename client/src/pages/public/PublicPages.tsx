@@ -176,7 +176,7 @@ export function UseCases() {
         <h3 className="text-xl font-semibold">{title}</h3><p className="mt-3 leading-7 text-muted-foreground">{detail}</p>
         <p className="mt-4 leading-7"><strong>Try it:</strong> {example}</p>
         <p className="mt-4 border-t border-border pt-4 text-sm leading-6 text-muted-foreground"><strong className="text-foreground">What you need:</strong> {requires}</p>
-        <a href={`https://github.com/OddjobApp/oddjob-oss/blob/main/${doc}`} target="_blank" rel="noopener noreferrer" className={`${link} mt-3 underline underline-offset-4`} aria-label={`Read ${title} documentation`}>Read the documentation <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></a>
+        <a href={`https://github.com/OddjobApp/oddjob-oss/blob/${["docs/developer-guides/PRODUCT_SCREENSHOTS.md", "docs/developer-guides/ORG_OAUTH_APPS.md"].includes(doc) ? "codex/login-announcements" : "main"}/${doc}`} target="_blank" rel="noopener noreferrer" className={`${link} mt-3 underline underline-offset-4`} aria-label={`Read ${title} documentation`}>Read the documentation <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></a>
         {title === 'Spatial intelligence' && <a href="/overview#spatial-rules-demo" className={`${link} mt-2 underline underline-offset-4`}>Try the geographic rules demo</a>}
         {title === 'Published agents and forms' && <a href="/a/oddjob-announcements" className={`${link} mt-2 underline underline-offset-4`}>Try the announcements form</a>}
       </article>)}</div>
