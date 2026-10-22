@@ -7,7 +7,7 @@ describe("public documentation navigation",()=>{
     expect(resolveSpaTemplate("/docs-private")).toBeNull();
   });
   it("bridges approved guides and suppresses repository and unsafe links",()=>{
-    expect(publicDocumentationLink("https://github.com/OddjobApp/oddjob-oss/blob/main/docs/developer-guides/ORG_AGENTMAIL.md","integrations")).toBe("/docs/agentmail");
+    expect(publicDocumentationLink("https://github.com/OddjobApp/oddjob-oss/blob/main/server/knowledge/public-features/agentmail.md","integrations")).toBe("/docs/agentmail");
     expect(publicDocumentationLink("https://github.com/OddjobApp/oddjob-oss/blob/main/private.md","pipelines")).toBeUndefined();
     expect(publicDocumentationLink("javascript:alert(1)","pipelines")).toBeUndefined();
     expect(publicDocumentationLink("../private.md","pipelines")).toBeUndefined();

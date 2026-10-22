@@ -584,7 +584,7 @@ describe("isRouteFile", () => {
 
 
 describe("public platform documentation boundary", () => {
-  it("uses current platform facts without loading organization specs or knowledge", async () => {
+  it("publishes curated guides without scanning internal schemas or organization knowledge", async () => {
     vi.clearAllMocks();
     const scan = vi.spyOn(documentationService, "getFeatures").mockResolvedValue([]);
     (fs.readFile as Mock).mockResolvedValue("# Pipelines\n\nCurrent guide from platform source.");
@@ -592,7 +592,8 @@ describe("public platform documentation boundary", () => {
     try {
       const doc = await documentationService.getPublicFeatureSpec("pipelines");
       expect(doc.markdown).toContain("Current guide from platform source");
-      expect(scan).toHaveBeenCalledWith();
+      expect(doc.markdown).not.toContain("Implementation reference");
+      expect(scan).not.toHaveBeenCalled();
       expect(knowledgeService.getGeneratedSpecMeta).not.toHaveBeenCalled();
       expect(knowledgeService.getDocumentByTitle).not.toHaveBeenCalled();
       expect(knowledgeService.createDocument).not.toHaveBeenCalled();
