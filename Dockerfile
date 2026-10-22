@@ -132,6 +132,11 @@ COPY --from=build /runtime-ui/server/domain ./server/domain
 COPY --from=build /app/client/src/components/ui ./client/src/components/ui
 COPY --from=build /app/server/domain/apps/core/block-registry.json ./server/domain/apps/core/block-registry.json
 
+# The public trust page builds its per-module "Quality & Verification" rollup from
+# the Playwright manifest and suite catalog (read-only; schemaVersion 2).
+COPY playwright-test-repo/e2e-tests-index.json ./playwright-test-repo/e2e-tests-index.json
+COPY playwright-test-repo/tests/suites.json ./playwright-test-repo/tests/suites.json
+
 # Copy runtime migrations and the migration runner dependency metadata
 COPY --from=build /app/migrations ./migrations
 COPY --from=build /app/package.json ./

@@ -42,6 +42,8 @@ class OddjobReporter implements Reporter {
   private apiToken: string;
   private internalToken: string;
   private failedTestsCount: number = 0;
+  /** Signed-in session of the reporting account, created on first write. */
+  private session: Promise<Record<string, string>> | null = null;
 
   constructor() {
     this.apiBaseUrl = process.env.ODDJOB_API_URL || 'http://localhost:5000/api';
@@ -51,6 +53,45 @@ class OddjobReporter implements Reporter {
     // SESSION_SECRET here — that is the session-signing secret and must never be handed
     // to a test tool. Prefer ODDJOB_API_TOKEN (a scoped credential) in real environments.
     this.internalToken = process.env.INTERNAL_API_SECRET || '';
+  }
+
+  /**
+   * Sign in as the reporting account (ODDJOB_REPORTER_EMAIL / ODDJOB_REPORTER_PASSWORD,
+   * else the TEST_USER_* the suite signs in with) and reuse its session cookie and CSRF
+   * token. This is how production is reported to: the account belongs to the
+   * organization that owns the incident dataset, so it can write there and nowhere else.
+   */
+  private async sessionHeaders(): Promise<Record<string, string> | null> {
+    const email = process.env.ODDJOB_REPORTER_EMAIL || process.env.TEST_USER_EMAIL;
+    const password = process.env.ODDJOB_REPORTER_PASSWORD || process.env.TEST_USER_PASSWORD;
+    if (!email || !password || this.apiToken) return null;
+    if (!this.session) {
+      this.session = (async () => {
+        const cookies = new Map<string, string>();
+        const keep = (setCookie?: string[]) => (setCookie || []).forEach((c) => {
+          const [pair] = c.split(';');
+          const i = pair.indexOf('=');
+          cookies.set(pair.slice(0, i).trim(), pair.slice(i + 1));
+        });
+        const cookieHeader = () => [...cookies].map(([k, v]) => `${k}=${v}`).join('; ');
+        const csrf = async () => {
+          const r = await axios.get(`${this.apiBaseUrl}/user`, { headers: { Cookie: cookieHeader() }, validateStatus: () => true });
+          keep(r.headers['set-cookie']);
+          return r.data?.csrfToken as string;
+        };
+        const login = await axios.post(`${this.apiBaseUrl}/login`, { email, password },
+          { headers: { Cookie: cookieHeader(), 'x-csrf-token': await csrf(), 'Content-Type': 'application/json' }, validateStatus: () => true });
+        if (login.status >= 300) throw new Error(`reporter sign-in failed (HTTP ${login.status})`);
+        keep(login.headers['set-cookie']);
+        const token = await csrf();
+        return { 'Content-Type': 'application/json', Cookie: cookieHeader(), 'x-csrf-token': token };
+      })();
+    }
+    return this.session;
+  }
+
+  private async headersFor(): Promise<Record<string, string>> {
+    return (await this.sessionHeaders()) ?? this.authHeaders();
   }
 
   private authHeaders(): Record<string, string> {
@@ -73,7 +114,7 @@ class OddjobReporter implements Reporter {
         const { data } = await axios.post(
           `${this.apiBaseUrl}/health/e2e-tests/resolve`,
           { testName: test.title },
-          { headers: this.authHeaders() }
+          { headers: await this.headersFor() }
         );
         if (data?.resolved > 0) {
           console.log(`[OddjobReporter] Resolved ${data.resolved} prior incident(s) for passing test "${test.title}".`);
@@ -117,7 +158,7 @@ class OddjobReporter implements Reporter {
 
       console.log(`[OddjobReporter] Reporting failure: "${test.title}"...`);
 
-      const headers = this.authHeaders();
+      const headers = await this.headersFor();
 
       try {
         const response = await axios.post(
