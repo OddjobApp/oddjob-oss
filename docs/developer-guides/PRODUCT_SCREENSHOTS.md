@@ -20,3 +20,21 @@ content, and save the browser screenshot. Crop only to focus the capture; do not
 reconstruct or alter product controls or execution results. Keep the image's
 intrinsic dimensions in `ProductScreenshots` in sync with the replacement. All
 screenshots can be opened at full size from the public pages.
+
+## Rescue Dispatch App Forge showcase
+
+`rescue-dispatch.png` is a browser capture of the actual blueprint dashboard and
+map components, mounted locally with Vite. The preview serves the blueprint's own
+MOCK_SQUADS, MOCK_RESCUES, and MOCK_PROVIDERS through its collection endpoints.
+Non-GET API calls return 403: no dispatch, pipeline execution, email, or operational
+record was created. An explicit preview banner is included in the capture.
+
+Request selection, map focus, and the selected-request panel were checked in the
+browser. The blueprint map uses MapLibre 4 (compatible with react-map-gl 7) and
+public OpenStreetMap raster tiles, with attribution; satellite mode uses Esri.
+Mapbox credentials are not required. Public tile-provider usage policies still
+apply to deployments; configure a suitable tile service for sustained traffic.
+
+The public `/app/rescue-dispatch` route was stuck loading at capture time and had
+no running Forge runtime recorded. The showcase links to source rather than that
+route. It does not claim a deployed emergency service or verified dispatch actions.

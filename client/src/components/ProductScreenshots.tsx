@@ -1,3 +1,5 @@
+import { ForgeShowcase } from "./ForgeShowcase";
+
 const examples = [
   {
     src: '/images/product/crew-form.png', width: 1210, height: 591,
@@ -20,7 +22,7 @@ const examples = [
 ];
 
 export function ProductScreenshots() {
-  return <section id="see-it-work" aria-labelledby="product-screenshots-heading" className="space-y-8 border-t border-border py-12 sm:py-16">
+  return <><ForgeShowcase /><section id="see-it-work" aria-labelledby="product-screenshots-heading" className="space-y-8 border-t border-border py-12 sm:py-16">
     <div className="max-w-2xl">
       <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Captured in Oddjob</p>
       <h2 id="product-screenshots-heading" className="mt-3 text-3xl font-bold tracking-tight">See the work take shape.</h2>
@@ -33,5 +35,5 @@ export function ProductScreenshots() {
       <figcaption className="space-y-3 p-6"><h3 className="text-xl font-semibold">{example.title}</h3><p className="text-sm leading-6 text-muted-foreground">{example.description}</p></figcaption>
     </figure>)}</div>
     <a href="/a/oddjob-announcements" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">Try the published announcements form</a>
-  </section>;
+  </section></>;
 }
