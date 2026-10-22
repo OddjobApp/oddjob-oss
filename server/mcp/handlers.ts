@@ -382,7 +382,7 @@ export async function handleToolCall(name: string, args: unknown, context?: Tool
 
         // Ephemeral tools
         case "get_user_intent":
-            return handleGetUserIntent(args);
+            return handleGetUserIntent(args, context);
 
         // SaaS tools
         case "list_saas_connectors":

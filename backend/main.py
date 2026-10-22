@@ -58,6 +58,7 @@ from core.input_validation import InputValidationMiddleware
 from core.rate_limiting import RateLimitMiddleware
 from core.security import SecurityHeadersMiddleware, RequestSecurityValidator
 from core.auth_middleware import AuthenticationMiddleware
+from core.service_auth import ServiceAuthMiddleware
 from core.error_middleware import ErrorTrackingMiddleware, ErrorBoundaryMiddleware
 from services.agent_orchestrator import agent_orchestrator
 from services.memory_service import memory_service
@@ -146,6 +147,11 @@ def _setup_middleware(app: FastAPI) -> None:
     # Custom middleware
     app.add_middleware(LoggingMiddleware)
     app.add_middleware(ErrorHandlingMiddleware)
+
+    # Outermost: the service token (when SIDECAR_SERVICE_TOKEN is set) and the
+    # caller's organization, which the SaaS routes require. Production runs
+    # service_main.py, which mounts only the production routes.
+    app.add_middleware(ServiceAuthMiddleware)
 
 def _include_routers(app: FastAPI) -> None:
     """Include all API routers."""

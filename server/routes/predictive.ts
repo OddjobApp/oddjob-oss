@@ -7,10 +7,11 @@ import { CycleAnalyticsService, type PredictiveMetrics } from "../domain/mission
 import { createLogger } from "@server/utils/logger.js";
 import { operationalCycles, missionRuns, aiUsageLogs } from "@shared/schema/index.js";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { getUserOrgContext } from "@server/utils/auth-context.js";
+import { sidecarFetch, sidecarConfigured } from "@server/integrations/sidecar-client.js";
 
 const router = Router();
 const logger = createLogger("PredictiveProxy");
-const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:8002";
 const SIDECAR_TIMEOUT_MS = 3000;
 const ACTIVE_CYCLE_STATUSES = new Set(["planning", "pending_approval", "active", "paused", "reviewing"]);
 
@@ -32,46 +33,42 @@ function getScopedOrgId(req: Request): number {
 
 async function isSidecarHealthy(): Promise<boolean> {
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), SIDECAR_TIMEOUT_MS);
-        const res = await fetch(`${PYTHON_SERVICE_URL}/health`, { signal: controller.signal });
-        clearTimeout(timeout);
+        if (!sidecarConfigured()) return false;
+        const res = await sidecarFetch("/health", { timeoutMs: SIDECAR_TIMEOUT_MS });
         return res.ok;
     } catch {
         return false;
     }
 }
 
+/**
+ * The sidecar's predictive engine keeps its state in process memory, across
+ * every organization: it is platform analytics, so only a platform super
+ * administrator may reach it. Everyone else is answered by the
+ * organization-scoped routes in this file.
+ */
 async function proxySidecar(req: Request, res: Response): Promise<boolean> {
-    const url = `${PYTHON_SERVICE_URL}${req.originalUrl}`;
+    const context = await getUserOrgContext(req);
+    if (!context.isSuperAdmin) {
+        res.status(403).json({ message: "Platform administrator required" });
+        return true;
+    }
+    if (!sidecarConfigured()) return false;
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), SIDECAR_TIMEOUT_MS);
-
-        const fetchOptions: RequestInit = {
-            method: req.method,
-            headers: { "Content-Type": "application/json" },
-            signal: controller.signal,
-        };
-
-        if (["POST", "PUT", "PATCH"].includes(req.method)) {
-            fetchOptions.body = JSON.stringify(req.body);
-        }
-
-        const response = await fetch(url, fetchOptions);
-        clearTimeout(timeout);
-
+        const response = await sidecarFetch(req.originalUrl, {
+            method: req.method as any,
+            body: ["POST", "PUT", "PATCH"].includes(req.method) ? req.body : undefined,
+            timeoutMs: SIDECAR_TIMEOUT_MS,
+        });
         const contentType = response.headers.get("content-type");
         if (contentType?.includes("application/json")) {
-            const data = await response.json();
-            res.status(response.status).json(data);
+            res.status(response.status).json(await response.json());
         } else {
-            const text = await response.text();
-            res.status(response.status).send(text);
+            res.status(response.status).send(await response.text());
         }
         return true;
     } catch (err: any) {
-        logger.warn(`[PredictiveProxy] Sidecar unreachable (${req.method} ${req.path}): ${err.message}. Falling back to local service.`);
+        logger.warn(`[PredictiveProxy] Sidecar unreachable (${req.method} ${req.path}): ${err.message}`);
         return false;
     }
 }
@@ -303,7 +300,7 @@ router.get("/health", requireAuth, asyncHandler(async (req: Request, res: Respon
         status: sidecarHealthy ? "sidecar_online" : "local_fallback",
         healthy: true,
         source: sidecarHealthy ? "sidecar" : "local",
-        sidecar: { healthy: sidecarHealthy, url: PYTHON_SERVICE_URL },
+        sidecar: { healthy: sidecarHealthy, url: sidecarConfigured() ? "configured" : "not configured" },
         local: {
             healthy: true,
             organization_id: orgId,
@@ -438,14 +435,12 @@ router.put("/service/mode", requireAuth, asyncHandler(async (req: Request, res: 
 }));
 
 router.get("/stats", requireAuth, asyncHandler(async (req: Request, res: Response) => {
-    if (await proxySidecar(req, res)) return;
 
     const stats = CyclePredictiveService.getModelStats(getScopedOrgId(req));
     res.json({ ...stats, source: "local" });
 }));
 
 router.get("/cycles/:cycleId", requireAuth, asyncHandler(async (req: Request, res: Response) => {
-    if (await proxySidecar(req, res)) return;
 
     const cycleId = parseInt(req.params.cycleId, 10);
     const prediction = await CyclePredictiveService.predictSuccess(cycleId, getScopedOrgId(req));
@@ -453,14 +448,12 @@ router.get("/cycles/:cycleId", requireAuth, asyncHandler(async (req: Request, re
 }));
 
 router.post("/train", requireAuth, asyncHandler(async (req: Request, res: Response) => {
-    if (await proxySidecar(req, res)) return;
 
     await CyclePredictiveService.trainModels(getScopedOrgId(req));
     res.json({ message: "Models trained successfully (local fallback)", source: "local" });
 }));
 
 router.post("/update/:cycleId", requireAuth, asyncHandler(async (req: Request, res: Response) => {
-    if (await proxySidecar(req, res)) return;
 
     const cycleId = parseInt(req.params.cycleId, 10);
     const { actualOutcome } = req.body;

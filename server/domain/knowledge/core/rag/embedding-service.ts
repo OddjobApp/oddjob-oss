@@ -90,35 +90,15 @@ export const embeddingService = {
         }
     },
 
-    /**
-     * Batch embedding generation offloaded to Python FastAPI backend for maximum throughput.
-     * Falls back to parallel generateEmbedding calls if Python service is unavailable.
-     */
+    /** Batch embedding generation: the organization's embeddings, else parallel single calls. */
     async generateBatchEmbeddings(texts: string[], model?: string): Promise<Array<number[] | null>> {
         if (!texts || texts.length === 0) return [];
         if (hasAiOrganizationContext() || process.env.NODE_ENV === "production") return organizationEmbeddings().embedDocuments(texts);
 
-        try {
-            const pyUrl = process.env.PYTHON_BACKEND_URL || "http://localhost:8000";
-            const response = await fetch(`${pyUrl}/api/v1/embeddings/batch`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ texts, model: model || "all-MiniLM-L6-v2" }),
-            }).catch(() => null);
-
-            if (response && response.ok) {
-                const data = await response.json() as any;
-                if (Array.isArray(data.embeddings)) {
-                    logger.info(`[EmbeddingService] Batch embedded ${texts.length} items via Python service in ${data.processing_time || 0}s`);
-                    return data.embeddings;
-                }
-            }
-        } catch {
-            // Fallback to local execution
-        }
-
-        // Fallback: Parallel batch resolution
-        logger.debug(`[EmbeddingService] Python batch service unavailable, falling back to parallel execution for ${texts.length} items`);
+        // Not the sidecar: its batch route needs a user token this API never had,
+        // and its local model (MiniLM, 384 dimensions) is a different vector space
+        // from the organization's index, so its vectors could not be searched together.
+        logger.debug(`[EmbeddingService] Embedding ${texts.length} items in parallel`);
         return Promise.all(texts.map((t) => this.generateEmbedding(t)));
     },
 

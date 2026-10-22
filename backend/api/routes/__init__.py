@@ -1,8 +1,8 @@
 """
 API Routes Package
-All route modules are imported here for easy inclusion in the main app
+
+Route modules are imported by the entry point that mounts them (main.py for
+development, service_main.py for production). Nothing is imported here: an
+eager import made every route, including the production ones, load
+sentence-transformers and PyTorch.
 """
-
-from . import health, embeddings, scraping
-
-__all__ = ["health", "embeddings", "scraping"]

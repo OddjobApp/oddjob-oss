@@ -290,11 +290,18 @@ export class TeamsProvider implements MessagingProvider {
                 ]
             };
 
-            const res = await fetch(webhookUrl, {
+            // The webhook URL is whatever the connector's owner configured, so it
+            // goes through the egress firewall like every other outbound request.
+            const { EgressFirewall } = await import("@server/utils/egress-firewall.js");
+            const guarded = await EgressFirewall.fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(card),
             });
+            if (!guarded.allowed || !guarded.response) {
+                throw new Error(`Teams webhook refused: ${guarded.reason ?? "address not allowed"}`);
+            }
+            const res = guarded.response;
 
             if (!res.ok) {
                 throw new Error(`Teams webhook returned ${res.status}`);

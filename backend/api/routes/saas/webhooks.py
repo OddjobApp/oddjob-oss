@@ -5,7 +5,8 @@ Endpoints for webhook handling and testing
 
 from typing import Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from core.service_auth import caller_org
 
 from core.saas_connectors import connector_manager
 from core.structured_logging import get_structured_logger
@@ -18,7 +19,7 @@ router = APIRouter()
 
 
 @router.post("/connectors/{platform}/test-webhook")
-async def test_webhook(platform: str, request: WebhookTestRequest, organization_id: int = 1):
+async def test_webhook(platform: str, request: WebhookTestRequest, organization_id: int = Depends(caller_org)):
     """Test webhook processing for a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -48,7 +49,7 @@ async def test_webhook(platform: str, request: WebhookTestRequest, organization_
 
 
 @router.post("/webhook/{platform}")
-async def handle_webhook(platform: str, payload: Dict[str, Any], background_tasks: BackgroundTasks, organization_id: int = 1):
+async def handle_webhook(platform: str, payload: Dict[str, Any], background_tasks: BackgroundTasks, organization_id: int = Depends(caller_org)):
     """Handle incoming webhooks from SaaS platforms."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:

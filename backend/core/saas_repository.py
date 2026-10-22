@@ -7,6 +7,7 @@ from datetime import datetime
 from core.structured_logging import get_structured_logger
 from core.service_base import ServiceConfig
 from core.database import get_pool
+from core.sealed import seal_json, open_json
 
 # Core definitions - import from split modules
 from core.saas_types import (
@@ -33,7 +34,8 @@ class ConnectorRepository:
         pool = await get_pool()
         async with pool.acquire() as conn:
             config_json = json.dumps(vars(connector.config), default=str)
-            creds_json = json.dumps(asdict(connector.credentials) if connector.credentials else {}, default=str)
+            # Encrypted at rest, in the format the Node API reads (core/sealed.py).
+            creds_json = json.dumps(seal_json(asdict(connector.credentials) if connector.credentials else {}))
             
             await conn.execute("""
                 INSERT INTO saas_connectors (org_id, platform, base_url, status, config, credentials, updated_at)
@@ -107,9 +109,7 @@ class ConnectorRepository:
                     if isinstance(config_data, str):
                         config_data = json.loads(config_data)
                         
-                    creds_data = row['credentials']
-                    if isinstance(creds_data, str):
-                        creds_data = json.loads(creds_data)
+                    creds_data = open_json(row['credentials'])
                     
                     connector = self._restore_connector(platform, base_url, config_data, creds_data)
                     if connector:

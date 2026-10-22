@@ -1,4 +1,5 @@
 ﻿import { sql } from "drizzle-orm";
+import { sealedJsonb } from "./sealed-json.js";
 import {
     pgTable,
     text,
@@ -82,7 +83,11 @@ export const saasConnectors = pgTable("saas_connectors", {
     baseUrl: text("base_url"),
     status: text("status").default("disconnected").notNull(),
     config: jsonb("config").$type<Record<string, any>>().default({}).notNull(),
-    credentials: jsonb("credentials").$type<Record<string, any>>().default({}).notNull(),
+    /**
+     * Encrypted at rest (sealed-json.ts): API keys, passwords and OAuth tokens.
+     * Anything that must be queried (a Slack team_id) belongs in `config`.
+     */
+    credentials: sealedJsonb<Record<string, any>>("credentials").default({}).notNull(),
     credentialId: integer("credential_id"),
     lastSync: timestamp("last_sync", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

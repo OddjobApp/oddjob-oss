@@ -4,7 +4,8 @@ Endpoints for bidirectional sync, event workflows, and statistics
 """
 
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from core.service_auth import caller_org
 
 from core.saas_connectors import (
     connector_manager, 
@@ -24,9 +25,9 @@ router = APIRouter()
 # Bidirectional Sync Endpoints
 
 @router.post("/connectors/{platform}/bidirectional-sync")
-async def configure_bidirectional_sync(platform: str, request: BidirectionalSyncConfigRequest):
+async def configure_bidirectional_sync(platform: str, request: BidirectionalSyncConfigRequest, organization_id: int = Depends(caller_org)):
     """Configure bidirectional synchronization for a connector."""
-    org_id = request.organization_id or 1 # Default to org 1 if not specified
+    org_id = organization_id
     connector = connector_manager.get_connector(org_id, platform)
     if not connector:
         # Try to load org state if not loaded
@@ -59,7 +60,7 @@ async def configure_bidirectional_sync(platform: str, request: BidirectionalSync
 
 
 @router.get("/connectors/{platform}/bidirectional-sync")
-async def get_bidirectional_sync(platform: str, organization_id: Optional[int] = Query(1)):
+async def get_bidirectional_sync(platform: str, organization_id: int = Depends(caller_org)):
     """Get bidirectional synchronization configuration for a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_sync_configs:
@@ -84,7 +85,7 @@ async def get_bidirectional_sync(platform: str, organization_id: Optional[int] =
 # Event Workflow Endpoints
 
 @router.post("/connectors/{platform}/event-workflows")
-async def add_event_workflow(platform: str, request: EventWorkflowRequest, organization_id: Optional[int] = Query(1)):
+async def add_event_workflow(platform: str, request: EventWorkflowRequest, organization_id: int = Depends(caller_org)):
     """Add an event-driven workflow for a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -116,7 +117,7 @@ async def add_event_workflow(platform: str, request: EventWorkflowRequest, organ
 
 
 @router.get("/connectors/{platform}/event-workflows")
-async def get_event_workflows(platform: str, organization_id: Optional[int] = Query(1)):
+async def get_event_workflows(platform: str, organization_id: int = Depends(caller_org)):
     """Get event-driven workflows for a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -144,7 +145,7 @@ async def get_event_workflows(platform: str, organization_id: Optional[int] = Qu
 
 
 @router.post("/connectors/{platform}/test-event-workflow")
-async def test_event_workflow(platform: str, event_type: str, event_data: Dict[str, Any], organization_id: Optional[int] = Query(1)):
+async def test_event_workflow(platform: str, event_type: str, event_data: Dict[str, Any], organization_id: int = Depends(caller_org)):
     """Test event workflow triggering for a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -174,7 +175,7 @@ async def test_event_workflow(platform: str, event_type: str, event_data: Dict[s
 # Monitoring and Statistics Endpoints
 
 @router.get("/advanced-features")
-async def get_advanced_features_status(organization_id: Optional[int] = Query(1)):
+async def get_advanced_features_status(organization_id: int = Depends(caller_org)):
     """Get status of all advanced integration features."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -194,7 +195,7 @@ async def get_sync_history():
 
 
 @router.get("/stats")
-async def get_saas_stats(organization_id: Optional[int] = Query(1)):
+async def get_saas_stats(organization_id: int = Depends(caller_org)):
     """Get statistics about SaaS integrations."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:

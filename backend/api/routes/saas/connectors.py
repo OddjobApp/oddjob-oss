@@ -4,7 +4,8 @@ Endpoints for managing SaaS connectors (list, get, create, delete, test)
 """
 
 from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Depends
+from core.service_auth import caller_org
 
 from core.saas_connectors import connector_manager, ConnectorStatus
 from core.structured_logging import get_structured_logger
@@ -52,7 +53,7 @@ def _merge_credentials(org_id: int, platform: str, new_creds: Dict[str, Any]) ->
 
 
 @router.get("/connectors", response_model=List[ConnectorResponse])
-async def list_connectors(organization_id: Optional[int] = Query(1)):
+async def list_connectors(organization_id: int = Depends(caller_org)):
     """Get list of all registered connectors and their status."""
     connectors = []
 
@@ -78,7 +79,7 @@ async def list_connectors(organization_id: Optional[int] = Query(1)):
 
 
 @router.get("/connectors/{platform}", response_model=ConnectorResponse)
-async def get_connector(platform: str, organization_id: Optional[int] = Query(1)):
+async def get_connector(platform: str, organization_id: int = Depends(caller_org)):
     """Get detailed information about a specific connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -102,10 +103,10 @@ async def get_connector(platform: str, organization_id: Optional[int] = Query(1)
 
 
 @router.post("/connectors", response_model=ConnectorResponse)
-async def create_connector(request: ConnectorConfigRequest, background_tasks: BackgroundTasks):
+async def create_connector(request: ConnectorConfigRequest, background_tasks: BackgroundTasks, organization_id: int = Depends(caller_org)):
     """Create and register a new SaaS connector."""
     
-    org_id = request.organization_id or 1
+    org_id = organization_id
     
     # Attempt to merge credentials with existing ones (for updates)
     _merge_credentials(org_id, request.platform, request.credentials)
@@ -170,7 +171,7 @@ async def create_connector(request: ConnectorConfigRequest, background_tasks: Ba
 
 
 @router.post("/connectors/{platform}/test")
-async def test_connection(platform: str, request: TestConnectionRequest, organization_id: Optional[int] = Query(1)):
+async def test_connection(platform: str, request: TestConnectionRequest, organization_id: int = Depends(caller_org)):
     """Test connection with provided credentials."""
     logger.info(f"Testing connection for platform: {platform}")
     
@@ -178,7 +179,8 @@ async def test_connection(platform: str, request: TestConnectionRequest, organiz
     if organization_id not in connector_manager.org_connectors:
         await connector_manager.load_org_state(organization_id)
 
-    logger.debug(f"Request data: {request.dict(exclude={'api_token', 'password', 'access_token', 'bot_token'})}")
+    # Never the credentials: only which fields arrived.
+    logger.debug(f"Request fields: {sorted(k for k, v in request.dict().items() if v is not None)}")
     try:
         test_creds = {
             "base_url": request.base_url,
@@ -254,7 +256,7 @@ async def test_connection(platform: str, request: TestConnectionRequest, organiz
 
 
 @router.delete("/connectors/{platform}")
-async def delete_connector(platform: str, organization_id: Optional[int] = Query(1)):
+async def delete_connector(platform: str, organization_id: int = Depends(caller_org)):
     """Remove a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -273,7 +275,7 @@ async def discover_resource(
     platform: str, 
     resource: str, 
     request: TestConnectionRequest, 
-    organization_id: Optional[int] = Query(1)
+    organization_id: int = Depends(caller_org)
 ):
     """Discover platform resources (spaces, projects, etc) with provided credentials."""
     logger.info(f"Discovering {resource} for platform: {platform}")
@@ -328,7 +330,7 @@ async def discover_resource(
 async def get_connector_schema(
     platform: str, 
     project_key: Optional[str] = Query(None),
-    organization_id: Optional[int] = Query(1)
+    organization_id: int = Depends(caller_org)
 ):
     """Get field schema for a platform (e.g., Jira issue fields for a project)."""
     logger.info(f"Fetching schema for platform: {platform}, Project: {project_key}")

@@ -1,5 +1,13 @@
 import { createLogger } from "@server/utils/logger.js";
 import { generalGateway } from "../../../integrations/general-gateway.js";
+import { sidecarBaseUrl, sidecarHeaders, sidecarConfigured } from "@server/integrations/sidecar-client.js";
+
+/**
+ * The sidecar's memory store lives in process memory and is shared by every
+ * organization, so production never writes conversations to it or reads
+ * "consolidated context" back out of it; Node's own memory is the record.
+ */
+const SIDECAR_MEMORY_ENABLED = process.env.NODE_ENV !== "production";
 
 const logger = createLogger("SidecarSync");
 
@@ -22,17 +30,18 @@ export class SidecarSyncService {
         // stale and never matched the running service. Derive the bare host root and
         // build each router's path explicitly — memory is under /api/v1, predictive
         // under /api, so a single baseUrl can't serve both.
-        const raw = process.env.BACKEND_URL || process.env.PYTHON_SERVICE_URL || "http://localhost:8002";
-        this.host = raw.replace(/\/+$/, "").replace(/\/api(\/v\d+)?$/, "");
+        this.host = sidecarBaseUrl();
     }
 
     /**
      * Sync a memory entry to the Python Sidecar
      */
     async syncMemory(input: MemorySyncInput, userId: string = "system", organizationId?: number, appDeploymentId?: number) {
+        if (!SIDECAR_MEMORY_ENABLED || !sidecarConfigured()) return null;
         try {
             const response = await generalGateway.execute({
                 internal: true,
+                headers: sidecarHeaders(organizationId ?? null),
                 action: "store_memory",
                 method: "POST",
                 url: `${this.host}/api/v1/memory/memories`,
@@ -65,9 +74,11 @@ export class SidecarSyncService {
      * Fetch consolidated long-term context from the Python Sidecar
      */
     async fetchConsolidatedContext(query: string, jobId?: number, userId: string = "system", appDeploymentId?: number) {
+        if (!SIDECAR_MEMORY_ENABLED || !sidecarConfigured()) return null;
         try {
             const response = await generalGateway.execute({
                 internal: true,
+                headers: sidecarHeaders(null),
                 action: "get_context",
                 method: "POST",
                 url: `${this.host}/api/v1/memory/memories/context`,
@@ -96,9 +107,11 @@ export class SidecarSyncService {
      * Log a predictive observation (metric) to the sidecar
      */
     async logObservation(entity: string, value: number, context: any = {}, userId: string = "system") {
+        if (!sidecarConfigured()) return null;
         try {
             const response = await generalGateway.execute({
                 internal: true,
+                headers: sidecarHeaders(null),
                 action: "record_observation",
                 method: "POST",
                 url: `${this.host}/api/predictive/observations`,

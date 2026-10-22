@@ -892,12 +892,15 @@ When helping a user fill out a document or report (like a bug report, test plan,
         }
 
         let emotionalStateContext = "";
-        if (!isConversational && clientContext?.fingerprint) {
+        if (!isConversational && clientContext?.fingerprint && userContext?.organizationId) {
             try {
                 const [latestState] = await db
                     .select()
                     .from(contactIntentStates)
-                    .where(eq(contactIntentStates.userFingerprint, clientContext.fingerprint))
+                    .where(and(
+                        eq(contactIntentStates.organizationId, userContext.organizationId),
+                        eq(contactIntentStates.userFingerprint, clientContext.fingerprint),
+                    ))
                     .orderBy(desc(contactIntentStates.createdAt))
                     .limit(1);
 

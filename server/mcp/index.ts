@@ -70,7 +70,7 @@ import {
     contactIntentStates,
     systemSettings
 } from "@shared/schema/index.js";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 const SERVER_NAME = "oddjob-mcp";
 const SERVER_VERSION = "1.0.0";
@@ -202,14 +202,16 @@ const promptDefinitions = [
 
 async function readResource(uri: string): Promise<{ contents: Array<{ uri: string; mimeType: string; text: string }> }> {
     const orgId = getOrgId();
-    const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:8001";
 
     if (uri === "oddjob://ephemeral/state") {
         // Fetch latest intent states for all users in the last 5 minutes
         const recentStates = await db
             .select()
             .from(contactIntentStates)
-            .where(sql`created_at > NOW() - INTERVAL '5 minutes'`)
+            .where(and(
+                eq(contactIntentStates.organizationId, orgId),
+                sql`${contactIntentStates.createdAt} > NOW() - INTERVAL '5 minutes'`,
+            ))
             .limit(50);
 
         return {
@@ -222,7 +224,8 @@ async function readResource(uri: string): Promise<{ contents: Array<{ uri: strin
     }
 
     if (uri === "oddjob://saas/connectors") {
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/connectors`);
+        const { sidecarFetch } = await import("../integrations/sidecar-client.js");
+        const response = await sidecarFetch("/api/saas/connectors", { organizationId: orgId });
         const data = await response.json();
         return {
             contents: [{

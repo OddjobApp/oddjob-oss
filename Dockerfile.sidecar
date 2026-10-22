@@ -1,0 +1,24 @@
+# Production Python sidecar: service_main.py behind the service boundary.
+# Internal only — reached by the API over the compose network, never published.
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+COPY backend/requirements-service.txt ./
+RUN pip install -r requirements-service.txt
+
+COPY backend/ ./
+# Development-only material stays out of the image.
+RUN rm -rf tests .venv .env* __pycache__ && useradd --system --uid 10002 --no-create-home sidecar
+USER sidecar
+
+EXPOSE 8002
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=4).status == 200 else 1)"
+
+CMD ["uvicorn", "service_main:app", "--host", "0.0.0.0", "--port", "8002", "--no-server-header"]

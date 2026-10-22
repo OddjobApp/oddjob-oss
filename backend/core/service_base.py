@@ -166,8 +166,9 @@ class ExternalService(BaseService):
         # Simple connectivity check - override in subclasses for more specific checks
         import httpx
 
+        from core.egress import assert_public_url
         async with httpx.AsyncClient(timeout=self.config.timeout) as client:
-            response = await client.get(f"{self.base_url}/health")
+            response = await client.get(assert_public_url(f"{self.base_url}/health"))
             response.raise_for_status()
 
     async def make_request(
@@ -179,7 +180,8 @@ class ExternalService(BaseService):
         """Make HTTP request to external service with error handling."""
         import httpx
 
-        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        from core.egress import assert_public_url
+        url = assert_public_url(f"{self.base_url}/{endpoint.lstrip('/')}")
 
         headers = kwargs.get('headers', {})
         if self.api_key and 'Authorization' not in headers:

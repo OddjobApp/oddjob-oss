@@ -2,7 +2,7 @@ import { and, asc, eq, lt, lte } from 'drizzle-orm';
 import { db } from '@server/database_service.js';
 import { kafkaOutboxEvents } from '@shared/schema/index.js';
 import type { KafkaEnvelope } from './kafka-event-bus.service.js';
-import { kafkaEventBus } from './kafka-event-bus.service.js';
+import { kafkaEventBus, readKafkaConfig } from './kafka-event-bus.service.js';
 import { createLogger } from '@server/utils/logger.js';
 
 const logger = createLogger('KafkaOutbox');
@@ -17,6 +17,11 @@ export async function enqueueKafkaEvent(
   // per key, and the entity is the thing whose event order has to hold.
   partitionKey = event.subject ?? String(event.organizationId),
 ): Promise<void> {
+  // With Kafka off nothing ever drains the outbox (the relay only runs when it
+  // is enabled), so a row written here would sit forever and the table would
+  // grow without bound. The in-process paths that matter (cycle delivery, the
+  // surprise loop) do not read it. Checked per call, not at import.
+  if (!readKafkaConfig().enabled) return;
   await writer.insert(kafkaOutboxEvents).values({
     organizationId: event.organizationId,
     eventId: event.eventId,

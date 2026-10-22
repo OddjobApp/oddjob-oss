@@ -1,4 +1,4 @@
-import { successResponse, errorResponse, getOrgContext, type ToolContext } from "./utils.js";
+import { successResponse, errorResponse, type ToolContext } from "./utils.js";
 import {
     ListSaasConnectorsInput,
     SyncSaasConnectorInput,
@@ -11,12 +11,13 @@ import {
 } from "../tools/saas.js";
 import { requireToolPermission } from "../auth.js";
 import { auditService } from "@domain/audit/index.js";
-
-const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:8001";
+import { requireToolOrgId } from "../../domain/tools/v1/capabilities/org-context.js";
+import { sidecarFetch } from "../../integrations/sidecar-client.js";
 
 export async function handleListSaasConnectors(args: unknown, context?: ToolContext) {
     try {
         const input = ListSaasConnectorsInput.parse(args);
+        const organizationId = requireToolOrgId(context);
 
         // Permission Check
         if (context) {
@@ -24,7 +25,7 @@ export async function handleListSaasConnectors(args: unknown, context?: ToolCont
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/connectors`);
+        const response = await sidecarFetch(`/api/saas/connectors`, { organizationId });
         if (!response.ok) {
             throw new Error(`Python service returned ${response.status}`);
         }
@@ -39,6 +40,7 @@ export async function handleListSaasConnectors(args: unknown, context?: ToolCont
 export async function handleSyncSaasConnector(args: unknown, context?: ToolContext) {
     try {
         const input = SyncSaasConnectorInput.parse(args);
+        const organizationId = requireToolOrgId(context);
 
         // Permission Check
         if (context) {
@@ -46,10 +48,7 @@ export async function handleSyncSaasConnector(args: unknown, context?: ToolConte
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/connectors/${input.platform}/sync`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        const response = await sidecarFetch(`/api/saas/connectors/${input.platform}/sync`, { organizationId, method: "POST", body: ({
                 sync_type: input.syncType || "projects",
                 parameters: {}
             }),
@@ -68,6 +67,7 @@ export async function handleSyncSaasConnector(args: unknown, context?: ToolConte
 export async function handleGetSaasConnectorSchema(args: unknown, context?: ToolContext) {
     try {
         const input = GetSaasConnectorSchemaInput.parse(args);
+        const organizationId = requireToolOrgId(context);
 
         // Permission Check
         if (context) {
@@ -75,12 +75,12 @@ export async function handleGetSaasConnectorSchema(args: unknown, context?: Tool
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        let url = `${PYTHON_SERVICE_URL}/api/saas/connectors/${input.platform}/schema`;
+        let path = `/api/saas/connectors/${encodeURIComponent(input.platform)}/schema`;
         if (input.projectKey) {
-            url += `?project_key=${input.projectKey}`;
+            path += `?project_key=${encodeURIComponent(input.projectKey)}`;
         }
 
-        const response = await fetch(url);
+        const response = await sidecarFetch(path, { organizationId });
         if (!response.ok) {
             throw new Error(`Python service returned ${response.status}`);
         }
@@ -95,6 +95,7 @@ export async function handleGetSaasConnectorSchema(args: unknown, context?: Tool
 export async function handleUpdateSaasSyncConfig(args: unknown, context?: ToolContext) {
     try {
         const input = UpdateSaasSyncConfigInput.parse(args);
+        const organizationId = requireToolOrgId(context);
 
         // Permission Check
         if (context) {
@@ -102,10 +103,7 @@ export async function handleUpdateSaasSyncConfig(args: unknown, context?: ToolCo
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/connectors/${input.platform}/bidirectional-sync`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(input.config),
+        const response = await sidecarFetch(`/api/saas/connectors/${input.platform}/bidirectional-sync`, { organizationId, method: "POST", body: (input.config),
         });
 
         if (!response.ok) {
@@ -121,17 +119,15 @@ export async function handleUpdateSaasSyncConfig(args: unknown, context?: ToolCo
 export async function handleAddJiraComment(args: unknown, context?: ToolContext) {
     try {
         const input = AddJiraCommentInput.parse(args);
-        const orgId = context ? (await getOrgContext(context)).organizationId : 1;
+        const organizationId = requireToolOrgId(context);
+        const orgId = organizationId;
 
         if (context) {
             const perm = requireToolPermission("add_jira_comment", (context as any).permissions || []);
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/jira/comment`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        const response = await sidecarFetch(`/api/saas/jira/comment`, { organizationId, method: "POST", body: ({
                 issue_key: input.issueKey,
                 comment: input.comment,
                 organization_id: orgId
@@ -164,17 +160,15 @@ export async function handleAddJiraComment(args: unknown, context?: ToolContext)
 export async function handleTransitionJiraIssue(args: unknown, context?: ToolContext) {
     try {
         const input = TransitionJiraIssueInput.parse(args);
-        const orgId = context ? (await getOrgContext(context)).organizationId : 1;
+        const organizationId = requireToolOrgId(context);
+        const orgId = organizationId;
 
         if (context) {
             const perm = requireToolPermission("transition_jira_issue", (context as any).permissions || []);
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/jira/transition`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        const response = await sidecarFetch(`/api/saas/jira/transition`, { organizationId, method: "POST", body: ({
                 issue_key: input.issueKey,
                 status: input.status,
                 organization_id: orgId
@@ -207,17 +201,15 @@ export async function handleTransitionJiraIssue(args: unknown, context?: ToolCon
 export async function handleUpdateJiraIssue(args: unknown, context?: ToolContext) {
     try {
         const input = UpdateJiraIssueInput.parse(args);
-        const orgId = context ? (await getOrgContext(context)).organizationId : 1;
+        const organizationId = requireToolOrgId(context);
+        const orgId = organizationId;
 
         if (context) {
             const perm = requireToolPermission("update_jira_issue", (context as any).permissions || []);
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/jira/update`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        const response = await sidecarFetch(`/api/saas/jira/update`, { organizationId, method: "POST", body: ({
                 issue_key: input.issueKey,
                 summary: input.summary,
                 description: input.description,
@@ -263,17 +255,15 @@ export async function handleUpdateJiraIssue(args: unknown, context?: ToolContext
 export async function handleCreateJiraIssue(args: unknown, context?: ToolContext) {
     try {
         const input = CreateJiraIssueInput.parse(args);
-        const orgId = context ? (await getOrgContext(context)).organizationId : 1;
+        const organizationId = requireToolOrgId(context);
+        const orgId = organizationId;
 
         if (context) {
             const perm = requireToolPermission("saas:write", (context as any).permissions || []);
             if (!perm.allowed) return errorResponse(perm.error);
         }
 
-        const response = await fetch(`${PYTHON_SERVICE_URL}/api/saas/jira/create`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        const response = await sidecarFetch(`/api/saas/jira/create`, { organizationId, method: "POST", body: ({
                 project_key: input.projectKey,
                 summary: input.summary,
                 issue_type: input.issueType,

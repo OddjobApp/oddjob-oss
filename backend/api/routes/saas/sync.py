@@ -5,7 +5,8 @@ Endpoints for synchronization operations
 
 from typing import Dict, Any, Optional
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from core.service_auth import caller_org
 
 from core.saas_connectors import connector_manager, ConnectorStatus
 from core.structured_logging import get_structured_logger
@@ -18,7 +19,7 @@ router = APIRouter()
 
 
 @router.post("/connectors/{platform}/sync", response_model=SyncResponse)
-async def sync_connector(platform: str, request: SyncRequest, background_tasks: BackgroundTasks, organization_id: int = 1):
+async def sync_connector(platform: str, request: SyncRequest, background_tasks: BackgroundTasks, organization_id: int = Depends(caller_org)):
     """Trigger data synchronization for a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -59,7 +60,7 @@ async def _perform_sync_background(org_id: int, platform: str, request: SyncRequ
 
 
 @router.get("/connectors/{platform}/sync/status")
-async def get_sync_status(platform: str, organization_id: int = 1):
+async def get_sync_status(platform: str, organization_id: int = Depends(caller_org)):
     """Get the current sync status for a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -78,7 +79,7 @@ async def get_sync_status(platform: str, organization_id: int = 1):
 
 
 @router.get("/connectors/{platform}/health")
-async def check_connector_health(platform: str, organization_id: int = 1):
+async def check_connector_health(platform: str, organization_id: int = Depends(caller_org)):
     """Check the health status of a connector."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -107,7 +108,7 @@ async def check_connector_health(platform: str, organization_id: int = 1):
 
 
 @router.post("/connectors/{platform}/reconnect")
-async def reconnect_connector(platform: str, background_tasks: BackgroundTasks, organization_id: int = 1):
+async def reconnect_connector(platform: str, background_tasks: BackgroundTasks, organization_id: int = Depends(caller_org)):
     """Reconnect a connector that has lost connection."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -128,7 +129,7 @@ async def reconnect_connector(platform: str, background_tasks: BackgroundTasks, 
 
 
 @router.get("/connectors/{platform}/data/{data_type}")
-async def get_connector_data(platform: str, data_type: str, limit: int = 50, offset: int = 0, organization_id: int = 1):
+async def get_connector_data(platform: str, data_type: str, limit: int = 50, offset: int = 0, organization_id: int = Depends(caller_org)):
     """Get cached data from a connector (for debugging/testing)."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:
@@ -170,7 +171,7 @@ async def _sync_all_background(sync_type: str):
 
 
 @router.post("/connectors/{platform}/sync-now")
-async def sync_now(platform: str, request: Optional[SyncRequest] = None, organization_id: int = 1):
+async def sync_now(platform: str, request: Optional[SyncRequest] = None, organization_id: int = Depends(caller_org)):
     """Trigger an immediate sync for a platform."""
     try:
         # Ensure state is loaded
@@ -199,7 +200,7 @@ async def sync_now(platform: str, request: Optional[SyncRequest] = None, organiz
 
 
 @router.get("/connectors/{platform}/schema")
-async def get_connector_schema(platform: str, project_key: Optional[str] = None, organization_id: int = 1):
+async def get_connector_schema(platform: str, project_key: Optional[str] = None, organization_id: int = Depends(caller_org)):
     """Get field schema/metadata for a connector platform."""
     # Ensure state is loaded
     if organization_id not in connector_manager.org_connectors:

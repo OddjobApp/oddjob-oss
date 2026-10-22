@@ -533,31 +533,9 @@ export class FileParser {
     }
 
     private static async parsePdf(buffer: Buffer, originalName: string): Promise<ParsedFile> {
-        try {
-            const pyUrl = process.env.PYTHON_BACKEND_URL || "http://localhost:8000";
-            const formData = new FormData();
-            formData.append("file", new Blob([Uint8Array.from(buffer)], { type: "application/pdf" }), originalName);
-
-            const res = await fetch(`${pyUrl}/api/v1/scraping/pdf/parse`, {
-                method: "POST",
-                body: formData,
-            }).catch(() => null);
-
-            if (res && res.ok) {
-                const data = await res.json() as any;
-                if (data?.text_content) {
-                    return {
-                        type: "text",
-                        content: data.text_content,
-                        summary: `### PDF Document: ${originalName}\nExtracted text via Python PDF service (${data.metadata?.num_pages || 1} pages).`,
-                        metadata: data.metadata
-                    };
-                }
-            }
-        } catch {
-            // Fallback to local JS parser
-        }
-
+        // Parsed here. The sidecar's parser (pypdf) read the same text layer and
+        // was never reachable anyway (its route needs a user token); sending a
+        // document across to it only added a copy of the bytes in another process.
         try {
             const parser = new PDFParse({ data: buffer });
             const result = await parser.getText();

@@ -15,6 +15,8 @@
 #   - JWT_SECRET (token signing; must differ from the dev default)
 # Optional but common:
 #   - SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, FROM_EMAIL
+#   - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (Google OAuth for Gmail/Drive/Calendar
+#     connectors; without them the Connect buttons stay disabled)
 #   - REDIS_URL, DATABASE_URL, QDRANT_URL (defaults point at the in-stack services)
 
 services:
@@ -51,6 +53,8 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
       INTERNAL_RPC_KEY: ${INTERNAL_RPC_KEY:?INTERNAL_RPC_KEY is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       # Node SMTP configuration lives in System Settings, not SMTP_* variables.
       EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
     volumes:
@@ -94,6 +98,8 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
       INTERNAL_RPC_KEY: ${INTERNAL_RPC_KEY:?INTERNAL_RPC_KEY is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     volumes:
       - oddjob_logs:/app/logs
       - oddjob_uploads:/app/uploads

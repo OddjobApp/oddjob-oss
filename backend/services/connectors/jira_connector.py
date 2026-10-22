@@ -61,7 +61,8 @@ class JiraConnector(SaaSConnector):
         
         try:
             import httpx
-            url = f"{self.base_url}/{endpoint.lstrip('/')}"
+            from core.egress import assert_public_url
+            url = assert_public_url(f"{self.base_url}/{endpoint.lstrip('/')}")
             
             async with httpx.AsyncClient() as client:
                 response = await client.request(method, url, **kwargs)

@@ -290,42 +290,13 @@ router.post("/response-templates/:id/analyze", requireAuth, asyncHandler(async (
     const template = await agentAnalyticsService.getTemplateById(orgContext, id);
     if (!template) return res.status(404).json({ error: "Template not found" });
 
-    // Forward to Python for AI analysis
-    const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:8001";
-
-    try {
-        const aiRes = await fetch(`${PYTHON_SERVICE_URL}/api/scoring/analyze-response`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_query: template.userQuery,
-                agent_response: template.preferredResponse,
-                criteria: template.reasoning || "General helpfulness and accuracy"
-            })
-        });
-
-        if (!aiRes.ok) throw new Error(`Python analysis failed: ${aiRes.status}`);
-
-        const analysisData = await aiRes.json();
-
-        // Update template with score
-        if (analysisData.score !== undefined) {
-            await agentAnalyticsService.updateTemplateScore(id, Math.round(analysisData.score * 100));
-        }
-
-        res.json({
-            effectiveness: analysisData.score * 100 || 85,
-            suggestions: analysisData.suggestions || ["Keep it concise", "Add more context"],
-            reasoning: analysisData.reasoning || "Response clearly addresses the user query."
-        });
-    } catch (err: any) {
-        logger.error("Analysis failed:", err);
-        res.json({
-            effectiveness: 75,
-            suggestions: ["AI Analysis unavailable", "Review manually"],
-            reasoning: "Failed to connect to AI scoring engine."
-        });
-    }
+    // There is no analysis behind this route: it forwarded to a sidecar endpoint
+    // (/api/scoring/analyze-response) that never existed, and on the failure it
+    // answered a fixed "75" as if a score had been measured. Say so instead.
+    return res.status(503).json({
+        error: "Template analysis is not available",
+        message: "No scoring engine is connected for response templates, so no effectiveness score was measured.",
+    });
 }));
 
 export default router;

@@ -1,18 +1,28 @@
 import { GetUserIntentInput } from "../tools/ephemeral.js";
 import { db } from "../../database_service.js";
 import { contactIntentStates, engagementLogs } from "@shared/schema/index.js";
-import { eq, desc } from "drizzle-orm";
-import { successResponse, errorResponse } from "./utils.js";
+import { and, eq, desc } from "drizzle-orm";
+import { successResponse, errorResponse, type ToolContext } from "./utils.js";
+import { requireToolOrgId } from "../../domain/tools/v1/capabilities/org-context.js";
 
-export async function handleGetUserIntent(args: unknown) {
+/**
+ * A visitor's intent state, within the caller's organization. The tables were
+ * keyed only by browser fingerprint, so any caller could read any
+ * organization's visitors; rows now carry their organization (migration 0157).
+ */
+export async function handleGetUserIntent(args: unknown, context?: ToolContext) {
     try {
         const input = GetUserIntentInput.parse(args);
+        const organizationId = requireToolOrgId(context);
 
         // 1. Get latest state
         const [latestState] = await db
             .select()
             .from(contactIntentStates)
-            .where(eq(contactIntentStates.userFingerprint, input.fingerprint))
+            .where(and(
+                eq(contactIntentStates.organizationId, organizationId),
+                eq(contactIntentStates.userFingerprint, input.fingerprint),
+            ))
             .orderBy(desc(contactIntentStates.createdAt))
             .limit(1);
 
@@ -20,7 +30,10 @@ export async function handleGetUserIntent(args: unknown) {
         const engagements = await db
             .select()
             .from(engagementLogs)
-            .where(eq(engagementLogs.userFingerprint, input.fingerprint))
+            .where(and(
+                eq(engagementLogs.organizationId, organizationId),
+                eq(engagementLogs.userFingerprint, input.fingerprint),
+            ))
             .orderBy(desc(engagementLogs.createdAt))
             .limit(5);
 
@@ -46,4 +59,3 @@ export async function handleGetUserIntent(args: unknown) {
         return errorResponse(error.message);
     }
 }
-

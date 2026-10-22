@@ -85,6 +85,12 @@ export class BootstrapService {
         const { initializeCircuits } = await import("../domain/core/infrastructure/circuit-breaker.service.js");
         await initializeCircuits();
 
+        // 1.2 Encrypt any SaaS connector credentials stored before sealing.
+        // Not awaited: idempotent, and a slow sweep must not hold up boot.
+        import("../domain/integrations/saas-credential-sealing.js")
+            .then(({ sealPlaintextSaasCredentials }) => sealPlaintextSaasCredentials())
+            .catch((error) => logger.error(`SaaS credential sealing failed: ${error?.message}`));
+
         const { jobExecutorRegistry } = await import("../domain/jobs/core/executors/index.js");
         await (jobExecutorRegistry as any).autoRegister();
 

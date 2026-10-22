@@ -9,7 +9,6 @@ import { saasConnectorConfigService } from "@domain/integrations/saas-connector-
 import { resolveProjectScope } from "@server/middleware/project-scope.js";
 
 const router = Router();
-const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8002";
 
 /** Optional project scope (?projectId / ?projectKey) — undefined when absent. */
 async function scopedProjectId(req: Request): Promise<number | undefined> {
@@ -122,7 +121,8 @@ router.post("/connectors/:platform/discover/:resource", requireAuth, asyncHandle
         return res.json({ results: spaces });
     }
 
-    const url = `${PYTHON_SERVICE_URL}/api/saas/connectors/${platform}/discover/${resource}?organization_id=${organizationId}`;
+    const { sidecarBaseUrl } = await import("@server/integrations/sidecar-client.js");
+    const url = `${sidecarBaseUrl()}/api/saas/connectors/${encodeURIComponent(platform)}/discover/${encodeURIComponent(resource)}`;
     const response = await pythonGateway.execute(
         'discover_resource',
         url,

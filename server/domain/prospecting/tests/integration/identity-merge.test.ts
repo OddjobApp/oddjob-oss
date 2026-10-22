@@ -32,6 +32,8 @@ describe("prospecting identity merge", () => {
     const createdProfileIds: number[] = [];
 
     beforeAll(async () => {
+        // The outbox is written only while Kafka is enabled; this suite asserts on it.
+        vi.stubEnv("KAFKA_ENABLED", "true");
         pool = new Pool({ connectionString: requireTestDatabaseUrl(), max: 5 });
         db = drizzle(pool, { schema });
 
@@ -49,6 +51,7 @@ describe("prospecting identity merge", () => {
     });
 
     afterAll(async () => {
+        vi.unstubAllEnvs();
         if (createdProfileIds.length > 0) {
             await db.delete(schema.scoringEvents).where(inArray(schema.scoringEvents.prospectId, createdProfileIds));
             await db.delete(schema.prospectLeads).where(inArray(schema.prospectLeads.profileId, createdProfileIds));

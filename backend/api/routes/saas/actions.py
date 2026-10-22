@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from core.service_auth import caller_org
 from typing import Dict, Any
 from core.saas_manager import connector_manager
 from .models import JiraCommentRequest, JiraTransitionRequest, JiraUpdateRequest, JiraCreateRequest
@@ -8,9 +9,9 @@ logger = get_structured_logger("saas_jira_actions_api")
 router = APIRouter(prefix="/jira", tags=["jira-actions"])
 
 @router.post("/comment")
-async def add_jira_comment(request: JiraCommentRequest):
+async def add_jira_comment(request: JiraCommentRequest, organization_id: int = Depends(caller_org)):
     """Add a comment to a Jira issue."""
-    org_id = request.organization_id or 1
+    org_id = organization_id
     connector = connector_manager.get_connector(org_id, "jira")
     if not connector:
         # Load state if not loaded
@@ -32,9 +33,9 @@ async def add_jira_comment(request: JiraCommentRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/transition")
-async def transition_jira_issue(request: JiraTransitionRequest):
+async def transition_jira_issue(request: JiraTransitionRequest, organization_id: int = Depends(caller_org)):
     """Transition a Jira issue to a new status."""
-    org_id = request.organization_id or 1
+    org_id = organization_id
     connector = connector_manager.get_connector(org_id, "jira")
     if not connector:
         await connector_manager.load_org_state(org_id)
@@ -54,9 +55,9 @@ async def transition_jira_issue(request: JiraTransitionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/update")
-async def update_jira_issue(request: JiraUpdateRequest):
+async def update_jira_issue(request: JiraUpdateRequest, organization_id: int = Depends(caller_org)):
     """Update Jira issue fields."""
-    org_id = request.organization_id or 1
+    org_id = organization_id
     connector = connector_manager.get_connector(org_id, "jira")
     if not connector:
         await connector_manager.load_org_state(org_id)
@@ -83,9 +84,9 @@ async def update_jira_issue(request: JiraUpdateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/create")
-async def create_jira_issue(request: JiraCreateRequest):
+async def create_jira_issue(request: JiraCreateRequest, organization_id: int = Depends(caller_org)):
     """Create a new Jira issue."""
-    org_id = request.organization_id or 1
+    org_id = organization_id
     connector = connector_manager.get_connector(org_id, "jira")
     if not connector:
         await connector_manager.load_org_state(org_id)

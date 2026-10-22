@@ -1275,23 +1275,14 @@ export const conversationalBridgeService = {
     async resolveConnector(message: InboundMessage) {
         // Multi-tenant resolution using teamId (Slack) or org specific metadata
         if (message.platform === 'slack' && message.teamId) {
-            const [connector] = await db.select()
-                .from(saasConnectors)
-                .where(and(
-                    eq(saasConnectors.platform, 'slack'),
-                    sql`credentials->>'team_id' = ${message.teamId}`,
-                    sql`${saasConnectors.status} IN ('active', 'connected')`
-                ))
-                .limit(1);
-            
-            if (connector) return connector;
-            
-            // Fallback: Check if teamId is in config instead of credentials
+            // The team id lives in config: credentials are encrypted and cannot
+            // be queried. The Slack OAuth adapter writes `teamId`; older rows
+            // and the sealing sweep may have `team_id`.
             const [fallbackConnector] = await db.select()
                 .from(saasConnectors)
                 .where(and(
                     eq(saasConnectors.platform, 'slack'),
-                    sql`config->>'team_id' = ${message.teamId}`,
+                    sql`(config->>'teamId' = ${message.teamId} OR config->>'team_id' = ${message.teamId})`,
                     sql`${saasConnectors.status} IN ('active', 'connected')`
                 ))
                 .limit(1);

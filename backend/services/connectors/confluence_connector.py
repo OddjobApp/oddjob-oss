@@ -50,7 +50,8 @@ class ConfluenceConnector(SaaSConnector):
             import httpx
             async with httpx.AsyncClient(timeout=10) as client:
                 self._log_diag(f"Attempting to resolve cloudId for: {site_url}")
-                response = await client.get(f"{site_url}/_edge/tenant_info")
+                from core.egress import assert_public_url
+                response = await client.get(assert_public_url(f"{site_url}/_edge/tenant_info"))
                 if response.status_code == 200:
                     data = response.json()
                     cloud_id = data.get("cloudId")
@@ -107,7 +108,8 @@ class ConfluenceConnector(SaaSConnector):
             import httpx
             async with httpx.AsyncClient(timeout=self.config.timeout) as client:
                 self._log_diag(f"Requesting: {method} {url}")
-                response = await client.request(method, url, **kwargs)
+                from core.egress import assert_public_url
+                response = await client.request(method, assert_public_url(url), **kwargs)
                 
                 if response.status_code >= 400:
                     try:

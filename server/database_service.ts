@@ -4,6 +4,11 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema/index.js";
 import { createLogger } from "./utils/logger.js";
+import { registerSealedJsonCodec } from "@shared/schema/sealed-json.js";
+import { encrypt, decrypt } from "./utils/encryption.js";
+
+// Sealed columns (SaaS connector credentials) encrypt with the platform key ring.
+registerSealedJsonCodec({ seal: (plaintext) => encrypt(plaintext), open: (ciphertext) => decrypt(ciphertext) });
 
 const logger = createLogger("Database");
 

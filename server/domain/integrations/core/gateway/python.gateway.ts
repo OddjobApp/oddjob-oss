@@ -1,4 +1,5 @@
-import { BaseGateway, type GatewayResponse } from "./base.gateway.js";
+import { BaseGateway, type GatewayRequest, type GatewayResponse } from "./base.gateway.js";
+import { sidecarBaseUrl, sidecarHeaders, sidecarConfigured, SidecarUnavailableError } from "@server/integrations/sidecar-client.js";
 import { createLogger } from "@server/utils/logger.js";
 
 const logger = createLogger("PythonGateway");
@@ -7,7 +8,13 @@ export class PythonGateway extends BaseGateway {
     protected readonly platform = 'python';
     // The sidecar lives on the private network; the egress firewall would refuse it.
     protected readonly internalService = true;
-    private readonly baseUrl = process.env.PYTHON_SERVICE_URL || process.env.PYTHON_SIDECAR_URL || 'http://localhost:8001';
+    private get baseUrl(): string { return sidecarBaseUrl(); }
+
+    /** Every sidecar call carries the service token and, when known, the caller's organization. */
+    protected override async request(req: GatewayRequest): Promise<GatewayResponse> {
+        if (!sidecarConfigured()) throw new SidecarUnavailableError();
+        return super.request({ ...req, headers: { ...sidecarHeaders(req.organizationId), ...(req.headers ?? {}) } });
+    }
 
     /**
      * Check if the Python sidecar is healthy
@@ -28,14 +35,13 @@ export class PythonGateway extends BaseGateway {
     /**
      * Execute a Python script
      */
-    async executeScript(script: string, inputData: any): Promise<any> {
-        const res = await this.request({
-            action: 'execute_script',
-            url: `${this.baseUrl}/execute`,
-            method: 'POST',
-            body: { script, input_data: inputData }
-        });
-        return res.body;
+    /**
+     * Not available. This posted arbitrary code to a sidecar `/execute` route
+     * that never existed; running submitted code on the host is not allowed in
+     * production in any case (docs/developer-guides/KEYS_AND_CREDENTIALS.md §3).
+     */
+    async executeScript(_script: string, _inputData: any): Promise<never> {
+        throw new Error("Python script execution is not available");
     }
 
     /**

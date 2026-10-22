@@ -44,6 +44,11 @@ Optional `QDRANT_API_KEY` is passed to Qdrant and both application roles;
 production's published Qdrant port binds to localhost. Configure Node SMTP in
 System Settings and set `EMAIL_ENABLED=true` for approval email notifications.
 The Python service's `SMTP_*` variables do not configure Node email.
+`GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` enable the Google OAuth connectors
+(Gmail inbox reads, Drive, Calendar); without them every "Connect" card is
+disabled and Gmail reads report "not connected". See
+`docs/developer-guides/GOOGLE_ADAPTER_CONNECTIONS.md` for the required
+callback registration and API enablement.
 
 ```sh
 docker compose -f docker-compose.prod.yml config --quiet
