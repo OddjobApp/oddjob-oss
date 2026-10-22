@@ -607,3 +607,22 @@ describe("public platform documentation boundary", () => {
     expect(fs.readFile).not.toHaveBeenCalled();
   });
 });
+
+
+describe('public release notes boundary', () => {
+  it('returns only explicit published summaries from the configured publisher', async () => {
+    vi.stubEnv('PUBLIC_RELEASE_NOTES_ORG_ID','7');
+    const scan = vi.spyOn(documentationService,'getReleaseNotes').mockResolvedValue([
+      {id:1,title:'Public update',version:'1.2.0',status:'published',createdAt:'2026-10-22',publishedAt:'2026-10-22T00:00:00Z',publicSummary:'New customer-facing capability.',changeIds:[9],markdown:'PRIVATE SCHEMA'},
+      {id:2,title:'Private update',version:'1.3.0',status:'published',createdAt:'2026-10-22',publishedAt:'2026-10-22T00:00:00Z',changeIds:[10],markdown:'PRIVATE'},
+      {id:3,title:'Draft',version:'1.4.0',status:'draft',createdAt:'2026-10-22',publishedAt:null,publicSummary:'Unpublished',changeIds:[],markdown:'DRAFT'}
+    ]);
+    try {
+      const releases = await documentationService.getPublicReleaseNotes();
+      expect(scan).toHaveBeenCalledWith(7);
+      expect(releases).toEqual([{title:'Public update',version:'1.2.0',publishedAt:'2026-10-22T00:00:00Z',summary:'New customer-facing capability.'}]);
+      vi.stubEnv('PUBLIC_RELEASE_NOTES_ORG_ID','');scan.mockClear();
+      expect(await documentationService.getPublicReleaseNotes()).toEqual([]);expect(scan).not.toHaveBeenCalled();
+    } finally {scan.mockRestore();vi.unstubAllEnvs();}
+  });
+});

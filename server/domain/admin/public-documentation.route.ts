@@ -15,6 +15,10 @@ publicDocumentationRouter.use((req, _res, next) => {
 publicDocumentationRouter.get("/", (_req, res) => {
   res.set("Cache-Control", "public, max-age=60").json({ guides: PUBLIC_FEATURE_DOCS.map(({slug,title}) => ({slug,title})) });
 });
+publicDocumentationRouter.get("/releases", asyncHandler(async (_req: Request, res: Response) => {
+  const releases = await documentationService.getPublicReleaseNotes();
+  res.set("Cache-Control", "public, max-age=30, must-revalidate").json({releases});
+}));
 publicDocumentationRouter.get("/:slug", asyncHandler(async (req: Request, res: Response) => {
   const doc = await documentationService.getPublicFeatureSpec(req.params.slug);
   res.set({ "Cache-Control": "public, max-age=60, must-revalidate", ETag: `"${doc.revision}"` });

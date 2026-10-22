@@ -35,6 +35,7 @@ const logger = createLogger("EnvValidation");
 
 /** Fail to boot without these, in every environment including development. */
 const required = z.object({
+    PUBLIC_RELEASE_NOTES_ORG_ID: z.string().regex(/^[1-9]\d*$/, "Public release publisher must be a positive organization ID").optional(),
     QUICKBOOKS_ENVIRONMENT: z.enum(['sandbox', 'production']).optional(),
     DATABASE_URL: z
         .string()
@@ -73,6 +74,7 @@ const requiredInProduction = z.object({
  * by a user.
  */
 const degradations: ReadonlyArray<{ vars: string[]; capability: string; consequence: string }> = [
+    { vars: ["PUBLIC_RELEASE_NOTES_ORG_ID"], capability: "Public release notes", consequence: "The public release feed is empty until a publisher organization is configured; internal releases stay private." },
     { vars: ['QUICKBOOKS_CLIENT_ID'], capability: 'QuickBooks Online OAuth client', consequence: 'QuickBooks company connections cannot be authorized.' },
     { vars: ['QUICKBOOKS_CLIENT_SECRET'], capability: 'QuickBooks Online OAuth secret', consequence: 'QuickBooks token exchange and refresh are unavailable.' },
     { vars: ['QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN'], capability: 'QuickBooks Online webhooks', consequence: 'QuickBooks change notifications are rejected; incremental sync falls back to scheduled pulls.' },

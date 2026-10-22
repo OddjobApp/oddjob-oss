@@ -11,6 +11,7 @@ We collect information you provide directly to us during sign-up, including:
 - Username
 - Email address
 - Name (optional)
+- Organization name, company size, and industry (optional)
 - Legal agreement timestamps and versions
 
 ## 3. How We Use Information

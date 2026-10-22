@@ -3,7 +3,7 @@ import express from "express";
 import request from "supertest";
 import {publicDocumentationRouter} from "../public-documentation.route";
 import {documentationService} from "../documentation.service";
-vi.mock("../documentation.service",()=>({documentationService:{getPublicFeatureSpec:vi.fn()}}));
+vi.mock("../documentation.service",()=>({documentationService:{getPublicFeatureSpec:vi.fn(),getPublicReleaseNotes:vi.fn()}}));
 vi.mock("../../../middleware/rate-limiter",()=>({createRateLimiter:()=> (_req:unknown,_res:unknown,next:()=>void)=>next()}));
 const app=express();app.use("/api/public/documentation",publicDocumentationRouter);app.use((_err:unknown,_req:unknown,res:express.Response,_next:unknown)=>{res.status(400).json({error:"Rejected"});});
 describe("public documentation HTTP bridge",()=>{
@@ -23,4 +23,12 @@ describe("public documentation HTTP bridge",()=>{
     const response=await request(app).get("/api/public/documentation");expect(response.status).toBe(200);
     expect(response.body.guides).toHaveLength(17);expect(response.body.guides).toEqual(expect.arrayContaining([{slug:"android",title:"Android app"},{slug:"desktop",title:"Electron desktop app"}]));expect(Object.keys(response.body.guides[0]).sort()).toEqual(["slug","title"]);
   });
+  it("serves the dynamic release feed without accepting an organization selector", async()=>{
+    vi.mocked(documentationService.getPublicReleaseNotes).mockResolvedValue([]);
+    const response=await request(app).get('/api/public/documentation/releases');
+    expect(response.status).toBe(200);expect(response.body).toEqual({releases:[]});
+    expect(documentationService.getPublicFeatureSpec).not.toHaveBeenCalled();
+    expect((await request(app).get('/api/public/documentation/releases?orgId=9')).status).toBe(400);
+  });
+
 });

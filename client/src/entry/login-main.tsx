@@ -20,6 +20,7 @@ const AcceptInvite = lazy(() => import("@domain-ui/auth/ui/modules/auth/pages/Ac
 const Overview = lazy(() => import('../pages/public/PublicPages').then(m => ({ default: m.Overview })));
 const MarketingPage = lazy(() => import('../pages/marketing/MarketingPage'));
 const PublicFormPage = lazy(() => import('../modules/forms/pages/PublicFormPage'));
+const PublicReleaseNotes = lazy(() => import("../pages/public/PublicReleaseNotes"));
 const PublicDocumentation = lazy(() => import("../pages/public/PublicDocumentation"));
 const UseCases = lazy(() => import('../pages/public/PublicPages').then(m => ({ default: m.UseCases })));
 const GettingStarted = lazy(() => import('../pages/public/PublicPages').then(m => ({ default: m.GettingStarted })));
@@ -70,6 +71,7 @@ function LoginApp() {
           {/* Public routes (no layout) */}
           <Route path="/overview" component={Overview} />
           <Route path="/use-cases" component={UseCases} />
+          <Route path="/docs/releases"><PublicReleaseNotes /></Route>
           <Route path="/docs/:slug">{params => <PublicDocumentation slug={params.slug} />}</Route>
           <Route path="/docs"><PublicDocumentation /></Route>
           <Route path="/getting-started" component={GettingStarted} />

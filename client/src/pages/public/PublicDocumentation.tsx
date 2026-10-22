@@ -22,6 +22,7 @@ export default function PublicDocumentation({ slug }: { slug?: string }) {
   }, [slug, topic, attempt]);
   const doc = state.slug === slug ? state.doc : undefined;
   return <Shell title={slug ? topic?.title ?? "Guide not found" : "Oddjob feature documentation"} intro="Explore what Oddjob can do, how to get started, and what each capability needs. These public guides stay connected to the deployed platform documentation.">
+    <a href="/docs/releases" className="mr-5 inline-flex min-h-11 items-center underline underline-offset-4">Release notes</a>
     <a href="/use-cases" className="inline-flex min-h-11 items-center underline underline-offset-4">Explore use cases</a>
     {!slug ? <div className="grid gap-4 md:grid-cols-2">{PUBLIC_FEATURE_DOCS.map(item => <a key={item.slug} href={`/docs/${item.slug}`} className="rounded-xl border border-border p-5 font-semibold hover:bg-muted">{item.title}</a>)}</div> : !topic ? <p role="alert">This guide is not in the public documentation catalog. <a href="/docs" className="underline">Browse available guides.</a></p> : <div className="grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
       <nav aria-label="Feature documentation" className="flex flex-wrap gap-2 lg:block lg:space-y-1">{PUBLIC_FEATURE_DOCS.map(item => <a key={item.slug} href={`/docs/${item.slug}`} aria-current={slug === item.slug ? "page" : undefined} className={`block rounded-lg px-3 py-2 text-sm ${slug === item.slug ? "bg-muted font-semibold" : "hover:bg-muted"}`}>{item.title}</a>)}</nav>

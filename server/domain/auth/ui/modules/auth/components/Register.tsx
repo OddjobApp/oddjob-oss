@@ -1,3 +1,4 @@
+import { COMPANY_SIZES, INDUSTRIES } from "@shared/company-profile";
 import { useState } from 'react';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { HatIcon } from '@domain-ui/core/ui/components/shared/HatIcon';
@@ -23,6 +24,8 @@ export default function Register({ onBackToLogin }: RegisterProps) {
     firstName: '',
     lastName: '',
     organizationName: '',
+    companySize: '',
+    industry: '',
     tosAccepted: false,
     privacyPolicyAccepted: false,
   });
@@ -40,6 +43,8 @@ export default function Register({ onBackToLogin }: RegisterProps) {
       firstName: form.firstName || undefined,
       lastName: form.lastName || undefined,
       organizationName: form.organizationName.trim() || undefined,
+      companySize: form.companySize || undefined,
+      industry: form.industry || undefined,
       privacyPolicyAccepted: true,
       privacyPolicyVersion: '1.0.0',
       tosAccepted: true,
@@ -83,6 +88,15 @@ export default function Register({ onBackToLogin }: RegisterProps) {
                 <Label htmlFor="organizationName" className={labelClass}>Organization name <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input id="organizationName" placeholder="Your company or team" value={form.organizationName} onChange={e => set('organizationName', e.target.value)} maxLength={120} autoComplete="organization" aria-describedby="organization-hint" className={inputClass} />
                 <p id="organization-hint" className="text-sm text-muted-foreground">We create this organization for you and make you its administrator. You can add your team afterwards.</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[['companySize', 'Company size', COMPANY_SIZES], ['industry', 'Industry', INDUSTRIES]].map(([field, label, options]) => <div key={field as string} className="space-y-2">
+                  <Label htmlFor={field as string} className={labelClass}>{label as string} <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                  <select id={field as string} value={form[field as 'companySize' | 'industry']} onChange={e => set(field as string, e.target.value)} className={`${inputClass} w-full bg-background`}>
+                    <option value="">Select {String(label).toLowerCase()}</option>
+                    {(options as readonly string[]).map(option => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </div>)}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="reg-password" className={labelClass}>Password</Label>
