@@ -70,3 +70,13 @@ https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer?f=p
 Rescue map correction: the public showcase uses rescue-dispatch-map.jpg, a viewport capture with the complete map and attribution visible. Removed the map child minimum height that exceeded its parent; avoided the full-page WebGL capture that clipped rendered tiles. The earlier full-page asset is retained only as history.
 
 Spatial geographic rules demo: SpatialRulesDemo replaces the static crop on the public pages. It uses real h3-js cell membership over a fictional Los Angeles service area, a deny-first restricted cell, and three synthetic request centroids. All evaluation stays in the browser. The human review step is explanatory; no approval or dispatch is executed. OpenStreetMap raster tiles retain contributor attribution. The previous satellite capture remains an archival asset.
+
+## Recurring-work examples
+
+The use-cases page includes three full-width captures from a disconnected local preview of the actual repository components, with a visible synthetic-data banner. Fixtures exist only in preview memory; no production records, credentials, schedules, or executions were created.
+
+- `recurring-pipeline.jpg` (1280×720): `PipelineCanvas.tsx`, with API intake → AI summary → human approval. No execution results supplied.
+- `recurring-schedules.jpg` (1274×717): the mounted schedule-rules `Schedules.tsx`, with three disabled QueryClient fixtures in America/Los_Angeles. All API access is disconnected.
+- `recurring-cycle.jpg` (1280×720): `CycleGanttChart.tsx`, with five draft phases, dependencies and an owner sign-off milestone. No actual run data supplied; Zoom to fit used.
+
+Captures are unaltered viewport screenshots, not full-page WebGL captures. The public captions distinguish UI previews from live operational evidence.

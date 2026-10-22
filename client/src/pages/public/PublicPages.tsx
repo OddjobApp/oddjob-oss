@@ -133,6 +133,30 @@ const capabilities = [
   }
 ];
 
+
+const recurringScreenshots: Record<string, { src: string; width: number; height: number; alt: string; caption: string }> = {
+  Pipelines: { src: 'recurring-pipeline.jpg', width: 1280, height: 720,
+    alt: 'Oddjob pipeline canvas showing sample intake collection, summary preparation, and a human approval step connected in sequence.',
+    caption: 'Read-only preview of the real pipeline canvas with three fictional steps. This is a design, not an executed run.' },
+  Schedules: { src: 'recurring-schedules.jpg', width: 1274, height: 717,
+    alt: 'Oddjob schedule rules displaying fictional weekly, daily, and monthly patterns in America/Los_Angeles, all offline.',
+    caption: 'The real schedule-rules interface with synthetic weekly, daily, and monthly fixtures. Every sample rule is disabled; none was saved or scheduled in production.' },
+  'Business cycles': { src: 'recurring-cycle.jpg', width: 1280, height: 720,
+    alt: 'Oddjob cycle timeline with five fictional phases, dependency arrows, and an owner sign-off milestone before releasing a brief.',
+    caption: 'The real cycle timeline with a fictional weekly review plan and an owner sign-off milestone. No cycle was activated and no phase was executed.' },
+};
+
+function RecurringWorkScreenshot({ title }: { title: string }) {
+  const shot = recurringScreenshots[title];
+  if (!shot) return null;
+  return <figure className="mt-5 overflow-hidden rounded-xl border border-border bg-background">
+    <a href={`/images/product/${shot.src}`} target="_blank" rel="noopener noreferrer" aria-label={`Open full-size ${title} demo screenshot`} className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+      <img src={`/images/product/${shot.src}`} alt={shot.alt} width={shot.width} height={shot.height} loading="lazy" decoding="async" className="block h-auto w-full" />
+    </a>
+    <figcaption className="p-4 text-sm leading-6 text-muted-foreground"><strong className="text-foreground">Synthetic demo data.</strong> {shot.caption} <span className="underline underline-offset-4">Open the image for full-size detail.</span></figcaption>
+  </figure>;
+}
+
 function Actions() {
   return <div className="mt-8 flex flex-wrap gap-3"><a className={`${link} bg-primary px-5 text-primary-foreground hover:bg-primary/90`} href="/auth/signup">Create an account <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></a><a className={`${link} border border-border px-5`} href="/getting-started">Read the getting-started guide</a></div>;
 }
@@ -172,8 +196,9 @@ export function UseCases() {
     <nav aria-label="Capability categories" className="flex flex-wrap gap-2">{groups.map((group, i) => <a key={group} className={`${link} border border-border`} href={`#capability-group-${i}`}>{group}</a>)}</nav>
     {groups.map((group, i) => <section key={group} id={`capability-group-${i}`} aria-labelledby={`capability-heading-${i}`} className="scroll-mt-6 space-y-5">
       <h2 id={`capability-heading-${i}`} className="text-2xl font-semibold">{group}</h2>
-      <div className="grid items-start gap-5 md:grid-cols-2">{capabilities.filter(item => item.group === group).map(({ title, detail, example, requires, doc }) => <article className={panel} key={title}>
+      <div className={`grid items-start gap-5 ${group === 'Automate recurring work' ? '' : 'md:grid-cols-2'}`}>{capabilities.filter(item => item.group === group).map(({ title, detail, example, requires, doc }) => <article className={panel} key={title}>
         <h3 className="text-xl font-semibold">{title}</h3><p className="mt-3 leading-7 text-muted-foreground">{detail}</p>
+        <RecurringWorkScreenshot title={title} />
         <p className="mt-4 leading-7"><strong>Try it:</strong> {example}</p>
         <p className="mt-4 border-t border-border pt-4 text-sm leading-6 text-muted-foreground"><strong className="text-foreground">What you need:</strong> {requires}</p>
         <a href={`https://github.com/OddjobApp/oddjob-oss/blob/${["docs/developer-guides/PRODUCT_SCREENSHOTS.md", "docs/developer-guides/ORG_OAUTH_APPS.md"].includes(doc) ? "codex/login-announcements" : "main"}/${doc}`} target="_blank" rel="noopener noreferrer" className={`${link} mt-3 underline underline-offset-4`} aria-label={`Read ${title} documentation`}>Read the documentation <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></a>
