@@ -14,7 +14,7 @@ export default function MarketingPage() {
   return <div className="min-h-screen bg-background text-foreground">
     <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:bg-background focus:p-4">Skip to content</a>
     <header className="border-b border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
-      <a href="/" className="flex min-h-11 items-center gap-2 text-xl font-bold" aria-label="Oddjob home"><HatIcon className="h-8 w-8" />Oddjob</a>
+      <a href="/" className="flex min-h-11 items-center gap-2 text-xl font-bold" aria-label="Oddjob home"><HatIcon publicBackdrop className="h-8 w-8" />Oddjob</a>
       <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-5 text-sm font-medium"><a className="hover:underline" href="/use-cases">Use cases</a><a className="hover:underline" href="/getting-started">Get started</a><a className="hover:underline" href="#announcements">Announcements</a><a className={button} href="/auth/login">Sign in <ArrowRight className="h-4 w-4" aria-hidden="true" /></a></nav>
     </div></header>
     <main id="main" className="mx-auto max-w-6xl px-5 sm:px-8">
@@ -36,6 +36,6 @@ export default function MarketingPage() {
       <section className="grid gap-6 py-10 md:grid-cols-2"><h2 className="max-w-md text-3xl font-bold tracking-tight">Your workspace.<br />Your context. Your decisions.</h2><div className="space-y-4 leading-7 text-muted-foreground"><p>Connect the tools your organization uses, bring your own AI provider credentials, and decide who can access the work.</p><p>Follow mission history and approval requests as work moves forward. Inspect the output and execution evidence before relying on the result.</p><p>Oddjob is open source under Apache 2.0. Explore the code, contribute, or run your own deployment.</p><a href="/overview" className="inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline underline-offset-4">Explore Oddjob <ArrowRight className="h-4 w-4" aria-hidden="true" /></a></div></section>
       <AnnouncementsSignup className="my-14" />
     </main>
-    <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5 px-5 py-8 text-sm text-muted-foreground sm:px-8"><p>Oddjob · Built in the open.</p><nav aria-label="Footer navigation" className="flex flex-wrap gap-5"><a href="/trust">Trust Center</a><a href="/contact">Support</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/docs">Documentation</a></nav></div></footer>
+    <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5 px-5 py-8 text-sm text-muted-foreground sm:px-8"><p>Oddjob · Built in the open.</p><nav aria-label="Footer navigation" className="flex flex-wrap gap-5"><a href="/trust">Trust Center</a><a href="/contact">Support</a><a href="mailto:admin@oddjob.app">admin@oddjob.app</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/docs">Documentation</a></nav></div></footer>
   </div>;
 }

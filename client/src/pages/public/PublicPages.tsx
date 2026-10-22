@@ -183,7 +183,7 @@ export function Shell({ title, intro, children }: { title: string; intro: string
   return <div className="min-h-screen bg-background text-foreground">
     <a href="#public-main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-background focus:p-4">Skip to content</a>
     <header className="border-b border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
-      <a href="/" className={`${link} gap-2 text-xl font-bold`} aria-label="Oddjob home"><HatIcon className="h-8 w-8" />Oddjob</a>
+      <a href="/" className={`${link} gap-2 text-xl font-bold`} aria-label="Oddjob home"><HatIcon publicBackdrop className="h-8 w-8" />Oddjob</a>
       <nav aria-label="Public navigation" className="flex flex-wrap gap-1">{[['Overview', '/overview'], ['Use cases', '/use-cases'], ['Get started', '/getting-started'], ['Documentation', '/docs'], ['Support', '/contact'], ['Sign in', '/auth/login']].map(([label, href]) => <a key={href} href={href} className={`${link} ${location === href ? 'bg-muted' : ''}`} aria-current={location === href ? 'page' : undefined}>{label}</a>)}</nav>
     </div></header>
     <main id="public-main" className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">

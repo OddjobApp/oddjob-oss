@@ -58,7 +58,7 @@ export default function Register({ onBackToLogin }: RegisterProps) {
       <div className="mx-auto grid w-full max-w-6xl items-start gap-10 lg:grid-cols-2 lg:gap-12 lg:px-8">
         <section className="mx-auto w-full max-w-md">
           <a href="/overview" className="mb-6 flex items-center gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
-            <HatIcon className="h-12 w-12" />
+            <HatIcon publicBackdrop className="h-12 w-12" />
             <span className="text-4xl font-bold tracking-tight">Oddjob</span>
           </a>
           <p className="mb-6 text-sm leading-6 text-muted-foreground">Plan, execute, approve, and replay autonomous work from one workspace.</p>

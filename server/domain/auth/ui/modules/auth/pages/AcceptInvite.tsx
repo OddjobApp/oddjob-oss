@@ -102,7 +102,7 @@ export default function AcceptInvite() {
     <main className="min-h-screen bg-background px-4 py-10 font-sans text-foreground sm:px-6 sm:py-12">
       <div className="mx-auto w-full max-w-md">
         <a href="/overview" className="mb-6 flex items-center gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
-          <HatIcon className="h-12 w-12" />
+          <HatIcon publicBackdrop className="h-12 w-12" />
           <span className="text-4xl font-bold tracking-tight">Oddjob</span>
         </a>
 
