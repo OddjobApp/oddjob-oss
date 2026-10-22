@@ -30,7 +30,7 @@ export const PUBLIC_FEATURE_DOCS = [
   },
   {
     "slug": "schedules",
-    "title": "Schedules",
+    "title": "Automations",
     "featureId": "schedules",
     "guide": "server/knowledge/features/schedules.md",
     "section": null

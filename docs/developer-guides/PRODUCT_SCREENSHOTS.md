@@ -80,3 +80,5 @@ The use-cases page includes three full-width captures from a disconnected local 
 - `recurring-cycle.jpg` (1280×720): `CycleGanttChart.tsx`, with five draft phases, dependencies and an owner sign-off milestone. No actual run data supplied; Zoom to fit used.
 
 Captures are unaltered viewport screenshots, not full-page WebGL captures. The public captions distinguish UI previews from live operational evidence.
+
+The Automations redesign replaces the Temporal Patterns presentation using the shared PageShell and semantic theme colors. `recurring-automations.jpg` (1274×717) supersedes `recurring-schedules.jpg` on the public page. Captured from the updated screen using the same three disabled local fixtures; create/edit prefill, cancellation, and search were checked without saving or enabling any rule.
