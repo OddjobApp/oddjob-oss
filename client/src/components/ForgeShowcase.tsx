@@ -13,8 +13,8 @@ export function ForgeShowcase() {
       </ul>
     </div>
     <figure className="overflow-hidden rounded-2xl border border-border bg-card">
-      <a href="/images/product/rescue-dispatch.png" target="_blank" rel="noopener noreferrer" aria-label="Open full-size Rescue Dispatch blueprint screenshot" className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
-        <img src="/images/product/rescue-dispatch.png" alt="Rescue Dispatch App Forge blueprint preview showing a Los Angeles map with sample requests, squad readiness, a priority queue, and service providers." width={1264} height={1411} loading="lazy" decoding="async" className="max-h-[850px] w-full object-contain bg-[#080a0c]" />
+      <a href="/images/product/rescue-dispatch-map.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open full-size Rescue Dispatch blueprint screenshot" className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+        <img src="/images/product/rescue-dispatch-map.jpg" alt="Rescue Dispatch App Forge blueprint preview showing a Los Angeles map with sample requests, squad readiness, and map layer controls." width={1264} height={720} loading="lazy" decoding="async" className="h-auto w-full bg-[#080a0c]" />
       </a>
       <figcaption className="space-y-3 p-6">
         <p className="text-sm leading-6 text-muted-foreground"><strong className="text-foreground">Blueprint preview with sample data.</strong> Captured from the real Rescue Dispatch components in a local, read-only preview. Dispatch actions were disconnected; this demonstrates the interface, not a live emergency service.</p>

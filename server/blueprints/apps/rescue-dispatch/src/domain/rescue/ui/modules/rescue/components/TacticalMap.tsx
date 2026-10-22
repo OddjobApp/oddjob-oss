@@ -175,7 +175,7 @@ export default function TacticalMap({ squads, rescues, providers, focusedRescueI
   }, []);
 
   return (
-    <div className="tactical-map relative w-full h-full min-h-[480px] bg-background overflow-hidden" data-testid="tactical-map">
+    <div className="tactical-map relative w-full h-full bg-background overflow-hidden" data-testid="tactical-map">
       {!mapReady && !mapError && <div className="map-loading" role="status"><RefreshCw className="animate-spin" aria-hidden="true" />Loading tactical map</div>}
       {mapError && <div className="map-error" role="alert"><AlertTriangle aria-hidden="true" /><div><strong>Map tiles could not be loaded</strong><span>{mapError}</span></div><button type="button" onClick={resetView}>Retry</button></div>}
 

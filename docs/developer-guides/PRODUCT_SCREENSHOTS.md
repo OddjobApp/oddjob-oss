@@ -66,3 +66,5 @@ The spatial image is a focused browser crop of the captured map, excluding a
 transient help tooltip over the side controls. Imagery attribution is included in
 the public caption, using the provider's service metadata:
 https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer?f=pjson
+
+Rescue map correction: the public showcase uses rescue-dispatch-map.jpg, a viewport capture with the complete map and attribution visible. Removed the map child minimum height that exceeded its parent; avoided the full-page WebGL capture that clipped rendered tiles. The earlier full-page asset is retained only as history.
