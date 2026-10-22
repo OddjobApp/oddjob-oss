@@ -59,8 +59,16 @@ router.get("/connectors", requireAuth, asyncHandler(async (req: Request, res: Re
 
 // POST /api/saas/create-connector - Create or Update a connector
 router.post("/create-connector", requireAuth, asyncHandler(async (req: Request, res: Response) => {
-    const { platform, organization_id, config, credentials } = req.body;
-    const orgId = organization_id ? parseInt(organization_id) : 1;
+    // The organization is the caller's, never one named in the body: this route
+    // used to take `organization_id` from the request (defaulting to 1), so any
+    // signed-in user could replace another organization's connector, credentials
+    // and base URL included.
+    const orgContext = await getUserOrgContext(req);
+    const orgId = requireOrgId(orgContext);
+    if (!orgContext.isOrgAdmin && !orgContext.isSuperAdmin) {
+        return res.status(403).json({ message: "Organization administrator required" });
+    }
+    const { platform, config, credentials } = req.body;
 
     if (!platform) {
         throw new BadRequestError("Platform is required");

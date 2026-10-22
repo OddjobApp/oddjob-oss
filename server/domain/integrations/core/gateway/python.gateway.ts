@@ -5,6 +5,8 @@ const logger = createLogger("PythonGateway");
 
 export class PythonGateway extends BaseGateway {
     protected readonly platform = 'python';
+    // The sidecar lives on the private network; the egress firewall would refuse it.
+    protected readonly internalService = true;
     private readonly baseUrl = process.env.PYTHON_SERVICE_URL || process.env.PYTHON_SIDECAR_URL || 'http://localhost:8001';
 
     /**
