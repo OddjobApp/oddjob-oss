@@ -301,7 +301,7 @@ export function buildToolResultReminders(toolsUsed: ToolCallRecord[], message: s
     // re-querying the internal KB for external facts and narrating findings it
     // never found. Point the escalation at the tools that can reach it.
     const emptyLookup = toolsUsed.some(
-        (t) => t.ok && /^(?:0 items|no results|nothing|none found)/i.test(t.digest ?? ""),
+        (t) => t.ok && !t.name.startsWith('gmail_') && /^(?:0 items|no results|nothing|none found)/i.test(t.digest ?? ""),
     );
     const emptyLookupReminder = emptyLookup
         ? ` A lookup returned nothing. Do not present findings it did not produce — ` +
