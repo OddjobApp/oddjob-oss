@@ -32,6 +32,18 @@ import type { ToolCallRecord } from "../crew-tools.service.js";
 const ok = (name: string, digest?: string): ToolCallRecord => ({ name, ok: true, ms: 5, digest });
 const fail = (name: string, error: string): ToolCallRecord => ({ name, ok: false, ms: 5, error });
 
+describe('current mailbox evidence', () => {
+    it('distinguishes a successful profile check from retrieving messages and supersedes historical failures', () => {
+        const reminder = buildToolResultReminders([ok('gmail_get_profile')], 'Check my email');
+        expect(reminder).toContain('earlier API-disabled error is historical');
+        expect(reminder).toContain('does not retrieve messages');
+        expect(reminder).toContain('gmail_list_messages');
+    });
+    it('does not claim a failed profile check succeeded', () => {
+        expect(buildToolResultReminders([fail('gmail_get_profile', '403')], 'Check my email')).not.toContain('CURRENT GMAIL EVIDENCE');
+    });
+});
+
 describe("detectEvasion — ungrounded claims", () => {
     it("flags 'contacted the support team' with no send-capable call", () => {
         const reason = detectEvasion(
