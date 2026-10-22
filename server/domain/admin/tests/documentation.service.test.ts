@@ -581,3 +581,28 @@ describe("isRouteFile", () => {
     expect(isRouteFile(p("crew", "api", "crew.routes.test.ts"))).toBe(false);
   });
 });
+
+
+describe("public platform documentation boundary", () => {
+  it("uses current platform facts without loading organization specs or knowledge", async () => {
+    vi.clearAllMocks();
+    const scan = vi.spyOn(documentationService, "getFeatures").mockResolvedValue([]);
+    (fs.readFile as Mock).mockResolvedValue("# Pipelines\n\nCurrent guide from platform source.");
+    (fs.stat as Mock).mockResolvedValue({mtimeMs: Date.parse("2026-10-22T00:00:00Z")});
+    try {
+      const doc = await documentationService.getPublicFeatureSpec("pipelines");
+      expect(doc.markdown).toContain("Current guide from platform source");
+      expect(scan).toHaveBeenCalledWith();
+      expect(knowledgeService.getGeneratedSpecMeta).not.toHaveBeenCalled();
+      expect(knowledgeService.getDocumentByTitle).not.toHaveBeenCalled();
+      expect(knowledgeService.createDocument).not.toHaveBeenCalled();
+      (fs.readFile as Mock).mockResolvedValue("# Pipelines\n\nChanged platform guide.");
+      expect((await documentationService.getPublicFeatureSpec("pipelines")).markdown).toContain("Changed platform guide");
+    } finally { scan.mockRestore(); }
+  });
+  it("rejects non-catalog identifiers before reading files or scanning", async () => {
+    vi.clearAllMocks();
+    await expect(documentationService.getPublicFeatureSpec("../../credentials")).rejects.toThrow("Unknown public feature guide");
+    expect(fs.readFile).not.toHaveBeenCalled();
+  });
+});

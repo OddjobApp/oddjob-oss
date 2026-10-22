@@ -1,3 +1,4 @@
+import { PUBLIC_FEATURE_DOCS } from "@shared/public-feature-docs.js";
 
 import { createLogger } from "@server/utils/logger.js";
 import { BadRequestError, NotFoundError } from "@server/utils/errors.js";
@@ -1455,9 +1456,11 @@ export class DocumentationService {
   private scanCachedAt: number | null = null;
   private uiScanCache: UiSpecData | null = null;
   private uiScanCachedAt: number | null = null;
+  private publicFeatureScan: { at: number; promise: Promise<Feature[]> } | null = null;
   private readonly cacheMaxAgeMs = 60_000; // 1 minute
 
   clearCache(): void {
+    this.publicFeatureScan = null;
     this.scanCache = null;
     this.scanCachedAt = null;
     this.uiScanCache = null;
@@ -2232,6 +2235,36 @@ export class DocumentationService {
     });
 
     return true;
+  }
+
+  /** Public projection of the same platform generator; deliberately no org or stored-document lookup. */
+  async getPublicFeatureSpec(slug: string) {
+    const topic = PUBLIC_FEATURE_DOCS.find(entry => entry.slug === slug);
+    if (!topic) throw new NotFoundError("Unknown public feature guide");
+    const guidePath = path.join(process.cwd(), topic.guide);
+    // Collapse concurrent anonymous reads into one bounded platform inventory scan.
+    if (!this.publicFeatureScan || Date.now() - this.publicFeatureScan.at >= this.cacheMaxAgeMs) {
+      const promise = this.getFeatures().catch(error => { this.publicFeatureScan = null; throw error; });
+      this.publicFeatureScan = { at: Date.now(), promise };
+    }
+    const [guide, stat, features] = await Promise.all([
+      fs.readFile(guidePath, "utf8"), fs.stat(guidePath), this.publicFeatureScan.promise,
+    ]);
+    let content = guide.trim();
+    if (topic.section) {
+      const lines = content.split("\n");
+      const start = lines.findIndex(line => line.trim() === `## ${topic.section}`);
+      if (start < 0) throw new NotFoundError("Public guide section unavailable");
+      const end = lines.findIndex((line, index) => index > start && /^## /.test(line));
+      content = lines.slice(start, end < 0 ? undefined : end).join("\n");
+    }
+    const feature = features.find(entry => entry.id === topic.featureId);
+    // Uses the platform generator's extracted facts, never persisted org narratives.
+    const reference = feature ? buildReferenceMarkdown(feature) : "## Implementation reference\n\nAn implementation inventory is not available for this feature in this deployment.";
+    const markdown = [`# ${topic.title}`, content.replace(/^#{1,2} .+\n/, ""), "---", reference].join("\n\n");
+    const sourceUpdatedAt = new Date(Math.max(stat.mtimeMs, feature ? Date.parse(feature.last_updated) || 0 : 0)).toISOString();
+    return { slug: topic.slug, title: topic.title, markdown, sourceUpdatedAt,
+      revision: fingerprint(markdown), source: "platform-generator" as const };
   }
 
   async getFeatureSpec(featureId: string, organizationId: number): Promise<FeatureSpec> {

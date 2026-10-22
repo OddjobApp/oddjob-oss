@@ -18,7 +18,7 @@ export function ForgeShowcase() {
       </a>
       <figcaption className="space-y-3 p-6">
         <p className="text-sm leading-6 text-muted-foreground"><strong className="text-foreground">Blueprint preview with sample data.</strong> Captured from the real Rescue Dispatch components in a local, read-only preview. Dispatch actions were disconnected; this demonstrates the interface, not a live emergency service.</p>
-        <a href="https://github.com/OddjobApp/oddjob-oss/tree/main/server/blueprints/apps/rescue-dispatch" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">Explore the open-source App Forge blueprint</a>
+        <a href="/docs/app-forge" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">Read the App Forge documentation</a>
       </figcaption>
     </figure>
   </section>;

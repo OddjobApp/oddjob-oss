@@ -17,7 +17,7 @@ const capabilities = [
     "detail": "Bring people and specialist agents into one shared workspace.",
     "example": "Review a launch plan together, capture decisions, and work with forms or app surfaces beside the conversation.",
     "requires": "Organization membership, permitted agent tools, and an organization-owned AI provider key.",
-    "doc": "docs/FEATURES.md#crew-multi-agent-rooms"
+    "doc": "crew"
   },
   {
     "group": "Collaborate and decide",
@@ -25,7 +25,7 @@ const capabilities = [
     "detail": "Carry a goal through planning, execution, pauses, and review.",
     "example": "Prepare an operations review, pause for missing information, then resume with the recorded context.",
     "requires": "A scoped mission, configured agents and tools, and any required approvals.",
-    "doc": "docs/feature-documentation/core-features/05-missions-system.md"
+    "doc": "missions"
   },
   {
     "group": "Collaborate and decide",
@@ -33,7 +33,7 @@ const capabilities = [
     "detail": "Keep proposed actions and recorded outcomes available for inspection.",
     "example": "Review an external action before authorizing it, then inspect the tool results and execution history.",
     "requires": "Approval policies and execution recording; available evidence depends on the action and runtime.",
-    "doc": "docs/specs/agent-governance.md"
+    "doc": "approvals"
   },
   {
     "group": "Automate recurring work",
@@ -41,7 +41,7 @@ const capabilities = [
     "detail": "Connect jobs into reusable sequences with data passed between steps.",
     "example": "Collect records, transform them into a summary, and route the output through a review step.",
     "requires": "Configured job types, credentials, workers, and permissions for each step.",
-    "doc": "docs/feature-documentation/core-features/02-pipelines-system.md"
+    "doc": "pipelines"
   },
   {
     "group": "Automate recurring work",
@@ -49,7 +49,7 @@ const capabilities = [
     "detail": "Run configured pipelines on a recurring timetable.",
     "example": "Prepare a weekly report in the organization’s timezone and inspect the resulting run history.",
     "requires": "An enabled schedule, a runnable pipeline, and a healthy scheduling worker.",
-    "doc": "docs/feature-documentation/core-features/04-scheduling-system.md"
+    "doc": "schedules"
   },
   {
     "group": "Automate recurring work",
@@ -57,7 +57,7 @@ const capabilities = [
     "detail": "Coordinate recurring work across phases, dependencies, and app handoffs.",
     "example": "Stage a product launch cycle with research, a readiness review, and a workbench completion gate.",
     "requires": "A staged cycle with its required inputs, integrations, budget, and activation approval.",
-    "doc": "docs/feature-documentation/cycle-blueprint-builder.md"
+    "doc": "cycles"
   },
   {
     "group": "Build interfaces and collect inputs",
@@ -65,7 +65,7 @@ const capabilities = [
     "detail": "Create and evolve dedicated interfaces for repeatable workflows.",
     "example": "Start from a blueprint for field dispatch, research, or software delivery, then review the generated app.",
     "requires": "Blueprint maturity varies. Generated code needs review and an approved execution environment; local generated-app builds are blocked in production.",
-    "doc": "docs/guides/blueprint-maturity.md"
+    "doc": "app-forge"
   },
   {
     "group": "Build interfaces and collect inputs",
@@ -73,7 +73,7 @@ const capabilities = [
     "detail": "Offer a focused public experience with structured inputs.",
     "example": "Collect announcement sign-ups or intake details through a published form; disable free-text chat for a guided flow.",
     "requires": "A configured and published agent, form fields, consent, and an appropriate submission destination.",
-    "doc": "docs/developer-guides/PRODUCT_SCREENSHOTS.md"
+    "doc": "published-forms"
   },
   {
     "group": "Ground work in context",
@@ -81,7 +81,7 @@ const capabilities = [
     "detail": "Reuse documents, retrieved context, and mission memory.",
     "example": "Prepare a brief from team documents and inspect the sources behind the response.",
     "requires": "Accessible documents, successful extraction and indexing, and an organization provider key where AI or embeddings are required.",
-    "doc": "docs/feature-documentation/core-features/03-knowledge-system.md"
+    "doc": "knowledge"
   },
   {
     "group": "Ground work in context",
@@ -89,7 +89,7 @@ const capabilities = [
     "detail": "Give recurring work a consistent set of records and fields.",
     "example": "Track intake requests in a dataset and use its structured records as workflow inputs.",
     "requires": "A defined dataset schema, authorized records, and configured tools for the intended queries or changes.",
-    "doc": "docs/platform/05-component-and-tooling-guides/knowledge-garden-and-dataset-schemas.md"
+    "doc": "datasets"
   },
   {
     "group": "Ground work in context",
@@ -97,7 +97,7 @@ const capabilities = [
     "detail": "Use geographic boundaries and location conditions in operational rules.",
     "example": "Check whether a request is within service coverage and outside a restricted zone before review.",
     "requires": "Location-bearing inputs and configured geographic rules. The public interactive example uses fictional boundaries.",
-    "doc": "docs/FEATURES.md#eulerian-hexagonal-uber-h3-spatial-command-deck"
+    "doc": "spatial"
   },
   {
     "group": "Connect tools and channels",
@@ -105,7 +105,7 @@ const capabilities = [
     "detail": "Bring authorized external tools into the workspace.",
     "example": "Use connected mail, documents, or business systems as inputs to a task, with the permissions granted to that connection.",
     "requires": "Provider-specific setup, credentials or OAuth consent, enabled APIs, and the intended organization or project scope.",
-    "doc": "docs/developer-guides/ORG_OAUTH_APPS.md"
+    "doc": "integrations"
   },
   {
     "group": "Connect tools and channels",
@@ -113,7 +113,7 @@ const capabilities = [
     "detail": "Connect a dedicated inbox for organizational and room communication.",
     "example": "Keep room notifications and their replies associated with the right organization and project.",
     "requires": "Each organization connects its own inbox and API key; webhook permissions and outbound approval rules still apply.",
-    "doc": "docs/developer-guides/ORG_AGENTMAIL.md"
+    "doc": "agentmail"
   },
   {
     "group": "Connect tools and channels",
@@ -121,7 +121,7 @@ const capabilities = [
     "detail": "Work through a browser interface when a direct integration is insufficient.",
     "example": "Let an agent carry out a supervised browser task, take over when needed, and review a captured procedure for reuse.",
     "requires": "An administrator-enabled computer-use runtime, an organization desktop, a provider key, and authorized access to the target service.",
-    "doc": "server/knowledge/features/computer-use.md"
+    "doc": "computer-use"
   },
   {
     "group": "Create and review media",
@@ -129,7 +129,7 @@ const capabilities = [
     "detail": "Move from scripted scenes to generated takes, review, and assembly.",
     "example": "Develop a scene, compare candidate takes, and review selected material before assembling a reel.",
     "requires": "Configured media providers or ComfyUI, required models and credentials, generation budget, and review gates. Provider capabilities vary.",
-    "doc": "docs/FEATURES.md#governed-ai-film-production--comfyui-media-studio"
+    "doc": "media"
   }
 ];
 
@@ -168,7 +168,7 @@ export function Shell({ title, intro, children }: { title: string; intro: string
     <a href="#public-main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-background focus:p-4">Skip to content</a>
     <header className="border-b border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
       <a href="/" className={`${link} gap-2 text-xl font-bold`} aria-label="Oddjob home"><HatIcon className="h-8 w-8" />Oddjob</a>
-      <nav aria-label="Public navigation" className="flex flex-wrap gap-1">{[['Overview', '/overview'], ['Use cases', '/use-cases'], ['Get started', '/getting-started'], ['Support', '/contact'], ['Sign in', '/auth/login']].map(([label, href]) => <a key={href} href={href} className={`${link} ${location === href ? 'bg-muted' : ''}`} aria-current={location === href ? 'page' : undefined}>{label}</a>)}</nav>
+      <nav aria-label="Public navigation" className="flex flex-wrap gap-1">{[['Overview', '/overview'], ['Use cases', '/use-cases'], ['Get started', '/getting-started'], ['Documentation', '/docs'], ['Support', '/contact'], ['Sign in', '/auth/login']].map(([label, href]) => <a key={href} href={href} className={`${link} ${location === href ? 'bg-muted' : ''}`} aria-current={location === href ? 'page' : undefined}>{label}</a>)}</nav>
     </div></header>
     <main id="public-main" className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
       <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Oddjob / Governed agentic operations</p>
@@ -201,12 +201,12 @@ export function UseCases() {
         <RecurringWorkScreenshot title={title} />
         <p className="mt-4 leading-7"><strong>Try it:</strong> {example}</p>
         <p className="mt-4 border-t border-border pt-4 text-sm leading-6 text-muted-foreground"><strong className="text-foreground">What you need:</strong> {requires}</p>
-        <a href={`https://github.com/OddjobApp/oddjob-oss/blob/${["docs/developer-guides/PRODUCT_SCREENSHOTS.md", "docs/developer-guides/ORG_OAUTH_APPS.md"].includes(doc) ? "codex/login-announcements" : "main"}/${doc}`} target="_blank" rel="noopener noreferrer" className={`${link} mt-3 underline underline-offset-4`} aria-label={`Read ${title} documentation`}>Read the documentation <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></a>
+        <a href={`/docs/${doc}`} className={`${link} mt-3 underline underline-offset-4`} aria-label={`Read ${title} documentation`}>Read the documentation <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></a>
         {title === 'Spatial intelligence' && <a href="/overview#spatial-rules-demo" className={`${link} mt-2 underline underline-offset-4`}>Try the geographic rules demo</a>}
         {title === 'Published agents and forms' && <a href="/a/oddjob-announcements" className={`${link} mt-2 underline underline-offset-4`}>Try the announcements form</a>}
       </article>)}</div>
     </section>)}
-    <aside className={panel}><h2 className="text-xl font-semibold">Choose a workflow your workspace is ready to run.</h2><p className="mt-3 leading-7 text-muted-foreground">These examples describe capabilities, not a claim that every integration or runtime is active here. AI features use organization-owned provider keys. Blueprint labels describe template maturity; review prerequisites before operational use. Roadmaps, proposals, and historical reports are not treated as shipped features.</p><a href="https://github.com/OddjobApp/oddjob-oss/blob/main/docs/README.md" target="_blank" rel="noopener noreferrer" className={`${link} mt-3 underline underline-offset-4`}>Browse the documentation index</a></aside>
+    <aside className={panel}><h2 className="text-xl font-semibold">Choose a workflow your workspace is ready to run.</h2><p className="mt-3 leading-7 text-muted-foreground">These examples describe capabilities, not a claim that every integration or runtime is active here. AI features use organization-owned provider keys. Blueprint labels describe template maturity; review prerequisites before operational use. Roadmaps, proposals, and historical reports are not treated as shipped features.</p><a href="/docs" className={`${link} mt-3 underline underline-offset-4`}>Browse the documentation index</a></aside>
     <Actions />
   </Shell>;
 }
