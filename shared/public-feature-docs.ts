@@ -53,7 +53,7 @@ export const PUBLIC_FEATURE_DOCS = [
     "slug": "published-forms",
     "title": "Published agents and forms",
     "featureId": "forms",
-    "guide": "docs/developer-guides/PRODUCT_SCREENSHOTS.md",
+    "guide": "server/knowledge/features/published-forms.md",
     "section": null
   },
   {

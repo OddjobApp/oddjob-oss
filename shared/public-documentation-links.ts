@@ -3,6 +3,7 @@ const anchor = (text: string) => text.toLowerCase().replace(/[^a-z0-9 -]/g, "").
 /** Only approved source links become public guide links. Never expose arbitrary repository paths. */
 export function publicDocumentationLink(href: string | undefined, slug: string): string | undefined {
   if (!href) return undefined;
+  if (href === "/a/oddjob-announcements") return href;
   if (href === "/docs" || PUBLIC_FEATURE_DOCS.some(doc => href === `/docs/${doc.slug}`)) return href;
   if (href.startsWith("#")) return href;
   const topic = PUBLIC_FEATURE_DOCS.find(doc => doc.slug === slug);
