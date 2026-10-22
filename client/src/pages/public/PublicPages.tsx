@@ -130,7 +130,23 @@ const capabilities = [
     "example": "Develop a scene, compare candidate takes, and review selected material before assembling a reel.",
     "requires": "Configured media providers or ComfyUI, required models and credentials, generation budget, and review gates. Provider capabilities vary.",
     "doc": "media"
-  }
+  },
+  {
+    "group": "Work across devices",
+    "title": "Android app",
+    "detail": "Stay involved in CREW rooms from a native Android client.",
+    "example": "Review a proposed action, complete a chat form, attach a field photo, or share a one-time location beacon with your room.",
+    "requires": "A configured Oddjob server and an Android build. Recent rooms are cached for reading; live actions need connectivity. Push requires Firebase and maps require a Mapbox public token. A signed public release is not yet available.",
+    "doc": "android"
+},
+  {
+    "group": "Work across devices",
+    "title": "Electron desktop app",
+    "detail": "Keep your Oddjob workspace close with a dedicated desktop window.",
+    "example": "Leave Oddjob in the system tray, receive approval notifications, and return to the workbench from a notification or an oddjob:// link.",
+    "requires": "An installed desktop build connected to a running Oddjob server. Windows packaging is documented; code signing and an automatic update feed are still pending.",
+    "doc": "desktop"
+}
 ];
 
 
@@ -180,11 +196,27 @@ export function Shell({ title, intro, children }: { title: string; intro: string
   </div>;
 }
 
+
+function DeviceApps() {
+  return <section className={panel} aria-labelledby="device-apps-heading">
+    <h2 id="device-apps-heading" className="text-2xl font-semibold">Your crew, on Android and desktop.</h2>
+    <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">Both apps connect to your running Oddjob workspace and use its organization permissions, connected services, and approval rules.</p>
+    <div className="mt-6 grid gap-6 md:grid-cols-2">{capabilities.filter(item => item.group === 'Work across devices').map(item => <article key={item.doc} className="rounded-xl border border-border p-5">
+      <h3 className="text-lg font-semibold">{item.title}</h3>
+      <p className="mt-2 leading-7">{item.detail}</p>
+      <p className="mt-3 leading-7 text-muted-foreground">{item.example}</p>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground"><strong>Build availability:</strong> {item.requires}</p>
+      <a className={`${link} mt-3`} href={`/docs/${item.doc}`}>Read {item.title} documentation <ArrowRight className="ml-2 h-4 w-4" /></a>
+    </article>)}</div>
+  </section>;
+}
+
 export function Overview() {
   return <Shell title="Give autonomous work a place to run." intro="Plan, execute, approve, and replay operational work across agents, tools, knowledge, and internal apps.">
     <Actions />
     <ProductScreenshots />
     <CapabilityShowcase />
+    <DeviceApps />
     <section className={panel}><h2 className="text-2xl font-semibold">Start with a goal. Stay involved at the decisions.</h2><p className="mt-4 max-w-3xl leading-7 text-muted-foreground">Bring the context, define the expected outcome, and review the proposed work. Follow progress, respond to approval requests, and inspect the result before using it.</p><a href="/use-cases" className={`${link} mt-4`}>Explore example workflows <ArrowRight className="ml-2 h-4 w-4" /></a></section>
     <p className="text-sm leading-6 text-muted-foreground">Available tools, integrations, and actions depend on your deployment, organization permissions, and configured connections. Visit the <a className="underline underline-offset-4" href="/trust">Trust Center</a> for reported system status and evidence.</p>
   </Shell>;

@@ -21,6 +21,6 @@ describe("public documentation HTTP bridge",()=>{
   });
   it("lists only public topic labels, without source files or org metadata",async()=>{
     const response=await request(app).get("/api/public/documentation");expect(response.status).toBe(200);
-    expect(response.body.guides).toHaveLength(15);expect(Object.keys(response.body.guides[0]).sort()).toEqual(["slug","title"]);
+    expect(response.body.guides).toHaveLength(17);expect(response.body.guides).toEqual(expect.arrayContaining([{slug:"android",title:"Android app"},{slug:"desktop",title:"Electron desktop app"}]));expect(Object.keys(response.body.guides[0]).sort()).toEqual(["slug","title"]);
   });
 });

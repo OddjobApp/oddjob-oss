@@ -104,6 +104,20 @@ export const PUBLIC_FEATURE_DOCS = [
     "featureId": "media-studio",
     "guide": "docs/FEATURES.md",
     "section": "Governed AI Film Production & ComfyUI Media Studio"
-  }
+  },
+  {
+    "slug": "android",
+    "title": "Android app",
+    "featureId": "crew",
+    "guide": "server/knowledge/features/android-client.md",
+    "section": null
+},
+  {
+    "slug": "desktop",
+    "title": "Electron desktop app",
+    "featureId": "crew",
+    "guide": "server/knowledge/features/desktop-client.md",
+    "section": null
+}
 ] as const;
 export type PublicFeatureDocSlug = typeof PUBLIC_FEATURE_DOCS[number]['slug'];

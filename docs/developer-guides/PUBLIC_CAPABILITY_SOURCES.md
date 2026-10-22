@@ -19,3 +19,6 @@ The public use-cases page groups documented capabilities into user-facing workfl
 - **Scribe and Media Studio**: `docs/FEATURES.md#governed-ai-film-production--comfyui-media-studio`
 
 Runtime checks: CREW and published forms were exercised in the public demonstration work; cycle-builder and Media Studio are mounted in server/routes.ts; computer use is mounted by the integrations route hub; schedules and datasets have mounted routing entries. App Forge production tenant execution limitations and blueprint maturity are explicitly retained. AgentMail uses the current organization-owned connection guide, not its retired shared-environment design.
+
+- **Android app**: `android/README.md`, `docs/architecture/CREW_ANDROID_CLIENT.md`, and native client implementation; public guide `server/knowledge/features/android-client.md`.
+- **Electron desktop app**: `desktop/README.md` and `desktop/src`; public guide `server/knowledge/features/desktop-client.md`. Release limitations are explicit; neither card implies a store download or signed installer is available.
