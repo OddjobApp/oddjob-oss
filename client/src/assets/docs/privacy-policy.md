@@ -31,4 +31,4 @@ If you are a California resident, you have the right to:
 We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure.
 
 ## 6. Contact Us
-If you have questions about this policy, please contact us at privacy@oddjob.io.
+If you have questions about this policy, please contact us at [admin@oddjob.app](mailto:admin@oddjob.app).

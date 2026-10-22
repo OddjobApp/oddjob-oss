@@ -47,7 +47,7 @@ const capabilities = [
     "group": "Automate recurring work",
     "title": "Automations",
     "detail": "Run configured pipelines on a recurring timetable.",
-    "example": "Prepare a weekly report in the organization’s timezone and inspect the resulting run history.",
+    "example": "Prepare a weekly report in the organizationâ€™s timezone and inspect the resulting run history.",
     "requires": "An enabled schedule, a runnable pipeline, and a healthy scheduling worker.",
     "doc": "schedules"
   },
@@ -192,7 +192,7 @@ export function Shell({ title, intro, children }: { title: string; intro: string
       <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">{intro}</p>
       <div className="mt-10 space-y-8">{children}</div>
     </main>
-    <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 sm:px-8"><p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Oddjob</p><nav aria-label="Footer" className="flex flex-wrap">{[['Trust center', '/trust'], ['Privacy', '/privacy'], ['Terms', '/terms'], ['Support', '/contact']].map(([label, href]) => <a key={href} className={link} href={href}>{label}</a>)}</nav></div></footer>
+    <footer className="border-t border-border"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 sm:px-8"><p className="text-sm text-muted-foreground">Â© {new Date().getFullYear()} Oddjob</p><nav aria-label="Footer" className="flex flex-wrap">{[['Trust center', '/trust'], ['Privacy', '/privacy'], ['Terms', '/terms'], ['Support', '/contact'], ['admin@oddjob.app', 'mailto:admin@oddjob.app']].map(([label, href]) => <a key={href} className={link} href={href}>{label}</a>)}</nav></div></footer>
   </div>;
 }
 
@@ -258,15 +258,15 @@ export function GettingStarted() {
 export function Support() {
   return <Shell title="Find your next step." intro="Help with access, missions, connections, and the information to collect when something goes wrong."><div className="grid gap-5 md:grid-cols-2">
     <section className={panel}><h2 className="text-xl font-semibold">Cannot sign in?</h2><p className="mt-3 leading-7 text-muted-foreground">Reset a forgotten password. For organization membership or permissions, contact your workspace administrator.</p><a className={`${link} mt-4 underline`} href="/auth/forgot-password">Reset password</a></section>
-    <section className={panel}><h2 className="text-xl font-semibold">A mission or connection is blocked</h2><p className="mt-3 leading-7 text-muted-foreground">Check the mission’s latest status and pending approvals. Ask your workspace administrator to verify connection access and available tools.</p><a className={`${link} mt-4 underline`} href="/trust">Check system status</a></section>
+    <section className={panel}><h2 className="text-xl font-semibold">A mission or connection is blocked</h2><p className="mt-3 leading-7 text-muted-foreground">Check the missionâ€™s latest status and pending approvals. Ask your workspace administrator to verify connection access and available tools.</p><a className={`${link} mt-4 underline`} href="/trust">Check system status</a></section>
     <section className={panel}><h2 className="text-xl font-semibold">Prepare a useful issue report</h2><p className="mt-3 leading-7 text-muted-foreground">Share the page, time, mission or app identifier, expected result, and visible error with your workspace administrator. Include steps to reproduce; remove passwords, API keys, and private document contents.</p></section>
-    <section className={panel}><h2 className="text-xl font-semibold">Privacy questions</h2><p className="mt-3 leading-7 text-muted-foreground">The Privacy Policy lists the contact for questions about personal information.</p><a className={`${link} mt-4 underline`} href="/privacy">Read the Privacy Policy</a></section>
+    <section className={panel}><h2 className="text-xl font-semibold">Privacy questions</h2><p className="mt-3 leading-7 text-muted-foreground">For questions about personal information, email <a className="underline underline-offset-4" href="mailto:admin@oddjob.app">admin@oddjob.app</a>.</p><a className={`${link} mt-4 underline`} href="/privacy">Read the Privacy Policy</a></section>
     </div><a className={`${link} underline`} href="/getting-started">New to Oddjob? Start here</a></Shell>;
 }
 
 export function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
   const isPrivacy = kind === 'privacy';
-  return <Shell title={isPrivacy ? 'Privacy Policy' : 'Terms of Service'} intro={isPrivacy ? 'Read the existing policy and understand the workspace features relevant to your information.' : 'Read the existing service terms and guidance for using Oddjob’s operational capabilities.'}>
+  return <Shell title={isPrivacy ? 'Privacy Policy' : 'Terms of Service'} intro={isPrivacy ? 'Read the existing policy and understand the workspace features relevant to your information.' : 'Read the existing service terms and guidance for using Oddjobâ€™s operational capabilities.'}>
     <aside className={panel}><h2 className="text-xl font-semibold">{isPrivacy ? 'Your workspace context' : 'Using agentic capabilities'}</h2><p className="mt-3 leading-7 text-muted-foreground">{isPrivacy ? 'Oddjob workflows can involve mission instructions, documents and organizational knowledge, connected services, generated apps, and execution history. Ask your workspace administrator which sources and connections are enabled for your organization.' : 'Review mission plans and outputs, use sources and connections you are authorized to access, and inspect proposed actions before approving them. Generated apps and agent outputs should be reviewed before operational use.'}</p><p className="mt-3 text-sm text-muted-foreground">This product guidance supplements the policy text below; it does not replace it.</p></aside>
     <article className={`${panel} max-w-4xl space-y-5`}><ReactMarkdown components={{ h1: () => null, h2: ({ children }) => <h2 className="pt-5 text-xl font-semibold">{children}</h2>, p: ({ children }) => <p className="leading-7 text-muted-foreground">{children}</p>, ul: ({ children }) => <ul className="list-disc space-y-2 pl-6 leading-7 text-muted-foreground">{children}</ul> }}>{isPrivacy ? privacy : terms}</ReactMarkdown></article>
   </Shell>;
