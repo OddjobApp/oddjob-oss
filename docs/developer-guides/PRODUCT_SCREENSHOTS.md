@@ -68,3 +68,5 @@ the public caption, using the provider's service metadata:
 https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer?f=pjson
 
 Rescue map correction: the public showcase uses rescue-dispatch-map.jpg, a viewport capture with the complete map and attribution visible. Removed the map child minimum height that exceeded its parent; avoided the full-page WebGL capture that clipped rendered tiles. The earlier full-page asset is retained only as history.
+
+Spatial geographic rules demo: SpatialRulesDemo replaces the static crop on the public pages. It uses real h3-js cell membership over a fictional Los Angeles service area, a deny-first restricted cell, and three synthetic request centroids. All evaluation stays in the browser. The human review step is explanatory; no approval or dispatch is executed. OpenStreetMap raster tiles retain contributor attribution. The previous satellite capture remains an archival asset.

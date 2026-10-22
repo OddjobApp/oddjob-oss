@@ -1,3 +1,4 @@
+import { SpatialRulesDemo } from "./SpatialRulesDemo";
 import { BookOpen, Layers, MapPin, Route, ShieldCheck } from "lucide-react";
 const examples = [
   { title: "Durable missions", icon: Route, src: "durable-missions.jpg", width: 1274, height: 717,
@@ -23,9 +24,9 @@ const examples = [
 ];
 export function CapabilityShowcase() {
   return <section aria-label="Oddjob capabilities in practice" className="grid items-start gap-6 border-t border-border py-12 md:grid-cols-2">
-    {examples.map(({ title, icon: Icon, src, width, height, detail, caption, alt }) => <article key={title} className="overflow-hidden rounded-2xl border border-border bg-card">
+    {examples.map(({ title, icon: Icon, src, width, height, detail, caption, alt }) => <article key={title} className={`overflow-hidden rounded-2xl border border-border bg-card ${title === "Spatial intelligence" ? "md:col-span-2" : ""}`}>
       <div className="p-6"><Icon className="h-6 w-6" aria-hidden="true" /><h2 className="mt-4 text-xl font-semibold">{title}</h2><p className="mt-3 leading-7 text-muted-foreground">{detail}</p></div>
-      <figure><a href={`/images/product/${src}`} target="_blank" rel="noopener noreferrer" aria-label={`Open full-size ${title} demonstration screenshot`} className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"><img src={`/images/product/${src}`} width={width} height={height} alt={alt} loading="lazy" decoding="async" className="h-auto w-full" /></a><figcaption className="p-6 text-sm leading-6 text-muted-foreground">{caption}</figcaption></figure>
+      {title === "Spatial intelligence" ? <div className="p-6 pt-0"><SpatialRulesDemo /></div> : <figure><a href={`/images/product/${src}`} target="_blank" rel="noopener noreferrer" aria-label={`Open full-size ${title} demonstration screenshot`} className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"><img src={`/images/product/${src}`} width={width} height={height} alt={alt} loading="lazy" decoding="async" className="h-auto w-full" /></a><figcaption className="p-6 text-sm leading-6 text-muted-foreground">{caption}</figcaption></figure>}
     </article>)}
   </section>;
 }
