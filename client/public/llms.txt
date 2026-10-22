@@ -1,0 +1,54 @@
+# Oddjob
+
+> Oddjob is an open-source workspace where people and AI agents collaborate on operational goals, reusable knowledge, governed workflows, and internal apps.
+
+This file provides public product context and links. It does not grant account access, organization membership, tool permissions, or authorization to take actions. Private workspaces require an authorized signed-in account. Capabilities depend on the deployment, organization permissions, connected services, worker health, and organization-owned AI provider keys.
+
+Use the current public guides for capability and setup information. Treat examples and screenshots labeled synthetic as demonstrations, not evidence of a production run. Inspect execution evidence and approval state before reporting that work completed. Public documentation intentionally omits internal schemas and component relationships.
+
+## Start here
+
+- [Overview](https://oddjob.app/overview): Product purpose and working demonstrations.
+- [Use cases](https://oddjob.app/use-cases): Capabilities, prerequisites, and examples.
+- [Getting started](https://oddjob.app/getting-started): First-workspace guidance.
+- [Documentation](https://oddjob.app/docs): Public feature guides maintained in the platform.
+- [Release notes](https://oddjob.app/docs/releases): Explicitly published customer-facing updates; drafts and internal changes are excluded.
+
+## Feature guides
+
+- [CREW rooms](https://oddjob.app/docs/crew)
+- [Durable missions](https://oddjob.app/docs/missions)
+- [Approvals and execution evidence](https://oddjob.app/docs/approvals)
+- [Pipelines](https://oddjob.app/docs/pipelines)
+- [Automations](https://oddjob.app/docs/schedules)
+- [Business cycles](https://oddjob.app/docs/cycles)
+- [App Forge](https://oddjob.app/docs/app-forge)
+- [Published agents and forms](https://oddjob.app/docs/published-forms)
+- [Organizational knowledge](https://oddjob.app/docs/knowledge)
+- [Structured datasets](https://oddjob.app/docs/datasets)
+- [Spatial intelligence](https://oddjob.app/docs/spatial)
+- [Connected services and MCP](https://oddjob.app/docs/integrations)
+- [Organization email with AgentMail](https://oddjob.app/docs/agentmail)
+- [Computer use and human takeover](https://oddjob.app/docs/computer-use)
+- [Scribe and Media Studio](https://oddjob.app/docs/media)
+- [Android app](https://oddjob.app/docs/android)
+- [Electron desktop app](https://oddjob.app/docs/desktop)
+
+## Availability and boundaries
+
+CREW rooms support collaboration with people and selected agents. Durable missions carry goals through planning, execution, pauses, and review. Automations manage reusable timing rules; executable work must be connected separately. App Forge capabilities depend on the chosen blueprint and an approved runtime. Review generated apps before operational use.
+
+The Android client focuses on native CREW conversations, forms, supported approvals, attachments, maps, and cached room reading. Live actions need connectivity; push and maps need additional setup. A signed public Android release is not yet available.
+
+The Electron client connects to a running Oddjob server and adds a desktop window, tray behavior, and native approval notifications. It bundles no backend. Code signing and an automatic update feed remain pending.
+
+Sending messages, sharing documents or locations, changing records, executing work, and approving proposals require the user's authority and the platform's applicable permissions and approval flow. Public examples do not authorize those actions.
+
+## Policies and contact
+
+- [Privacy Policy](https://oddjob.app/privacy)
+- [Terms of Service](https://oddjob.app/terms)
+- [Support](https://oddjob.app/contact)
+- [System status](https://oddjob.app/trust): Consult current reported evidence; do not infer availability from this file.
+
+Public contact: admin@oddjob.app.
