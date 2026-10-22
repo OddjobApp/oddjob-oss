@@ -1,6 +1,8 @@
 
-import fetch, { RequestInit, Response } from 'node-fetch';
+import fetch, { RequestInit } from 'node-fetch';
 import { createLogger } from "../../../../utils/logger.js";
+import { EgressFirewall } from "../../../../utils/egress-firewall.js";
+import { BadRequestError } from "../../../../utils/errors.js";
 
 const logger = createLogger('BaseGateway');
 
@@ -11,7 +13,27 @@ export interface GatewayRequest {
     headers?: Record<string, string>;
     body?: any;
     organizationId?: number | null;
+    /**
+     * The request goes to one of our own services on the private network (the
+     * Python sidecar). Everything else — a SaaS base URL, a webhook, any address
+     * a user typed — goes through the egress firewall, which refuses private and
+     * reserved addresses on every redirect hop.
+     */
+    internal?: boolean;
 }
+
+/** Headers whose values are secrets: kept out of the API log. */
+const SECRET_HEADERS = /^(authorization|proxy-authorization|cookie|x-api-key|api-key|x-auth-token)$/i;
+function redactHeaders(headers: Record<string, string>): Record<string, string> {
+    return Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, SECRET_HEADERS.test(k) ? "[redacted]" : v]));
+}
+
+type GatewayFetchResponse = {
+    status: number;
+    headers: { get(name: string): string | null; forEach(cb: (value: string, key: string) => void): void };
+    json(): Promise<any>;
+    text(): Promise<string>;
+};
 
 export interface GatewayResponse {
     status: number;
@@ -21,6 +43,8 @@ export interface GatewayResponse {
 
 export abstract class BaseGateway {
     protected abstract readonly platform: string;
+    /** True only for a gateway whose every request goes to our own private service. */
+    protected readonly internalService: boolean = false;
 
     /**
      * Common request handler for all gateways
@@ -28,6 +52,7 @@ export abstract class BaseGateway {
     protected async request(req: GatewayRequest): Promise<GatewayResponse> {
         const start = Date.now();
         const { method, url, headers = {}, body, action, organizationId } = req;
+        const internal = req.internal ?? this.internalService;
 
         logger.info(`[${this.platform}] Gateway Request: ${action}`, {
             method,
@@ -54,7 +79,19 @@ export abstract class BaseGateway {
         }
 
         try {
-            const response = await fetch(url, fetchOptions);
+            let response: GatewayFetchResponse;
+            if (internal) {
+                response = await fetch(url, fetchOptions);
+            } else {
+                // A connector's base URL is whatever its owner typed, so without this
+                // a "test connection" could read Qdrant, Redis or any internal address
+                // and hand the body back in its error message.
+                const guarded = await EgressFirewall.fetch(url, fetchOptions as any);
+                if (!guarded.allowed || !guarded.response) {
+                    throw new BadRequestError(`Outbound request refused: ${guarded.reason ?? "address not allowed"}`);
+                }
+                response = guarded.response;
+            }
             const duration = Date.now() - start;
 
             let responseBody: any;
@@ -83,7 +120,7 @@ export abstract class BaseGateway {
                 action,
                 method,
                 url,
-                requestHeaders: headers,
+                requestHeaders: redactHeaders(headers),
                 requestBody: body,
                 responseStatus: response.status,
                 responseHeaders: resHeaders,
@@ -111,7 +148,7 @@ export abstract class BaseGateway {
                 action,
                 method,
                 url,
-                requestHeaders: headers,
+                requestHeaders: redactHeaders(headers),
                 requestBody: body,
                 error: error.message,
                 durationMs: duration,

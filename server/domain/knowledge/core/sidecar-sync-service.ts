@@ -32,6 +32,7 @@ export class SidecarSyncService {
     async syncMemory(input: MemorySyncInput, userId: string = "system", organizationId?: number, appDeploymentId?: number) {
         try {
             const response = await generalGateway.execute({
+                internal: true,
                 action: "store_memory",
                 method: "POST",
                 url: `${this.host}/api/v1/memory/memories`,
@@ -66,6 +67,7 @@ export class SidecarSyncService {
     async fetchConsolidatedContext(query: string, jobId?: number, userId: string = "system", appDeploymentId?: number) {
         try {
             const response = await generalGateway.execute({
+                internal: true,
                 action: "get_context",
                 method: "POST",
                 url: `${this.host}/api/v1/memory/memories/context`,
@@ -96,6 +98,7 @@ export class SidecarSyncService {
     async logObservation(entity: string, value: number, context: any = {}, userId: string = "system") {
         try {
             const response = await generalGateway.execute({
+                internal: true,
                 action: "record_observation",
                 method: "POST",
                 url: `${this.host}/api/predictive/observations`,
