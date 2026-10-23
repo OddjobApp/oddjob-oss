@@ -107,7 +107,18 @@ describe("orgDesktopService", () => {
         expect(desktopBrokerCommand).toHaveBeenCalledWith("/run/oddjob-desktop/broker.sock", expect.any(Array), 60000);
     });
 
+    it("waits for noVNC when the action API becomes ready first", async () => {
+        let viewerAttempts = 0;
+        vi.mocked(fetch).mockImplementation(async (url) => {
+            if (String(url).endsWith("/vnc.html") && ++viewerAttempts === 1) throw new Error("listener still starting");
+            return { ok: true, status: 200 } as Response;
+        });
+        await orgDesktopService.ensureEndpoints(23);
+        expect(viewerAttempts).toBe(2);
+    });
+
     beforeEach(() => {
+        vi.mocked(fetch).mockResolvedValue({ ok: true, status: 200 } as Response);
         containers.clear();
         activity.clear();
         dockerCalls.length = 0;
@@ -127,6 +138,7 @@ describe("orgDesktopService", () => {
 
         const run = runs[0];
         const flag = (f: string) => run[run.indexOf(f) + 1];
+        expect(vi.mocked(fetch)).toHaveBeenCalledWith("http://127.0.0.1:55000/vnc.html", expect.any(Object));
         expect(flag("--name")).toBe("oddjob-desktop-org-7");
         expect(flag("--network")).toBe("oddjob-desktops");
         expect(flag("-p")).toBe("127.0.0.1::8000");

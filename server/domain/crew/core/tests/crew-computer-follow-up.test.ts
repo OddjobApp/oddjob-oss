@@ -83,3 +83,52 @@ describe("computer-use follow-up", () => {
         expect(output).not.toHaveProperty("screenshotDataUrl");
     });
 });
+
+
+describe("verified dependent task completion", () => {
+    it("reads the source and renders the requested form across dependent steps", async () => {
+        const input = scope(["get_platform_feature_spec", "render_intake_form", "gmail_send", "scribe_update_node"]);
+        input.sink.toolsUsed = [{ name: "search_platform_documentation", ok: true, ms: 1 }];
+        vi.mocked(generateForCard).mockResolvedValueOnce(reply("render_intake_form")).mockResolvedValueOnce(reply());
+        const result = await runBoundedFollowUp(input);
+        expect(input.sink.toolsUsed.map((r: any) => r.name)).toEqual(["search_platform_documentation", "get_platform_feature_spec", "render_intake_form"]);
+        expect(result.content).toBe("Verified");
+        const offered = (vi.mocked(generateForCard).mock.calls[0][4]?.tools as any[]).map(t => t.name);
+        expect(offered).toContain("render_intake_form");
+        expect(offered).not.toContain("gmail_send");
+        expect(offered).not.toContain("scribe_update_node");
+        expect(vi.mocked(generateForCard).mock.calls.at(-1)?.[4]).not.toHaveProperty("tools");
+    });
+
+    it("can read, save, and verify a document without granting another write after saving", async () => {
+        const input = scope(["scribe_get_document", "scribe_update_node", "gmail_send"]);
+        input.sink.toolsUsed = [{ name: "mount_scribe_studio", ok: true, ms: 1 }];
+        input.turnMaxTokens = 2500;
+        vi.mocked(generateForCard).mockResolvedValueOnce(reply("scribe_update_node")).mockResolvedValueOnce(reply("scribe_get_document")).mockResolvedValueOnce(reply());
+        await runBoundedFollowUp(input);
+        expect(input.sink.toolsUsed.map((r: any) => r.name)).toEqual(["mount_scribe_studio", "scribe_get_document", "scribe_update_node", "scribe_get_document"]);
+        expect(vi.mocked(generateForCard).mock.calls[0][4]?.maxTokens).toBe(2500);
+        const afterWrite = vi.mocked(generateForCard).mock.calls[1][4]?.tools as any[];
+        expect(afterWrite.map(t => t.name)).toEqual(["scribe_get_document"]);
+        expect(vi.mocked(generateForCard).mock.calls.at(-1)?.[4]).not.toHaveProperty("tools");
+    });
+
+    it("stops after a document write failure instead of blindly repeating it", async () => {
+        const input = scope(["scribe_update_node", "scribe_get_document"]);
+        input.sink.availableTools[0].definition.execute.mockRejectedValue(new Error("storage unavailable"));
+        vi.mocked(generateForCard).mockResolvedValue(reply());
+        await runBoundedFollowUp(input);
+        expect(input.sink.availableTools[0].definition.execute).toHaveBeenCalledTimes(1);
+        expect(input.sink.toolsUsed.at(-1).ok).toBe(false);
+        expect(input.sink.availableTools[1].definition.execute).not.toHaveBeenCalled();
+        expect(vi.mocked(generateForCard).mock.calls[0][4]).not.toHaveProperty("tools");
+    });
+
+    it("retains the total tool budget for research and presentation chains", async () => {
+        const input = scope(["get_platform_feature_spec", "render_table"], MAX_TOOL_CALLS_PER_TURN - 1);
+        vi.mocked(generateForCard).mockResolvedValue(reply());
+        await runBoundedFollowUp(input);
+        expect(input.sink.toolsUsed).toHaveLength(MAX_TOOL_CALLS_PER_TURN);
+        expect(vi.mocked(generateForCard).mock.calls[0][4]).not.toHaveProperty("tools");
+    });
+});

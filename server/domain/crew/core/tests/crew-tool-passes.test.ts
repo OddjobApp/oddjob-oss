@@ -281,7 +281,7 @@ describe("speaker turn tool passes", () => {
         expect(out.result.content).toBe("Two apps.");
     });
 
-    it("allows one bounded follow-up, then answers with tools withdrawn", async () => {
+    it("allows bounded research continuation with only granted lookups", async () => {
         generate
             .mockResolvedValueOnce(gen("", [{ name: "list_installed_apps" }]))
             .mockResolvedValueOnce(gen("", [{ name: "google_search" }]))
@@ -295,8 +295,8 @@ describe("speaker turn tool passes", () => {
 
         expect(execute).toHaveBeenCalledTimes(2);
         expect(generate).toHaveBeenCalledTimes(3);
-        // The last pass must not offer tools, so the turn has to end in prose.
-        expect(generate.mock.calls[2][3].tools).toBeUndefined();
+        // A source read or rendered result can still follow the search, within the shared cap.
+        expect(generate.mock.calls[2][3].tools.map((t: any) => t.name)).toEqual(["list_installed_apps", "google_search"]);
         expect(out.result.content).toBe("Found it upstream.");
         expect(out.toolsUsed.map((t: any) => t.name)).toEqual(["list_installed_apps", "google_search"]);
         expect(cost.modelCalls).toBe(3);
@@ -312,6 +312,9 @@ describe("speaker turn tool passes", () => {
         const out = await run;
 
         // Only the first-pass call ran; the mission proposal is not a follow-up.
+        expect(out.result.toolCalls).toEqual([]);
+        expect(out.result.content).toContain("was not executed");
+        expect(out.result.content).not.toContain("I will propose");
         expect(execute).toHaveBeenCalledTimes(1);
         expect(generate).toHaveBeenCalledTimes(2);
         expect(out.toolsUsed.map((t: any) => t.name)).toEqual(["list_installed_apps"]);

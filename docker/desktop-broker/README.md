@@ -23,6 +23,17 @@ those ports to the application network and host; expose the viewer through
 Oddjob's existing authentication, organization membership and one-use ticket
 proxy. Do not expose desktop ports in the AWS security group.
 
+The broker uses public DNS resolvers so blocking private-network egress does not
+break browser name resolution. Set `CUA_TELEMETRY_ENABLED=false` on the API and
+worker; desktop containers also disable Cua telemetry. Preserve the broker's
+runtime directory across service restarts (`RuntimeDirectoryPreserve=yes`) so
+containers keep their mounted socket directory.
+
+The desktop Dockerfile pins its XFCE base and installs computer-server 0.3.46
+with FastAPI 0.115.12 in a separate environment. New XFCE bases ship spacesd,
+which does not implement Oddjob's installed Computer SDK's legacy API. Keep the
+compatibility server and noVNC readiness checks until that SDK is migrated.
+
 Home volumes retain browser sessions and downloads. Treat them as organization
 credentials and keep them private. Desktops stop after the existing idle timeout.
 Autonomous runs still require the organization's configured Gemini credentials

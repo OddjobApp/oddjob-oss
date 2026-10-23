@@ -145,10 +145,14 @@ class OrgDesktopService {
         }
 
         const api = await this.publishedHost(name, API_PORT);
-        await waitForComputerServer(api, envInt("TRYCUA_DESKTOP_READY_TIMEOUT_MS", 90_000));
+        const timeout = envInt("TRYCUA_DESKTOP_READY_TIMEOUT_MS", 90_000);
+        await waitForComputerServer(api, timeout);
+        const viewer = await this.publishedHost(name, VIEWER_PORT);
+        // The API may be ready before noVNC finishes its own startup delay.
+        await waitForComputerServer(viewer, timeout, "/vnc.html");
         return {
             api,
-            viewer: await this.publishedHost(name, VIEWER_PORT),
+            viewer,
             cdp: await this.publishedHost(name, CDP_PORT),
         };
     }
@@ -288,12 +292,12 @@ async function docker(args: string[], timeout = 60_000): Promise<string> {
     }
 }
 
-async function waitForComputerServer(host: string, timeoutMs: number): Promise<void> {
+async function waitForComputerServer(host: string, timeoutMs: number, path = "/status"): Promise<void> {
     const deadline = Date.now() + timeoutMs;
     let lastError = "no response";
     while (Date.now() < deadline) {
         try {
-            const res = await fetch(`http://${host}/status`, { signal: AbortSignal.timeout(3000) });
+            const res = await fetch(`http://${host}${path}`, { signal: AbortSignal.timeout(3000) });
             if (res.ok) return;
             lastError = `HTTP ${res.status}`;
         } catch (error: any) {

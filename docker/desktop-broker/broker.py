@@ -63,9 +63,11 @@ def command(args, config):
                 "--label", "oddjob.role=computer-use-desktop",
                 "--label", f"oddjob.organization-id={org_id}",
                 "--network", NETWORK, "--restart", "no",
+                "--dns", "1.1.1.1", "--dns", "8.8.8.8",
                 "--memory", "2048m", "--cpus", "1", "--shm-size", "512m",
                 "--pids-limit", "1024", "--security-opt", "no-new-privileges:true",
                 "-e", "VNC_RESOLUTION=1280x800",
+                "-e", "CUA_TELEMETRY_ENABLED=false",
                 "-v", f"{name}-home:/home/cua",
                 *sum((["-p", f'{config["host"]}::{port}'] for port in [8000, 6901, 9223]), []),
                 config["image"], *config["boot"]]
