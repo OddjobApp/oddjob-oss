@@ -1707,6 +1707,7 @@ function ChangeRegisterTab() {
 
 function ReleaseNotesTab() {
   const { toast } = useToast();
+  const [publicSummaries, setPublicSummaries] = useState<Record<number, string>>({});
   const queryClient = useQueryClient();
   const { data: releases = [], isLoading } = useQuery<DocumentationRelease[]>({
     queryKey: ["/api/documentation/releases"],
@@ -1718,7 +1719,7 @@ function ReleaseNotesTab() {
   });
   const publish = useMutation({
     mutationFn: async (releaseId: number) => {
-      const res = await fetch(`/api/documentation/releases/${releaseId}/publish`, { method: "POST" });
+      const res = await apiRequest("POST", `/api/documentation/releases/${releaseId}/publish`, publicSummaries[releaseId]?.trim() ? {publicSummary: publicSummaries[releaseId].trim()} : {});
       if (!res.ok) throw new Error("Failed to publish release notes");
       return res.json();
     },
@@ -1743,7 +1744,11 @@ function ReleaseNotesTab() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-5"><div className="prose prose-sm dark:prose-invert max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{release.markdown}</ReactMarkdown></div></CardContent>
+      <CardContent className="pt-5">{release.status === 'draft' && <div className="mb-5 space-y-2">
+        <label htmlFor={`public-summary-${release.id}`} className="block text-sm font-medium">Public release summary (optional)</label>
+        <textarea id={`public-summary-${release.id}`} value={publicSummaries[release.id] ?? ''} onChange={event => setPublicSummaries(previous => ({...previous, [release.id]: event.target.value}))} maxLength={5000} rows={4} className="w-full rounded-lg border border-border bg-background p-3 text-sm" />
+        <p className="text-sm text-muted-foreground">Platform publishers only. When provided, publishing makes this summary publicly visible at /docs/releases. Write for customers; omit schemas, internal details, and private information. Leaving it empty keeps the release internal.</p>
+      </div>}<div className="prose prose-sm dark:prose-invert max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{release.markdown}</ReactMarkdown></div></CardContent>
     </Card>
   ))}</div>;
 }

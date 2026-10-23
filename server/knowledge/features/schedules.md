@@ -1,11 +1,11 @@
-# Schedules Feature
+# Automations
 
 ## Overview
-Schedules define timing patterns for automated job/pipeline execution.
+The Automations screen manages reusable timing rules for automated job and pipeline execution. Create, search, and edit daily, weekly, monthly, or custom-cron rules. Enabling a timing rule does not attach executable work; connect the rule to a scheduled job or pipeline separately.
 
 ## Components
 
-### Schedules
+### Automation timing rules
 Reusable timing patterns (e.g., "Every weekday at 9am").
 
 ### Scheduled Jobs
@@ -15,21 +15,21 @@ Links a job or pipeline to a schedule with specific trigger configuration.
 
 | Pattern | Description | Example |
 |---------|-------------|---------|
-| 1 (Hourly) | Runs every hour | Every hour at :00 |
-| 2 (Daily) | Runs once per day | Daily at 9:00 AM |
-| 3 (Weekly) | Runs on specific days | Mon/Wed/Fri at 8:00 AM |
+| 1 (Daily) | Runs once per day | Daily at 9:00 AM |
+| 2 (Weekly) | Runs on selected weekdays | Monday at 9:00 AM |
+| 3 (Monthly) | Runs on a selected day of the month | Day 1 at 10:00 AM |
 | 4 (Cron) | Custom cron expression | `0 8 * * 1-5` |
 
 ## Pattern String Examples
 
 ### Daily at 9am
 ```json
-{"hour": 9, "minute": 0}
+{"starttime": "09:00"}
 ```
 
 ### Weekly Mon/Wed/Fri at 8am
 ```json
-{"days": [1, 3, 5], "hour": 8, "minute": 0}
+{"starttime": "08:00", "weekdays": "1,3,5"}
 ```
 
 ### Cron (Weekdays at 8am)

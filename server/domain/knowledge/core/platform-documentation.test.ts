@@ -1,6 +1,6 @@
 /** @vitest-environment node */
 import { afterAll, describe, expect, it } from "vitest";
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, readdirSync, readFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { createPlatformDocumentationLibrary, PLATFORM_DOCUMENTATION_MANIFEST } from "./platform-documentation.service.js";
@@ -16,6 +16,15 @@ const library = createPlatformDocumentationLibrary(root);
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 describe("published platform documentation boundary", () => {
+  it("marks template excerpts as reference guidance rather than verified product claims", () => {
+    const hits=library.search("42% Governed AI",1,50);
+    const campaign=hits.find(hit=>hit.id.includes("marketing-campaign"));
+    expect(campaign).toBeDefined();
+    expect(campaign!.metadata.referenceOnly).toBe(true);
+    expect(campaign!.textContent).toMatch(/^\[PLATFORM REFERENCE ONLY/);
+    expect(campaign!.textContent).toContain("Do not present template metrics");
+  });
+
   it("makes the same versioned public guides available to existing and new orgs", () => {
     expect(library.list(1)).toHaveLength(PLATFORM_DOCUMENTATION_MANIFEST.length);
     expect(library.list(2)).toEqual(library.list(1));
@@ -36,6 +45,21 @@ describe("published platform documentation boundary", () => {
     expect(library.get("private-organization-upload.md", 1)).toBeNull();
     expect(library.get("42", 1)).toBeNull();
     expect(library.get("platform:../../private-organization-upload.md", 1)).toBeNull();
+  });
+  it("covers every packaged best-practice source and retrieves its content for every org", () => {
+    const published = PLATFORM_DOCUMENTATION_MANIFEST.filter(entry => entry.file.startsWith("platform/"));
+    const disk = readdirSync(path.resolve("docs/platform"), {recursive:true, withFileTypes:true})
+      .filter(entry => entry.isFile() && /\.(md|yaml|json|ts)$/.test(entry.name))
+      .map(entry => path.relative(path.resolve("docs"), path.join(entry.parentPath, entry.name)).replace(/\\/g,"/"));
+    expect(published.map(entry=>entry.file).sort()).toEqual(disk.sort());
+    expect(published).toHaveLength(81);
+    expect(new Set(PLATFORM_DOCUMENTATION_MANIFEST.map(entry=>entry.slug)).size).toBe(PLATFORM_DOCUMENTATION_MANIFEST.length);
+    for (const entry of published) {
+      const doc=library.get(`platform:${entry.slug}`, 1)!;
+      expect(doc.textContent).toBe(readFileSync(path.resolve("docs",entry.file),"utf8"));
+      expect(library.get(doc.id, 999999)).toEqual(doc);
+      expect(library.search(entry.title,1,50).map(hit=>hit.id)).toContain(doc.id);
+    }
   });
   it("finds organization key guidance without embeddings or an AI provider", () => {
     const hits = library.search("BYOK credentials", 1);

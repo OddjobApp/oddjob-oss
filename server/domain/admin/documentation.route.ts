@@ -4,7 +4,7 @@ import { documentationService } from "./documentation.service.js";
 import { asyncHandler } from "../../middleware/error-handler.js";
 import { requireAuth } from "../auth/core/security.service.js";
 import { getUserOrgContext, assertOrgId } from "../../utils/auth-context.js";
-import { BadRequestError } from "@server/utils/errors.js";
+import { BadRequestError, ForbiddenError } from "@server/utils/errors.js";
 
 const router = Router();
 
@@ -172,7 +172,9 @@ router.post("/releases/:releaseId/publish", requireAuth, asyncHandler(async (req
     if (!Number.isInteger(releaseId) || releaseId <= 0) throw new BadRequestError("Invalid releaseId");
     const orgContext = await getUserOrgContext(req);
     const organizationId = assertOrgId(orgContext.organizationId);
-    const release = await documentationService.publishReleaseNotes(releaseId, organizationId);
+    const publicSummary = req.body?.publicSummary;
+    if (publicSummary !== undefined && !orgContext.isSuperAdmin) throw new ForbiddenError("Only a platform administrator can publish public release summaries");
+    const release = await documentationService.publishReleaseNotes(releaseId, organizationId, publicSummary);
     res.json(release);
 }));
 

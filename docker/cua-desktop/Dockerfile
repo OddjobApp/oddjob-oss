@@ -5,9 +5,20 @@
 #   docker build -t oddjob/cua-desktop:latest docker/cua-desktop
 #
 # org-desktop.service.ts builds this automatically the first time it is missing.
-FROM trycua/cua-xfce:latest
+FROM trycua/cua-xfce@sha256:e188a008084e1034f5ff003e7983c58596d9c0e47adf5c34078b362aad2a57e7
 
 USER root
+ENV CUA_TELEMETRY_ENABLED=false
+
+# Current XFCE images ship spacesd. Oddjob's installed Computer SDK uses the
+# HTTP/WebSocket computer-server contract, so supply that pinned compatibility
+# service in its own environment rather than relying on a removed base script.
+RUN uv venv /opt/oddjob-computer --python /usr/local/bin/python \
+    && uv pip install --python /opt/oddjob-computer/bin/python 'cua-computer-server[linux]==0.3.46' 'fastapi==0.115.12'
+COPY start-computer-server.sh /usr/local/bin/start-computer-server.sh
+COPY oddjob-computer-server.conf /etc/supervisor/conf.d/oddjob-computer-server.conf
+RUN chmod 0755 /usr/local/bin/start-computer-server.sh
+RUN /opt/oddjob-computer/bin/python -c 'from fastapi import FastAPI; FastAPI(websocket_max_size=1024)'
 
 # Debian 12 ships a real chromium package (no snap).
 RUN apt-get update \

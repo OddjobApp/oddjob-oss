@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { gmailDayQuery } from './gmail-time.js';
 import { randomBytes } from 'node:crypto';
 import { marked, Renderer } from 'marked';
 import type { ToolContext, ToolDefinition } from './types.js';
@@ -122,12 +123,13 @@ function decodeMessage(message: any): any {
 }
 export const GOOGLE_MAIL_DOCS_TOOLS: Record<string, ToolDefinition> = {
   ...Object.fromEntries(Object.entries(schema).map(([name, parameters]) => [name, { name, parameters, idempotency: 'none', riskLevel: 'medium', group: 'Google Workspace', description: name.startsWith('gdocs_') ? 'Propose a Google Docs change for approval. For editing, read the document first, preserve its tabs and formatting, and supply required_revision_id. requests supports native Docs batchUpdate operations for text, formatting, tables, lists, images and headers.' : 'Propose a Gmail change for approval. Use message/thread/draft IDs from live Gmail reads. Modify labels to archive (remove INBOX), mark read (remove UNREAD), star (add STARRED), or apply labels. Reply requires actual thread ID and Message-ID header. Never claim a send until approval succeeds.', execute: (p: any, c: ToolContext) => propose(name, parameters.parse(p), c) }] as [string, ToolDefinition])),
-  gmail_list_messages: read('gmail_list_messages', 'Search or list Gmail messages with query syntax and pagination. Each result carries id, subject, sender, date and snippet (metadata is fetched for up to 10 hits, the rest return IDs only); use gmail_get_message to read full content.', z.object({ query: z.string().optional(), ...page }), async (p, c) => {
+  gmail_list_messages: read('gmail_list_messages', 'Search or list Gmail messages with query syntax and pagination. For today use time_range today and time_zone (user IANA zone), without query date operators; server resolves exact day boundaries. Metadata is fetched for up to 10 hits; use gmail_get_message for full content. Successful zero matches are not a permission failure.', z.object({ query: z.string().optional(), time_range: z.literal('today').optional(), time_zone: z.string().optional(), ...page }), async (p, c) => {
     // The Gmail list endpoint returns ids alone — a bare id list is all an
     // agent can then report ("I found two emails: 19ef…, 19ef…"). Enrich the
     // first page with metadata headers so a listing answers the actual
     // question: what arrived, from whom, when.
-    const list = await call(c, 'gmail_read', 'gmail', `/messages?${pageQuery(p)}${p.query ? `&q=${enc(p.query)}` : ''}`);
+    const query = gmailDayQuery(p.query ?? '', p.time_range, p.time_zone);
+    const list = await call(c, 'gmail_read', 'gmail', `/messages?${pageQuery(p)}${query ? `&q=${enc(query)}` : ''}`);
     const ids: any[] = list.messages ?? [];
     const details = await Promise.all(ids.slice(0, 10).map((m: any) =>
       call(c, 'gmail_read', 'gmail', `/messages/${enc(m.id)}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`).catch(() => null)));

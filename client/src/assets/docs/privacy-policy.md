@@ -11,6 +11,7 @@ We collect information you provide directly to us during sign-up, including:
 - Username
 - Email address
 - Name (optional)
+- Organization name, company size, and industry (optional)
 - Legal agreement timestamps and versions
 
 ## 3. How We Use Information
@@ -31,4 +32,4 @@ If you are a California resident, you have the right to:
 We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure.
 
 ## 6. Contact Us
-If you have questions about this policy, please contact us at privacy@oddjob.io.
+If you have questions about this policy, please contact us at [admin@oddjob.app](mailto:admin@oddjob.app).

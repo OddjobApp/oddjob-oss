@@ -29,3 +29,9 @@ export interface MissionMember {
   description?: string;
   suggestedConfig?: any;
 }
+
+// Generated plans must not erase an existing brief with absent fields.
+export const missionPlanResponseSchema = z.object({
+  name: z.string().trim().min(1),
+  objective: z.string().trim().min(1),
+}).passthrough();

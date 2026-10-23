@@ -209,6 +209,9 @@ export async function registerRoutes(app: Express, server: Server): Promise<Serv
   const { default: ecommerceRouter } = await import("./domain/ecommerce/recovery.route.js");
   app.use("/api/ecommerce", ecommerceRouter);
 
+  const { publicDocumentationRouter } = await import("./domain/admin/public-documentation.route.js");
+  app.use("/api/public/documentation", publicDocumentationRouter);
+
   // --- Public Published Apps ---
   const { publicAppsRouter } = await import("./routes/public-apps.js");
   app.use("/api/public/apps", publicAppsRouter);

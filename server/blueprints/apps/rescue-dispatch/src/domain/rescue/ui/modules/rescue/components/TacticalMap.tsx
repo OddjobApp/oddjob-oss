@@ -1,33 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Map, { FullscreenControl, Marker, NavigationControl, Popup, ScaleControl, type MapRef, type ViewStateChangeEvent } from "react-map-gl";
-import mapboxgl from "mapbox-gl";
+import Map, { FullscreenControl, Marker, NavigationControl, Popup, ScaleControl, type MapRef, type ViewStateChangeEvent } from "react-map-gl/maplibre";
+import maplibregl from "maplibre-gl";
 import { AlertTriangle, Crosshair, Layers3, LocateFixed, RefreshCw, Shield, UserRound, Wrench } from "lucide-react";
-import "mapbox-gl/dist/mapbox-gl.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 export const MAP_LIB: any = {
-  ...(mapboxgl as any),
-  supported: () => (mapboxgl as any).supported?.() ?? true,
+  ...(maplibregl as any),
+  supported: () => (maplibregl as any).supported?.() ?? true,
 };
 
-export const CARTO_DARK_STYLE: any = {
+export const STREET_RASTER_STYLE: any = {
   version: 8,
   sources: {
-    "carto-dark": {
+    "osm-street": {
       type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-      ],
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
       tileSize: 256,
-      attribution: "© OpenStreetMap contributors, © CARTO",
+      attribution: "© OpenStreetMap contributors",
     },
   },
   layers: [
     {
-      id: "carto-dark-layer",
+      id: "osm-street-layer",
       type: "raster",
-      source: "carto-dark",
+      source: "osm-street",
       minzoom: 0,
       maxzoom: 22,
     },
@@ -108,7 +104,6 @@ interface TacticalMapProps {
   onRescueClick?: (rescue: RescueMapItem) => void;
 }
 
-const MAPBOX_TOKEN = (typeof process !== "undefined" && process?.env ? (process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN) : "") || (typeof import.meta !== "undefined" && (import.meta as any).env ? (import.meta as any).env.VITE_MAPBOX_TOKEN : "") || "";
 const INITIAL_VIEW = { longitude: -118.2437, latitude: 34.0522, zoom: 12.2 };
 
 function squadColor(status: string) {
@@ -171,30 +166,16 @@ export default function TacticalMap({ squads, rescues, providers, focusedRescueI
     mapRef.current?.flyTo({ center: [rescue.location.lng, rescue.location.lat], zoom: 14, duration: 650 });
   }, [focusedRescueId, rescues]);
 
-  const [usingFallbackStyle, setUsingFallbackStyle] = useState(!MAPBOX_TOKEN);
   const [basemapMode, setBasemapMode] = useState<"dark" | "satellite">("dark");
 
-  const activeMapStyle = useMemo(() => {
-    if (usingFallbackStyle || !MAPBOX_TOKEN) {
-      return basemapMode === "satellite" ? SATELLITE_RASTER_STYLE : CARTO_DARK_STYLE;
-    }
-    return basemapMode === "satellite"
-      ? "mapbox://styles/mapbox/satellite-streets-v12"
-      : "mapbox://styles/mapbox/dark-v11";
-  }, [usingFallbackStyle, basemapMode]);
-
+  // Public raster basemaps use MapLibre and require no Mapbox credentials.
+  const activeMapStyle = basemapMode === "satellite" ? SATELLITE_RASTER_STYLE : STREET_RASTER_STYLE;
   const handleMapError = useCallback((event: any) => {
-    const errorMsg = event?.error?.message || "";
-    if (!usingFallbackStyle) {
-      setUsingFallbackStyle(true);
-      setMapError(null);
-    } else {
-      setMapError(errorMsg || "Basemap tiles could not be loaded.");
-    }
-  }, [usingFallbackStyle]);
+    setMapError(event?.error?.message || "Basemap tiles could not be loaded.");
+  }, []);
 
   return (
-    <div className="tactical-map relative w-full h-full min-h-[480px] bg-background overflow-hidden" data-testid="tactical-map">
+    <div className="tactical-map relative w-full h-full bg-background overflow-hidden" data-testid="tactical-map">
       {!mapReady && !mapError && <div className="map-loading" role="status"><RefreshCw className="animate-spin" aria-hidden="true" />Loading tactical map</div>}
       {mapError && <div className="map-error" role="alert"><AlertTriangle aria-hidden="true" /><div><strong>Map tiles could not be loaded</strong><span>{mapError}</span></div><button type="button" onClick={resetView}>Retry</button></div>}
 
@@ -205,13 +186,13 @@ export default function TacticalMap({ squads, rescues, providers, focusedRescueI
           type="button"
           onClick={() => setBasemapMode((m) => (m === "dark" ? "satellite" : "dark"))}
           className="hover:text-cyan-300 font-semibold transition-colors"
-          title="Toggle between Tactical Dark and Satellite Basemaps"
+          title="Toggle between Street map and Satellite Basemaps"
         >
-          {basemapMode === "dark" ? "Tactical Dark" : "Satellite"}
+          {basemapMode === "dark" ? "Street map" : "Satellite"}
         </button>
         <span className="text-muted-foreground">•</span>
         <span className="text-emerald-400 font-bold">
-          {MAPBOX_TOKEN && !usingFallbackStyle ? "Mapbox Vector" : "CARTO Engine"}
+          {basemapMode === "satellite" ? "Esri imagery" : "OpenStreetMap"}
         </span>
       </div>
 
@@ -222,7 +203,6 @@ export default function TacticalMap({ squads, rescues, providers, focusedRescueI
         onMove={(event: ViewStateChangeEvent) => setViewState(event.viewState)}
         onLoad={() => { setMapReady(true); setMapError(null); mapRef.current?.resize(); }}
         onError={handleMapError}
-        mapboxAccessToken={!usingFallbackStyle && MAPBOX_TOKEN ? MAPBOX_TOKEN : undefined}
         mapStyle={activeMapStyle}
         attributionControl
         reuseMaps

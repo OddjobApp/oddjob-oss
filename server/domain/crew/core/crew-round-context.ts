@@ -32,8 +32,10 @@ export function isScribeEditRequest(message: string, hasActiveDocument = false):
     if (hasActiveDocument && (conversation === "resume" || conversation === "revise")) return true;
     if (/\b(?:only|just)\s+(?:review|discuss|suggest)|\b(?:do not|don't)\s+(?:edit|change|write|apply|create|generate|draft|mount)\b/i.test(message)) return false;
     const action = /\b(?:add|insert|update|edit|revise|rewrite|replace|remove|expand|shorten|reorganize|apply|improve|make|create|generate)\b/i.test(message);
-    const target = /\b(?:toc|table\s+of\s+contents|outline|document|manuscript|section|station|paragraph|draft|prd)\b/i.test(message);
-    return action && (target || hasActiveDocument);
+    const target = /\b(?:toc|table\s+of\s+contents|outline|document|manuscript|section|station|paragraph|prd)\b/i.test(message);
+    // A bare "draft" can be a verb: "Yes, draft and update it" is not a document target.
+    const draftTarget = /\b(?:the|this|that|my|our|your|a)\s+draft\b|\b(?:edit|revise|rewrite|update|replace)\s+draft\b/i.test(message);
+    return action && (target || draftTarget || hasActiveDocument);
 }
 
 export type ScribeLargeEditMode = "complete" | "batches" | "condensed";

@@ -1,3 +1,4 @@
+import { AnnouncementsSignup } from '@/components/AnnouncementsSignup';
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { Activity, AppWindow, Eye, EyeOff, Fingerprint, Loader2, Lock, Route, ShieldCheck, Sparkles } from 'lucide-react';
@@ -71,7 +72,7 @@ export default function Login({ onRegisterClick }: LoginProps) {
             <div className="flex items-center gap-3" data-testid="login-brand-lockup">
               <div className="relative shrink-0">
                 <div className="relative z-10 flex items-center justify-center rounded-full border border-foreground/20 bg-card p-[3.1px] shadow-md">
-                  <HatIcon className="h-[42px] w-[42px] drop-shadow-md" />
+                  <HatIcon publicBackdrop className="h-[42px] w-[42px] drop-shadow-md" />
                 </div>
                 <div className="absolute -inset-2 rounded-full bg-primary/20 opacity-40 blur-xl" />
               </div>
@@ -176,7 +177,7 @@ export default function Login({ onRegisterClick }: LoginProps) {
                   <>
                     Sign in
                     <span className="ml-2 flex h-6 w-6 items-center justify-center rounded-full bg-card p-[1.5px]">
-                      <HatIcon className="h-5 w-5" />
+                      <HatIcon publicBackdrop className="h-5 w-5" />
                     </span>
                   </>
                 )}
@@ -247,6 +248,8 @@ export default function Login({ onRegisterClick }: LoginProps) {
 
           </div>
         </section>
+
+        <AnnouncementsSignup className="lg:col-span-2" />
 
           <footer className="flex flex-col items-center gap-3 border-t border-foreground/10 pt-6 lg:col-span-2">
             <div className="flex flex-wrap justify-center gap-2">
