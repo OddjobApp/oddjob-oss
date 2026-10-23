@@ -150,10 +150,11 @@ export class QueueService {
             this.recordWorkerFailure(queueName);
         });
 
-        // Job delayed (retry)
-        queue.on('delayed', (jobId: string) => {
-            logger.warn(`Job delayed: ${jobId}`, { queue: queueName });
-        });
+        // No 'delayed' listener: in Bull it is an internal channel carrying the next
+        // delay timestamp, not a job id, and listening to it subscribes in the
+        // background without handling failure, so closing a queue that never
+        // connected left one unhandled rejection per queue. Bull registers the
+        // channel itself when it processes jobs; retries are logged under 'failed'.
 
         // Queue errors
         queue.on('error', (error: Error) => {
