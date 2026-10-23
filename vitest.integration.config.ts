@@ -8,6 +8,8 @@ export default defineConfig({
     test: {
         ...baseConfig.test,
         include: ["**/integration/**/*.test.{ts,tsx}", "**/*.integration.test.{ts,tsx}"],
+        // Names the file behind each unhandled rejection (they arrive without a message or stack).
+        setupFiles: [...((baseConfig.test?.setupFiles as string[] | undefined) ?? []), "./tests/unhandled-rejection-reporter.ts"],
         exclude: [...(baseConfig.test?.exclude || []), "external/**", "workspace/**"],
     },
 });
