@@ -1,3 +1,4 @@
+import { BEST_PRACTICE_DOCUMENTATION_MANIFEST } from "./best-practice-documentation-manifest.js";
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -13,6 +14,7 @@ export const PLATFORM_DOCUMENTATION_MANIFEST = [
   { slug: "cycles", file: "CYCLES.md", title: "Cycles" },
   { slug: "app-forge", file: "APP_FORGE_LIFECYCLE.md", title: "App Forge lifecycle" },
   { slug: "architecture", file: "SYSTEM_ARCHITECTURE.md", title: "System architecture" },
+  ...BEST_PRACTICE_DOCUMENTATION_MANIFEST,
 ] as const;
 
 export interface PlatformDocument {
@@ -44,7 +46,7 @@ export function createPlatformDocumentationLibrary(root = path.resolve(process.c
     const textContent = readFileSync(file, "utf8");
     if (!textContent.trim()) throw new Error(`Published platform document is empty: ${entry.file}`);
     return { id: `platform:${entry.slug}`, title: entry.title, sourceType: "platform_documentation",
-      scope: "platform", readOnly: true, url: `/knowledge/platform-docs?id=${entry.slug}`,
+      scope: "platform", readOnly: true, url: `/knowledge/platform-docs?id=${encodeURIComponent(entry.slug)}`,
       sourceUrl: `https://github.com/OddjobApp/oddjob-oss/blob/main/docs/${entry.file}`,
       version: createHash("sha256").update(textContent).digest("hex"), textContent };
   });
