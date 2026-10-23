@@ -118,13 +118,16 @@ export default function KnowledgeGarden() {
     const [selectedSourceNode, setSelectedSourceNode] = useState<KnowledgeNode | null>(null);
 
     // Fetch staging nodes
-    const { data: stagingData, isLoading: isLoadingStaging, refetch } = useQuery<{
+    const { data: stagingData, isLoading: isLoadingStaging, isFetching: isRefreshingNodes, refetch } = useQuery<{
         nodes: KnowledgeNode[];
         total: number;
         page: number;
         limit: number;
     }>({
         queryKey: ["/api/knowledge-graph/staging", page, filterLabel, filterTopicId, selectedOrgId],
+        staleTime: 0,
+        refetchInterval: 10_000,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
             const params = new URLSearchParams();
             params.append("page", page.toString());
@@ -139,8 +142,11 @@ export default function KnowledgeGarden() {
     });
 
     // Fetch stats
-    const { data: stats } = useQuery<StagingStats>({
+    const { data: stats, isFetching: isRefreshingStats, refetch: refetchStats } = useQuery<StagingStats>({
         queryKey: ["/api/knowledge-graph/staging/stats", selectedOrgId],
+        staleTime: 0,
+        refetchInterval: 10_000,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
             const orgParam = selectedOrgId ? `?orgId=${selectedOrgId}` : '';
             const res = await apiRequest("GET", `/api/knowledge-graph/staging/stats${orgParam}`);
@@ -358,11 +364,12 @@ export default function KnowledgeGarden() {
                     <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => refetch()} 
+                        onClick={() => { void refetch(); void refetchStats(); }}
+                        disabled={isRefreshingNodes || isRefreshingStats} 
                         className="rounded-xl hover:bg-primary/5 text-muted-foreground hover:text-primary transition-colors"
                         aria-label="Refresh staging nodes"
                     >
-                        <RefreshCw className={cn("w-4 h-4 mr-2", isLoadingStaging && "animate-spin")} aria-hidden="true" />
+                        <RefreshCw className={cn("w-4 h-4 mr-2", (isRefreshingNodes || isRefreshingStats) && "animate-spin")} aria-hidden="true" />
                         Refresh
                     </Button>
                 </div>
@@ -440,6 +447,9 @@ export default function KnowledgeGarden() {
                 )}
 
                 <Separator orientation="vertical" className="h-6" />
+
+                {(filterLabel || filterTopicId) && <Button variant="ghost" size="sm" onClick={() => { setFilterLabel(''); setFilterTopicId(null); setPage(1); }}>Clear filters</Button>}
+                <p className="hidden text-xs text-muted-foreground lg:block">New entities refresh every 10 seconds.</p>
 
                 {/* Bulk Actions */}
                 {selectedNodes.length > 0 && (

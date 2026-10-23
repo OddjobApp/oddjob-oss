@@ -49,8 +49,9 @@ export function KnowledgeExtractionProgress({
                 return null;
             }
         },
-        // Avoid initial fetch if we already have terminal status
-        enabled: !initialStatus || ['queued', 'processing'].includes(initialStatus),
+        // Load result counts even when the document list supplies a terminal status.
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         initialData: initialStatus ? { status: initialStatus, progress: initialProgress || 0 } : undefined,
         refetchInterval: (query) => {
             const status = query.state.data?.status;
@@ -105,22 +106,7 @@ export function KnowledgeExtractionProgress({
         }
     };
 
-    if (isLoading) return <div className="text-muted-foreground text-xs">Loading status...</div>;
-
-    if (!extraction) {
-        // No extraction run yet
-        return (
-            <div className="flex items-center gap-2">
-                {compact ? (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setStartDialogOpen(true)} title="Start Extraction">
-                        <Play className="h-3 w-3" />
-                    </Button>
-                ) : (
-                    <Button variant="outline" size="sm" onClick={() => setStartDialogOpen(true)}>
-                        <Play className="h-3 w-3 mr-1" /> Extract
-                    </Button>
-                )}
-
+    const extractionDialog = (
                 <Dialog open={startDialogOpen} onOpenChange={setStartDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
@@ -167,24 +153,42 @@ export function KnowledgeExtractionProgress({
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+    );
+
+    if (isLoading) return <div className="text-muted-foreground text-xs">Loading status...</div>;
+
+    if (!extraction) {
+        // No extraction run yet
+        return (
+            <div className="flex items-center gap-2">
+                {compact ? (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setStartDialogOpen(true)} title="Start Extraction">
+                        <Play className="h-3 w-3" />
+                    </Button>
+                ) : (
+                    <Button variant="outline" size="sm" onClick={() => setStartDialogOpen(true)}>
+                        <Play className="h-3 w-3 mr-1" /> Extract
+                    </Button>
+                )}
+
+                {extractionDialog}
             </div>
         );
     }
 
-    const { status, progress, progressMessage, error: extractionError } = extraction;
+    const { status, progress, progressMessage, error: extractionError, nodesExtracted } = extraction;
 
     if (status === 'completed') {
         return (
             <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200 gap-1 pr-3">
+                <Badge variant="outline" className="bg-muted text-foreground border-border gap-1 pr-3">
                     <CheckCircle2 className="w-3 h-3" />
-                    Extracted
+                    {nodesExtracted === 0 ? 'No entities found' : typeof nodesExtracted === 'number' ? `${nodesExtracted} entities` : 'Extracted'}
                 </Badge>
-                {!compact && (
-                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => setStartDialogOpen(true)}>
-                        Re-run
-                    </Button>
-                )}
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => setStartDialogOpen(true)}>
+                    Re-run
+                </Button>
+                {extractionDialog}
             </div>
         );
     }
@@ -208,6 +212,7 @@ export function KnowledgeExtractionProgress({
                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setStartDialogOpen(true)}>
                     <Play className="h-3 w-3" />
                 </Button>
+                {extractionDialog}
             </div>
         );
     }
@@ -222,6 +227,7 @@ export function KnowledgeExtractionProgress({
                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Start Extraction" onClick={() => setStartDialogOpen(true)}>
                     <Play className="h-3 w-3 text-muted-foreground" />
                 </Button>
+                {extractionDialog}
             </div>
         );
     }
@@ -230,7 +236,7 @@ export function KnowledgeExtractionProgress({
     return (
         <div className={`flex flex-col gap-1 ${compact ? 'w-24' : 'w-full max-w-[200px]'}`}>
             <div className="flex justify-between text-xs mb-1">
-                <span className="flex items-center gap-1 font-medium text-blue-600">
+                <span className="flex items-center gap-1 font-medium text-primary">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     {status === 'queued' ? 'Queued' : 'Extracting...'}
                 </span>
