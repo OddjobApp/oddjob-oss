@@ -1,3 +1,4 @@
+import { desktopBrokerCommand } from "./desktop-broker-client.js";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { and, eq, max, sql } from "drizzle-orm";
@@ -222,7 +223,8 @@ class OrgDesktopService {
 
     private async publishedHost(name: string, port: number): Promise<string> {
         // e.g. "127.0.0.1:55012". Re-read on every provision: a restart gets a new port.
-        const out = (await docker(["port", name, `${port}/tcp`])).split(/\r?\n/).find((line) => line.startsWith("127.0.0.1:"));
+        const host = process.env.TRYCUA_DESKTOP_BROKER_SOCKET ? (process.env.TRYCUA_DESKTOP_HOST || "127.0.0.1") : "127.0.0.1";
+        const out = (await docker(["port", name, `${port}/tcp`])).split(/\r?\n/).find((line) => line.startsWith(`${host}:`));
         if (!out) throw new ConfigurationError(`Desktop ${name} has no loopback port for ${port}/tcp`);
         return out.trim();
     }
@@ -272,6 +274,9 @@ async function cdpAnswers(host: string): Promise<boolean> {
 }
 
 async function docker(args: string[], timeout = 60_000): Promise<string> {
+    if (process.env.TRYCUA_DESKTOP_BROKER_SOCKET) {
+        return desktopBrokerCommand(process.env.TRYCUA_DESKTOP_BROKER_SOCKET, args, timeout);
+    }
     try {
         const { stdout } = await execFileAsync("docker", args, { timeout, windowsHide: true, maxBuffer: 4 * 1024 * 1024 });
         return stdout;

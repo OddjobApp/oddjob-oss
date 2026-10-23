@@ -1,5 +1,5 @@
 /** @vitest-environment node */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // A fake docker daemon: containers by name, each with a state and a loopback port.
 const containers = new Map<string, { status: string; port: number; startedAt: string; noViewer?: boolean }>();
@@ -83,11 +83,30 @@ function findOrgId(node: any, seen = new Set()): number {
     return NaN;
 }
 
+vi.mock("./desktop-broker-client.js", () => ({ desktopBrokerCommand: vi.fn() }));
+const { desktopBrokerCommand } = await import("./desktop-broker-client.js");
+
 vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200 })));
 
 const { orgDesktopService } = await import("./org-desktop.service.js");
 
 describe("orgDesktopService", () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("uses the restricted broker and private host endpoint without invoking the Docker CLI", async () => {
+        vi.stubEnv("TRYCUA_DESKTOP_BROKER_SOCKET", "/run/oddjob-desktop/broker.sock");
+        vi.stubEnv("TRYCUA_DESKTOP_HOST", "172.17.0.1");
+        vi.mocked(desktopBrokerCommand).mockImplementation(async (_socket, args) => {
+            if (args[0] === "inspect" && args[2] === "{{.State.Status}}") return "running";
+            if (args[0] === "inspect") return JSON.stringify({ "6901/tcp": [{}], "9223/tcp": [{}] });
+            if (args[0] === "port") return `172.17.0.1:${args[2].split("/")[0]}\n`;
+            throw new Error("Unexpected broker request");
+        });
+        expect(await orgDesktopService.ensureEndpoints(21)).toEqual({ api: "172.17.0.1:8000", viewer: "172.17.0.1:6901", cdp: "172.17.0.1:9223" });
+        expect(dockerCalls).toHaveLength(0);
+        expect(desktopBrokerCommand).toHaveBeenCalledWith("/run/oddjob-desktop/broker.sock", expect.any(Array), 60000);
+    });
+
     beforeEach(() => {
         containers.clear();
         activity.clear();
