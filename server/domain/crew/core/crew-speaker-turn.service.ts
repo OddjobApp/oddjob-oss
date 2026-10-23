@@ -670,6 +670,8 @@ export function buildTurnInstruction(
           `to render a swipeable card carousel.`
         : "";
 
+    const referenceGroundingDirective = "\n\nREFERENCE GROUNDING: Documentation and templates describe guidance, examples and placeholders. They are not evidence of this organization's results, configured state, or completed actions. Never reuse sample percentages, customer claims, budgets or campaign copy as verified Oddjob performance or brand facts. Draft only supported claims; omit unsupported metrics.\n";
+
     const researchLadderToUse = isEmailRequest || assemblyDirective || isScribeRequest || isTocOrOutlineRequest || isRatifyDecisionRequest
         ? ""
         : buildResearchLadder(availableToolNames.length > 0 ? availableToolNames : undefined);
@@ -681,7 +683,7 @@ export function buildTurnInstruction(
             assemblyDirective +
             executionDirective +
             externalResearchDirective +
-            factualResearchDirective +
+            factualResearchDirective + referenceGroundingDirective +
             emailDirective + googleWorkspaceDirective(userMessage) +
             flightSearchDirective +
             scribeDirective +
@@ -710,7 +712,7 @@ export function buildTurnInstruction(
         assemblyDirective +
         executionDirective +
         externalResearchDirective +
-        factualResearchDirective +
+        factualResearchDirective + referenceGroundingDirective +
         emailDirective + googleWorkspaceDirective(userMessage) +
         flightSearchDirective +
         scribeDirective +

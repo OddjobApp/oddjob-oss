@@ -13,3 +13,11 @@ it("retains explicit writing requests", () => {
   expect(isScribeEditRequest("Create a document", true)).toBe(true);
   expect(isScribeAuthoringRequest("Create a document")).toBe(true);
 });
+
+it("does not treat a draft verb as a Scribe document target", () => {
+  expect(isScribeEditRequest("Yes, draft and update it.")).toBe(false);
+  expect(isScribeEditRequest("Draft and update the YouTube channel description.")).toBe(false);
+  expect(isScribeEditRequest("Update the draft.")).toBe(true);
+  expect(isScribeEditRequest("Edit draft.")).toBe(true);
+  expect(isScribeEditRequest("Yes, draft and update it.",true)).toBe(true);
+});

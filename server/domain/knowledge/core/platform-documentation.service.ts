@@ -94,9 +94,10 @@ export function createPlatformDocumentationLibrary(root = path.resolve(process.c
         seen.add(hit.chunk.document.id); return true;
       }).slice(0, Math.min(50, Math.max(1, Number.isFinite(limit) ? Math.floor(limit) : 5))).map(({ chunk, rank, coverage }) => ({
         id: chunk.document.id, type: "document" as const, title: chunk.document.title,
-        description: chunk.content.slice(0, 180), textContent: chunk.content, url: chunk.document.url,
+        description: chunk.content.slice(0, 180),
+        textContent: `[PLATFORM REFERENCE ONLY: guidance and examples are not evidence of organization configuration, executed actions or measured product performance. Do not present template metrics or sample campaign copy as verified claims.]\n${chunk.content}`, url: chunk.document.url,
         score: 0.5 + 0.25 * coverage + 0.15 * rank / (rank + 5),
-        metadata: { scope: "platform", readOnly: true, sourceType: "platform_documentation", sourceUrl: chunk.document.sourceUrl,
+        metadata: { scope: "platform", readOnly: true, referenceOnly: true, sourceType: "platform_documentation", sourceUrl: chunk.document.sourceUrl,
           version: chunk.document.version, assetKey: chunk.document.id, name: chunk.document.title,
           chunkId: `${chunk.document.id}:${chunk.order}`, url: chunk.document.url },
       }));

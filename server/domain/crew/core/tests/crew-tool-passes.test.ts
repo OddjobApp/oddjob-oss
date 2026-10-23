@@ -65,6 +65,18 @@ function runPasses(overrides: Record<string, unknown> = {}) {
 }
 
 describe("speaker turn tool passes", () => {
+    it("preserves a YouTube description draft without inventing a Scribe failure", async () => {
+        generate.mockResolvedValueOnce(gen("Here is the proposed channel description. No channel update has been published."));
+        const names=["youtube_get_channel","search_unified_knowledge","scribe_get_document","scribe_replace_text"];
+        const {run}=runPasses({message:"Yes, draft and update it.",hasActiveDocument:false,
+          availableTools:names.map(name=>({definition:{name}})),functionDeclarations:names.map(name=>({name}))});
+        const {result}=await run;
+        expect(result.content).toContain("proposed channel description");
+        expect(result.content).not.toContain("Scribe write");
+        expect(execute).not.toHaveBeenCalled();
+        expect(buildTurnInstruction("Yes, draft and update it.",[],"Copilot",false,[],names)).toContain("Never reuse sample percentages");
+    });
+
     it("offers only app evidence readers for an explicit read-only app audit", async () => {
         generate.mockResolvedValueOnce(gen("", [{ name: 'read_app_records', args: { app: 'sdlc-workbench-org342' } }]))
             .mockResolvedValueOnce(gen("The app has no saved collections; execution is unverified."));

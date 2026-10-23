@@ -16,6 +16,15 @@ const library = createPlatformDocumentationLibrary(root);
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 describe("published platform documentation boundary", () => {
+  it("marks template excerpts as reference guidance rather than verified product claims", () => {
+    const hits=library.search("42% Governed AI",1,50);
+    const campaign=hits.find(hit=>hit.id.includes("marketing-campaign"));
+    expect(campaign).toBeDefined();
+    expect(campaign!.metadata.referenceOnly).toBe(true);
+    expect(campaign!.textContent).toMatch(/^\[PLATFORM REFERENCE ONLY/);
+    expect(campaign!.textContent).toContain("Do not present template metrics");
+  });
+
   it("makes the same versioned public guides available to existing and new orgs", () => {
     expect(library.list(1)).toHaveLength(PLATFORM_DOCUMENTATION_MANIFEST.length);
     expect(library.list(2)).toEqual(library.list(1));
