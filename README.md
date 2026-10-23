@@ -20,7 +20,7 @@ production tenant execution requires an isolated runtime. See
 
 ## Quickstart
 
-You need Node.js 22.12 or later (`.nvmrc` pins 22), Docker (for Postgres and Redis),
+You need Node.js 24 or later (`.nvmrc` pins 24), Docker (for Postgres and Redis),
 and an API key from at least one model provider — Google Gemini is the default.
 
 **Oddjob is bring-your-own-key.** It never runs AI on a shared platform key: each

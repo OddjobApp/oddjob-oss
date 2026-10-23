@@ -49,23 +49,41 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
     "claude-3-opus-latest": { input1M: 15.00, output1M: 75.00 },
     "claude-3-haiku-20240307": { input1M: 0.25, output1M: 1.25 },
 
+    // Amazon Nova (Bedrock on-demand list prices). Other Bedrock IDs price as
+    // their vendor's own model through bedrockBaseModel().
+    "amazon.nova-micro-v1:0": { input1M: 0.035, output1M: 0.14 },
+    "amazon.nova-lite-v1:0": { input1M: 0.06, output1M: 0.24 },
+    "amazon.nova-pro-v1:0": { input1M: 0.80, output1M: 3.20 },
+
     // Fallback/Default
     "default": { input1M: 1.00, output1M: 3.00 }
 };
 
 /**
- * The Anthropic name inside a Bedrock model ID, so Claude on Bedrock is priced as
- * the same model: us.anthropic.claude-sonnet-4-6 -> claude-sonnet-4-6.
+ * A Bedrock model or inference-profile ID: an optional geography prefix
+ * ("us.", "global.", ...), the vendor, then the vendor's model.
  */
-function bedrockClaudeName(model: string): string {
-    return model.replace(/^(?:[a-z]+\.)?anthropic\./, "").replace(/-v\d+(?::\d+)?$/, "");
+const BEDROCK_MODEL_ID = /^(?:(?:us|eu|apac|jp|au|ca|us-gov|global)\.)?(amazon|anthropic|meta|mistral|cohere|ai21|deepseek|openai|qwen|writer|google|moonshot|minimax|nvidia|zai|xai|twelvelabs)\.(.+)$/;
+
+/**
+ * The ID MODEL_PRICING knows a Bedrock model by: the geography prefix dropped
+ * (a profile costs what its model does); for other vendors, the vendor's own
+ * model ID ("us.anthropic.claude-haiku-4-5-20251001-v1:0" -> "claude-haiku-4-5-20251001").
+ * Regional profiles of some models carry a surcharge this does not model.
+ */
+function bedrockBaseModel(model: string): string | null {
+    const match = model.match(BEDROCK_MODEL_ID);
+    if (!match) return null;
+    const [, vendor, rest] = match;
+    return vendor === "amazon" ? `amazon.${rest}` : rest.replace(/-v\d+(?::\d+)?$/, "");
 }
 
 /**
  * Calculate the cost of an AI operation in USD.
  */
 export function calculateAiCost(model: string, inputTokens: number = 0, outputTokens: number = 0): number {
-    const pricing = MODEL_PRICING[model] || MODEL_PRICING[bedrockClaudeName(model)] || MODEL_PRICING["default"];
+    const base = bedrockBaseModel(model);
+    const pricing = MODEL_PRICING[model] || (base ? MODEL_PRICING[base] : undefined) || MODEL_PRICING["default"];
     const inputCost = (inputTokens / 1_000_000) * pricing.input1M;
     const outputCost = (outputTokens / 1_000_000) * pricing.output1M;
     return inputCost + outputCost;
@@ -84,7 +102,8 @@ export function calculateAiCost(model: string, inputTokens: number = 0, outputTo
 export function providerForModel(model: string | null | undefined): string {
     const m = (model ?? "").toLowerCase();
     if (!m) return "unknown";
-    if (/^(?:[a-z]+\.)?anthropic\.claude-/.test(m)) return "bedrock";
+    // Billed by AWS whoever made the model, so this comes before the vendor prefixes.
+    if (BEDROCK_MODEL_ID.test(m)) return "bedrock";
     if (m.startsWith("gemini")) return "google";
     if (m.startsWith("gpt") || m.startsWith("o1") || m.startsWith("o3")) return "openai";
     if (m.startsWith("claude")) return "anthropic";

@@ -4,7 +4,7 @@ import { agentCritiques } from "@shared/schema/agent/critiques.js";
 import { AIClientFactory } from "@domain/ai/core/ai-client.service.js";
 import { desc, lte, sql } from "drizzle-orm";
 import { z } from "zod";
-import { ORG_GEMINI_KEY_MISSING, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { ORG_AI_KEY_MISSING, resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 // Zod Schema for Structured Output
 const AssessmentSchema = z.object({
@@ -58,9 +58,9 @@ export class CriticService {
                 }
             `;
 
-            const apiKey = await resolveOrgGeminiKey(null);
+            const apiKey = await resolveOrgTextAiKey(null);
             if (!apiKey) {
-                console.warn(`[Critic] Skipping assessment: ${ORG_GEMINI_KEY_MISSING}.`);
+                console.warn(`[Critic] Skipping assessment: ${ORG_AI_KEY_MISSING}.`);
                 return;
             }
 

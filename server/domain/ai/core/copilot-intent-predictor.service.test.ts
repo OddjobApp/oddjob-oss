@@ -39,6 +39,16 @@ describe("CopilotIntentPredictorService", () => {
     }
   });
 
+  it("leaves short replies and names to the conversation instead of asking which action was meant", () => {
+    const replies = ["yes", "Yes", "no", "ok", "thanks", "hi", "hello there", "42", "form studio", "Pulse survey", "sure"];
+
+    for (const reply of replies) {
+      const result = copilotIntentPredictor.predictIntent(reply, { page: "dashboard", currentUrl: "/dashboard" });
+      expect(result.intent, reply).not.toBe("clarification_needed");
+      expect(result.clarification, reply).toBeUndefined();
+    }
+  });
+
   it("classifies high-risk action verbs as actionable and requires confirmation", () => {
     const result = copilotIntentPredictor.predictIntent("restart production database cluster", {
       currentUrl: "/admin/infrastructure/production",

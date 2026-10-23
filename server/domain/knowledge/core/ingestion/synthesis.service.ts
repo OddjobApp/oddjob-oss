@@ -19,7 +19,7 @@ import type { OrgContext } from "@server/utils/auth-context.js";
 import { documentTemplateService } from "../document-template.service.js";
 import type { CollectedContent } from "./collectors/collector.interface.js";
 import type { ClassifiedInput } from "./types.js";
-import { developmentProviderKey, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 const logger = createLogger("Synthesis");
 
@@ -214,9 +214,7 @@ async function generateSynthesisReport(
 
   const apiKey =
     config.apiKey ||
-    (config.provider === "google"
-      ? await resolveOrgGeminiKey(null)
-      : developmentProviderKey("openai")) ||
+    (await resolveOrgTextAiKey(null, config.provider === "google" ? "google" : "openai")) ||
     "";
 
   if (!apiKey) {

@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CoreProviders } from "@domain-ui/core/ui/components/providers/CoreProviders";
 import "../index.css";
 
@@ -18,6 +18,10 @@ const AcceptInvite = lazy(() => import("@domain-ui/auth/ui/modules/auth/pages/Ac
 
 // Public/External Pages (Lazy)
 const Overview = lazy(() => import('../pages/public/PublicPages').then(m => ({ default: m.Overview })));
+const MarketingPage = lazy(() => import('../pages/marketing/MarketingPage'));
+const PublicFormPage = lazy(() => import('../modules/forms/pages/PublicFormPage'));
+const PublicReleaseNotes = lazy(() => import("../pages/public/PublicReleaseNotes"));
+const PublicDocumentation = lazy(() => import("../pages/public/PublicDocumentation"));
 const UseCases = lazy(() => import('../pages/public/PublicPages').then(m => ({ default: m.UseCases })));
 const GettingStarted = lazy(() => import('../pages/public/PublicPages').then(m => ({ default: m.GettingStarted })));
 const Support = lazy(() => import('../pages/public/PublicPages').then(m => ({ default: m.Support })));
@@ -45,7 +49,7 @@ function LoginApp() {
     // tasks, rescue links, public app/agent pages) render their own component and
     // nothing else dismisses the overlay — so it would sit on top forever (black
     // page + spinner). Clear it here for any non-auth route.
-    const isAuthRoute = location === "/" || location.startsWith("/auth");
+    const isAuthRoute = location.startsWith("/auth") || location === "/login" || location === "/signup";
     if (!isAuthRoute) {
       window.clearLoginLoading?.();
     }
@@ -61,10 +65,15 @@ function LoginApp() {
           <Route path="/auth/signup" component={AuthPage} />
           <Route path="/auth/login" component={AuthPage} />
           <Route path="/auth" component={AuthPage} />
+          <Route path="/login" component={AuthPage} />
+          <Route path="/signup">{() => <Redirect to="/auth/signup" />}</Route>
           
           {/* Public routes (no layout) */}
           <Route path="/overview" component={Overview} />
           <Route path="/use-cases" component={UseCases} />
+          <Route path="/docs/releases"><PublicReleaseNotes /></Route>
+          <Route path="/docs/:slug">{params => <PublicDocumentation slug={params.slug} />}</Route>
+          <Route path="/docs"><PublicDocumentation /></Route>
           <Route path="/getting-started" component={GettingStarted} />
           <Route path="/contact" component={Support} />
           <Route path="/privacy">{() => <LegalPage kind="privacy" />}</Route>
@@ -73,6 +82,7 @@ function LoginApp() {
           <Route path="/dev/builder-pods" component={BuilderPodsShowcasePage} />
           <Route path="/external/builder-pods" component={BuilderPodsShowcasePage} />
           <Route path="/external/task" component={ExternalTaskPage} />
+          <Route path="/external/forms/:token" component={PublicFormPage} />
           <Route path="/hil-form/:id" component={ExternalTaskPage} />
           <Route path="/trust" component={TrustPage} />
           <Route path="/r/:token" component={RescuePublicPage} />
@@ -87,7 +97,7 @@ function LoginApp() {
           <Route path="/o/:orgId/app/:slug" component={PublicAppDeploymentPage} />
           <Route path="/app/:slug" component={PublicAppDeploymentPage} />
 
-          <Route path="/" component={AuthPage} />
+          <Route path="/" component={MarketingPage} />
           <Route>
             {() => {
               // Unknown public links have a recovery page even for signed-in users.

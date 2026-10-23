@@ -30,6 +30,28 @@ export async function resolveOrgGeminiKey(organizationId: number | null | undefi
 
 export type PlatformKeyProvider = "google" | "openai" | "anthropic" | "fal";
 
+/** What to tell a person whose organization has connected no AI provider at all. */
+export { ORG_AI_KEY_MISSING } from "./organization-ai-client.js";
+
+/**
+ * The `apiKey` for a text call through the org-aware client (`AIClientFactory` /
+ * `aiClient`), or null when the organization has connected no AI provider.
+ *
+ * That client sends the call to the organization's default connection, whatever
+ * its provider (Gemini, Bedrock, Anthropic...), so a text feature needs *a* key,
+ * not a Gemini key: asking an org with Bedrock connected for a Gemini key is the
+ * bug this replaces. Outside production the platform key for `developmentProvider`
+ * stands in. Never hand the result to a provider SDK directly: it may be a
+ * Bedrock or Anthropic key. Features only Gemini runs use resolveOrgGeminiKey.
+ */
+export async function resolveOrgTextAiKey(organizationId: number | null | undefined,
+    developmentProvider: PlatformKeyProvider = "google"): Promise<string | null> {
+    const orgId = await resolveAiOrganization(organizationId ?? null);
+    const connection = orgId === null ? null : await orgModelService.resolve(orgId);
+    if (connection?.apiKey) return connection.apiKey;
+    return developmentProviderKey(developmentProvider) || null;
+}
+
 /**
  * The platform's key for `provider` outside production, and "" in production.
  *

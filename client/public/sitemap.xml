@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Public pages only (shared/spa-routes.ts "public" entry); the signed-in workspace is not indexed. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://oddjob.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://oddjob.app/overview</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://oddjob.app/use-cases</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://oddjob.app/getting-started</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://oddjob.app/docs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://oddjob.app/trust</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://oddjob.app/contact</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://oddjob.app/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://oddjob.app/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

@@ -8,6 +8,24 @@ import { runToolPasses } from '../crew-speaker-turn.service.js';
 import { workspaceContextMessage } from '@shared/crew-workspace-results';
 
 describe('Calendar connection recovery in an actual speaker turn', () => {
+  it('repairs a malformed Gmail table using executed message artifacts rather than draft text', async () => {
+    const response = (toolCalls: any[] = []) => ({ content: 'Rendering a fictional email now.', toolCalls, providerId: 1, modelId: 1, modelIdentifier: 'test', isFallback: false, latencyMs: 1 });
+    generate.mockResolvedValueOnce(response([{ name: 'gmail_list_messages', args: {} }]))
+      .mockResolvedValueOnce(response([{ name: 'render_table', args: { columns: [] } }]))
+      .mockResolvedValue(response());
+    let renderAttempts = 0;
+    const execute = vi.spyOn(crewToolsService, 'execute').mockImplementation(async (name, args: any) => {
+      if (name === 'gmail_list_messages') return { record: { name, ok: true, ms: 1 }, output: '{}', artifact: { tool: name, payload: { type: 'google_workspace_results', items: [{ id: 'm1', sender: 'real@example.com', title: 'Verified subject', date: '2026-10-21', preview: 'Verified snippet' }] } } } as any;
+      renderAttempts++;
+      return renderAttempts === 1 ? { record: { name, ok: false, ms: 1, error: 'invalid arguments — rows: Required' }, output: 'rows required' } as any
+        : { record: { name, ok: true, ms: 1 }, output: JSON.stringify(args), artifact: { tool: name, payload: { type: 'assistant_table', ...args } } } as any;
+    });
+    const names = ['gmail_list_messages', 'render_table'];
+    const result = await runToolPasses({ cost: { modelCalls: 0, generationMs: 0, toolCalls: 0 } as any, card: { id: 1, name: 'Copilot' } as any, orgId: 7, message: 'Check my email and show a table', messages: [], availableTools: names.map(name => ({ definition: { name, parameters: {} }, reason: 'declared-read-safe' })) as any, functionDeclarations: names.map(name => ({ name })), toolContext: { organizationId: 7, projectId: 3 }, turnMaxTokens: 1000 });
+    expect(execute.mock.calls.map(call => call[0])).toEqual(['gmail_list_messages', 'render_table', 'render_table']);
+    expect(execute.mock.calls.at(-1)?.[1]).toMatchObject({ rows: [{ sender: 'real@example.com', subject: 'Verified subject', received: '2026-10-21', snippet: 'Verified snippet' }] });
+    expect(result.result.content).toContain('table shows 1 retrieved messages');
+  });
   it('reads outstanding QuickBooks invoices and renders their cards before generation', async () => {
     generate.mockResolvedValue({ content: 'One unpaid invoice.', toolCalls: [], providerId: 1, modelId: 1, modelIdentifier: 'test', isFallback: false, latencyMs: 1 });
     const execute = vi.spyOn(crewToolsService, 'execute').mockResolvedValue({ record: { name: 'quickbooks_list_records', ok: true, ms: 1 }, output: '{"entity":"Invoice","items":[{"Id":"1","Balance":50}]}', artifact: { tool: 'quickbooks_list_records', payload: { type: 'google_workspace_results', items: [{ id: 'Invoice:1', kind: 'accounting', platform: 'quickbooks', title: 'Invoice 1' }] } } });

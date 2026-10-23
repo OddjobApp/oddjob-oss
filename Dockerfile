@@ -5,7 +5,7 @@
 # =============================================================================
 # Base stage: Node runtime with the shared OS-level dependencies
 # =============================================================================
-FROM node:22-slim AS base
+FROM node:24-slim AS base
 
 ENV NODE_ENV=production \
     PORT=5000 \
@@ -128,7 +128,9 @@ COPY --from=build /app/server/blueprints ./server/blueprints
 COPY --from=build /app/server/templates ./server/templates
 COPY --from=build /app/docs ./docs
 COPY --from=build /app/packages/scaffold-registry ./packages/scaffold-registry
-COPY --from=build /runtime-ui/server/domain ./server/domain
+# Platform documentation scans deployed source facts; tenant-authored files are not included.
+COPY --from=build /app/server/domain ./server/domain
+COPY --from=build /app/server/knowledge ./server/knowledge
 COPY --from=build /app/client/src/components/ui ./client/src/components/ui
 COPY --from=build /app/server/domain/apps/core/block-registry.json ./server/domain/apps/core/block-registry.json
 

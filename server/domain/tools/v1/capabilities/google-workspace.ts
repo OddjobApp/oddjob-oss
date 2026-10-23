@@ -1,5 +1,6 @@
 import { GOOGLE_MAIL_DOCS_TOOLS } from './google-mail-docs.js';
 import { calendarRange } from './calendar-time.js';
+import { gmailDayQuery } from './gmail-time.js';
 import { z } from "zod";
 import type { ToolDefinition } from "./types.js";
 import { getGoogleWorkspaceToken } from '@domain/integrations/google-workspace-connector-bridge.js';
@@ -115,9 +116,11 @@ export const GOOGLE_WORKSPACE_TOOLS: Record<string, ToolDefinition> = {
         idempotency: "read-safe",
         label: "Search Gmail",
         group: "Google Workspace",
-        description: "Search the connected Gmail mailbox, not AgentMail, using Gmail query syntax. For a requested account, pass mailbox to verify identity. Apply after/before date filters when asked for today's messages.",
+        description: "Search the connected Gmail mailbox, not AgentMail. For a requested account, pass mailbox to verify identity. For today use time_range today and time_zone with the user's IANA zone, leaving date operators out of query; the server computes exact local-day boundaries. A successful empty result is not a permission failure.",
         parameters: z.object({
             query: z.string().describe("Gmail search query"),
+            time_range: z.literal('today').optional(),
+            time_zone: z.string().optional().describe('IANA time zone, for example America/Los_Angeles. Required with time_range.'),
             mailbox: z.string().email().optional().describe('Requested mailbox account, not a sender filter. Refuses results from a different connected account.'),
             max_results: z.number().min(1).max(50).default(10).optional(),
         }),
@@ -131,7 +134,7 @@ export const GOOGLE_WORKSPACE_TOOLS: Record<string, ToolDefinition> = {
                     throw new Error(`Connected Gmail account is ${profile.emailAddress}, not ${requestedMailbox}. Connect the requested account in this project's Integrations. No messages were read.`);
                 }
             }
-            const encoded = encodeURIComponent(params.query);
+            const encoded = encodeURIComponent(gmailDayQuery(params.query, params.time_range, params.time_zone));
             const data = await gmailRequest(token, `/users/me/messages?q=${encoded}&maxResults=${params.max_results || 10}`);
             if (!data.messages?.length) return "No messages found.";
             const details = await Promise.all(

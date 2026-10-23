@@ -1,5 +1,5 @@
 # Auth Service Dockerfile
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ WORKDIR /app/services/auth
 RUN npm run build
 
 # Production image
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 

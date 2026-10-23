@@ -106,6 +106,13 @@ describe('listReauthorizations', () => {
         expect((await listReauthorizations({ ...scope, isOrgAdmin: true }))[0].canReauthorize).toBe(true);
     });
 
+    it('marks Google as admin-only for non-admin callers', async () => {
+        mocks.results = [[flagged('google')], []];
+        expect((await listReauthorizations(scope))[0].canReauthorize).toBe(false);
+        mocks.results = [[flagged('google')], []];
+        expect((await listReauthorizations({ ...scope, isOrgAdmin: true }))[0].canReauthorize).toBe(true);
+    });
+
     it('lists flagged user connections with kind user', async () => {
         mocks.results = [[], [flagged('granola', { id: 8 })]];
         const items = await listReauthorizations(scope);

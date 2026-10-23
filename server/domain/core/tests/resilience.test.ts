@@ -267,6 +267,9 @@ describe("RetryService - Rate-Limit-Aware Retries", () => {
         const elapsed = Date.now() - start;
         expect(result).toBe("success");
         expect(callCount).toBe(2);
-        expect(elapsed).toBeGreaterThanOrEqual(100);
+        // setTimeout may fire a millisecond early against Date.now(), so a 100 ms
+        // Retry-After can measure 99 ms; what matters is that the delay was honored
+        // rather than the 10 ms backoff.
+        expect(elapsed).toBeGreaterThanOrEqual(95);
     });
 });

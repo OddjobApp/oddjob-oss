@@ -15,6 +15,26 @@ function scope(names: string[], used = 1) {
     } as any;
 }
 beforeEach(() => vi.clearAllMocks());
+describe('Gmail dependent reads', () => {
+    it('executes a message listing after a profile check and allows rendering the result', async () => {
+        const input = scope(['gmail_list_messages', 'render_table']);
+        input.sink.toolsUsed = [{ name: 'gmail_get_profile', ok: true, ms: 1 }];
+        vi.mocked(generateForCard).mockResolvedValueOnce(reply('render_table')).mockResolvedValueOnce(reply());
+        const result = await runBoundedFollowUp(input);
+        expect(input.sink.toolsUsed.map((r: any) => r.name)).toEqual(['gmail_get_profile', 'gmail_list_messages', 'render_table']);
+        expect(result.content).toBe('Verified');
+        const offered = vi.mocked(generateForCard).mock.calls[0][4]?.tools as any[];
+        expect(offered.map(t => t.name)).toEqual(['render_table']);
+        expect(vi.mocked(generateForCard).mock.calls.at(-1)?.[4]).not.toHaveProperty('tools');
+    });
+    it('does not grant outbound email tools during mailbox follow-up', async () => {
+        const input = scope(['gmail_search', 'gmail_send']);
+        vi.mocked(generateForCard).mockResolvedValue(reply());
+        await runBoundedFollowUp(input);
+        const offered = vi.mocked(generateForCard).mock.calls[0][4]?.tools as any[];
+        expect(offered.some(t => t.name === 'gmail_send')).toBe(false);
+    });
+});
 describe("computer-use follow-up", () => {
     it("runs dependent observe, click, and verification calls after session creation", async () => {
         const input = scope(["trycua_observe", "trycua_click"]);

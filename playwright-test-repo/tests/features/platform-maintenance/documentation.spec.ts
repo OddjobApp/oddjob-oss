@@ -40,7 +40,8 @@ test.describe('Platform documentation and change register', () => {
 
     await page.goto('/platform-maintenance/documentation?tab=modules&feature=e2e-testing');
 
-    await expect(page.getByRole('heading', { name: 'E2E Testing', exact: true })).toBeVisible();
+    // The feature card's title; the document below repeats it as its own heading.
+    await expect(page.getByRole('heading', { name: 'E2E Testing', exact: true, level: 3 })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Implementation status:/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Copy markdown', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Regenerate', exact: true })).toBeVisible();

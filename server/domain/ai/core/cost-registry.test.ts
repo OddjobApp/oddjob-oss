@@ -53,6 +53,13 @@ describe("providerForModel", () => {
         expect(providerForModel(undefined)).toBe("unknown");
     });
 
+    it("attributes Bedrock model and inference-profile IDs to Bedrock, whoever made the model", () => {
+        expect(providerForModel("amazon.nova-lite-v1:0")).toBe("bedrock");
+        expect(providerForModel("us.anthropic.claude-haiku-4-5-20251001-v1:0")).toBe("bedrock");
+        expect(providerForModel("global.anthropic.claude-sonnet-5-5")).toBe("bedrock");
+        expect(providerForModel("claude-sonnet-5-5")).toBe("anthropic");
+    });
+
     it("is case-insensitive, since model ids arrive in both", () => {
         expect(providerForModel("GEMINI-2.0-FLASH")).toBe("google");
         expect(providerForModel("GPT-4o")).toBe("openai");
@@ -84,6 +91,13 @@ describe("calculateAiCost", () => {
         // Opus 5.5 four- to sevenfold.
         expect(calculateAiCost("claude-sonnet-5-5", 1_000_000, 1_000_000)).toBeCloseTo(12.0, 6);
         expect(calculateAiCost("claude-opus-5-5", 1_000_000, 1_000_000)).toBeCloseTo(24.0, 6);
+    });
+
+    it("prices Bedrock IDs as the model they run, not the default", () => {
+        expect(calculateAiCost("amazon.nova-lite-v1:0", 1_000_000, 1_000_000)).toBeCloseTo(0.30, 6);
+        expect(calculateAiCost("us.amazon.nova-lite-v1:0", 1_000_000, 1_000_000)).toBeCloseTo(0.30, 6);
+        expect(calculateAiCost("us.anthropic.claude-haiku-4-5-20251001-v1:0", 1_000_000, 1_000_000)).toBeCloseTo(4.80, 6);
+        expect(calculateAiCost("global.anthropic.claude-opus-5-5", 1_000_000, 1_000_000)).toBeCloseTo(24.0, 6);
     });
 
     it("falls back to default pricing for an unknown model rather than throwing", () => {

@@ -52,6 +52,7 @@ export function reconnectTargetFor(platform: string, ctx: { scopes?: string[] } 
                 label: GOOGLE_CONNECTION_PROFILES[profile].label,
                 path: '/api/saas/connectors/google/oauth/initiate',
                 query: { for: profile },
+                adminOnly: true,
             };
         }
         case 'microsoft365':

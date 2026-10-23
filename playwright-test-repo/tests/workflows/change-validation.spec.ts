@@ -40,7 +40,8 @@ test.describe('Change validation workflow', () => {
     await page.goto('/health/e2e-tests');
 
     await expect(page.getByText(/E2E documentation/)).toBeVisible();
-    await expect(page.getByText(/Latest register entry:/)).toBeVisible();
+    // An organization with no E2E changes yet says so instead of a register entry.
+    await expect(page.getByText(/Latest register entry:|No change register entries for E2E testing yet/)).toBeVisible();
     await expect(page.getByRole('link', { name: 'Documentation', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Change register', exact: true })).toBeVisible();
   });

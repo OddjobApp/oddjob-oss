@@ -213,11 +213,15 @@ describe("Documentation Routes", () => {
       });
     });
 
+    it("blocks public summaries from non-platform administrators", async () => {
+      const res = await request(app).post('/api/documentation/releases/9/publish').send({publicSummary:'Visible to everyone'});
+      expect(res.status).toBe(403);expect(h.publishReleaseNotes).not.toHaveBeenCalled();
+    });
     it("publishes a release", async () => {
       h.publishReleaseNotes.mockResolvedValue({ id: 9, status: "published" });
       const res = await request(app).post("/api/documentation/releases/9/publish");
       expect(res.status).toBe(200);
-      expect(h.publishReleaseNotes).toHaveBeenCalledWith(9, 1);
+      expect(h.publishReleaseNotes).toHaveBeenCalledWith(9, 1, undefined);
     });
 
     it("updates a draft from selected register changes", async () => {

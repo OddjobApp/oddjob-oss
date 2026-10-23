@@ -54,7 +54,7 @@ By following this pattern, we can keep our codebase clean, organized, and easy t
 ## Getting Started
 
 1.  Fork the repository and get it running locally with the
-    [README quickstart](README.md#quickstart): Node 22.12+, Docker for Postgres and
+    [README quickstart](README.md#quickstart): Node 24+, Docker for Postgres and
     Redis, `cp .env.example .env`, `npm run setup`, `npm run dev:no-sidecar`.
 2.  Read [AGENTS.md](AGENTS.md). It records the rules that are not visible from a
     single file — org scoping, BYOK keys, routing and migrations — each of which

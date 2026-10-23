@@ -5,7 +5,7 @@ import { systemAiService } from "../../../ai/core/system-ai.service.js";
 import { missionService } from "../../../mission/core/mission.service.js";
 import { createLogger } from "../../../../utils/logger.js";
 import { AIClientFactory } from "@domain/ai/core/ai-client.service.js";
-import { developmentProviderKey, ORG_GEMINI_KEY_MISSING, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { ORG_AI_KEY_MISSING, resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 const logger = createLogger("KnowledgeSynthesisService");
 
@@ -63,8 +63,8 @@ export const knowledgeSynthesisService = {
       }
     `;
 
-    const apiKey = config.provider === 'google' ? await resolveOrgGeminiKey(null) : developmentProviderKey("openai");
-    if (!apiKey) throw new Error(`${ORG_GEMINI_KEY_MISSING} to run knowledge synthesis`);
+    const apiKey = await resolveOrgTextAiKey(null, config.provider === 'google' ? "google" : "openai");
+    if (!apiKey) throw new Error(`${ORG_AI_KEY_MISSING} to run knowledge synthesis`);
 
     try {
       const res = await aiClient.execute({

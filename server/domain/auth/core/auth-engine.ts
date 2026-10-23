@@ -1,3 +1,4 @@
+import { COMPANY_SIZES, INDUSTRIES } from "@shared/company-profile.js";
 import { userManager } from "./user-manager.js";
 import { passwordService } from "./password-service.js";
 import {
@@ -28,11 +29,12 @@ function isOrgNameTaken(err: unknown): boolean {
  */
 async function insertSignupOrganization(
     tx: any,
-    organizationService: { insertOrganizationRecord: (executor: any, data: { name: string }) => Promise<{ id: number }> },
+    organizationService: { insertOrganizationRecord: (executor: any, data: { name: string; companySize?: string; industry?: string }) => Promise<{ id: number }> },
     requestedName: string,
     username: string,
+    profile: { companySize?: string; industry?: string } = {},
 ): Promise<{ id: number }> {
-    const attempt = (name: string) => tx.transaction((sp: any) => organizationService.insertOrganizationRecord(sp, { name }));
+    const attempt = (name: string) => tx.transaction((sp: any) => organizationService.insertOrganizationRecord(sp, { name, ...profile }));
     if (requestedName) {
         try {
             return await attempt(requestedName);
@@ -101,6 +103,14 @@ export const authEngine = {
             throw new ConflictError("Username or email already exists");
         }
 
+        const profile: { companySize?: string; industry?: string } = {};
+        for (const [field, allowed] of [['companySize', COMPANY_SIZES], ['industry', INDUSTRIES]] as const) {
+            const value = input[field];
+            if (value === undefined || value === '') continue;
+            if (typeof value !== 'string' || !(allowed as readonly string[]).includes(value)) throw new BadRequestError(`Invalid ${field}`);
+            profile[field] = value;
+        }
+
         const hashedPassword = await passwordService.hashPassword(password);
 
         const requestedOrgName = typeof input.organizationName === "string" ? input.organizationName.trim() : "";
@@ -137,7 +147,7 @@ export const authEngine = {
                 legalAcceptedAt: new Date(),
             }, tx);
 
-            const org = await insertSignupOrganization(tx, organizationService, requestedOrgName, username);
+            const org = await insertSignupOrganization(tx, organizationService, requestedOrgName, username, profile);
             await tx.insert(userOrgs).values({ userId: created.id, orgId: org.id });
             await tx.insert(adminRoles).values({ userId: created.id, role: "org_admin", organizationId: org.id });
             await tx.update(users).set({ defaultOrgId: org.id }).where(eq(users.id, created.id));

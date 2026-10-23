@@ -7,6 +7,7 @@ import type {
   AssistantInstantAppResponse,
   AssistantInstantAppSurfaceResponse,
   ModeSwitchRequest,
+  IntentClarificationResponse,
 } from './copilot-chat-types';
 
 /**
@@ -187,6 +188,12 @@ export function parseAssistantRichResponse(content: string): AssistantRichRespon
 
   if (payload.type === 'mode_switch_request') {
     return { type: 'mode_switch_request', data: payload as ModeSwitchRequest };
+  }
+
+  // Without this branch the sheet's clarification card was unreachable and the
+  // envelope rendered as raw JSON prose.
+  if (payload.type === 'intent_clarification' && (payload.question || payload.headline)) {
+    return { type: 'intent_clarification', data: payload as IntentClarificationResponse };
   }
 
   if (payload.type === 'launch_tutorial' && typeof payload.trackId === 'string' && payload.trackId.trim().length > 0) {

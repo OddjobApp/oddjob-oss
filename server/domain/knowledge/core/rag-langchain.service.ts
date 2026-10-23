@@ -1,7 +1,7 @@
 import { hasAiOrganizationContext } from "@domain/ai/core/ai-org-context.js";
 import { markDegradation } from "@domain/ai/core/ai-degradation.js";
 import { organizationEmbeddings } from "@domain/ai/core/org-embeddings.js";
-import { developmentProviderKey, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { developmentProviderKey, resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import {
@@ -469,7 +469,7 @@ export async function assetToDocuments(
 export async function enrichChunk(content: string, organizationId?: number | null): Promise<Partial<RagChunkMetadata>> {
   // Gate on the organization's key. Gating on the platform GEMINI_API_KEY —
   // never set in production — skipped enrichment for every customer.
-  const apiKey = await resolveOrgGeminiKey(organizationId);
+  const apiKey = await resolveOrgTextAiKey(organizationId);
   if (!apiKey) return {};
 
   try {

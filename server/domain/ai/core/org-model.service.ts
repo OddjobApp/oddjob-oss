@@ -142,7 +142,7 @@ async function verify(provider: OrgAiProviderId, apiKey: string, model: string, 
         // inference profile (us.…, global.…) or a base model ID.
         const runtime = new URL(orgAiProviderBaseUrl(provider, region)!);
         const control = runtime.origin.replace("://bedrock-runtime.", "://bedrock.");
-        const kind = /^[a-z]+\.anthropic\./.test(model) ? "inference-profiles" : "foundation-models";
+        const kind = /^(?:us|eu|apac|au|jp|ca|us-gov|global)\./.test(model) ? "inference-profiles" : "foundation-models";
         const response = await reach(`${control}/${kind}/${encodeURIComponent(model)}`, { Authorization: `Bearer ${apiKey}` });
         if (response.status === 404 || response.status === 400) {
             throw new BadRequestError(`${label} does not offer the model "${model}" in this Region.`);

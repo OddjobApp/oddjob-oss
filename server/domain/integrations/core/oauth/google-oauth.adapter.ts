@@ -1,3 +1,4 @@
+import { currentOAuthApp } from './org-oauth-app.service.js';
 /**
  * Google OAuth 2.0 Adapter
  * 
@@ -39,11 +40,11 @@ export class GoogleOAuthAdapter extends BaseOAuthAdapter {
     };
 
     protected getClientId(): string {
-        return process.env.GMAIL_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || "";
+        return currentOAuthApp()?.clientId ?? (process.env.GMAIL_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || "");
     }
 
     protected getClientSecret(): string {
-        return process.env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+        return currentOAuthApp()?.clientSecret ?? (process.env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || "");
     }
 
     public async exchangeCodeForTokens(
@@ -73,9 +74,8 @@ export class GoogleOAuthAdapter extends BaseOAuthAdapter {
         });
 
         if (!res.ok) {
-            const errText = await res.text();
-            logger.error("Failed to exchange Google auth code for token", { error: errText });
-            throw new Error(`Google token exchange failed with status ${res.status}: ${errText}`);
+            logger.error("Failed to exchange Google auth code for token", { status: res.status });
+            throw new Error(`Google token exchange failed with status ${res.status}`);
         }
 
         const data = await res.json();
@@ -113,13 +113,12 @@ export class GoogleOAuthAdapter extends BaseOAuthAdapter {
         });
 
         if (!res.ok) {
-            const errText = await res.text();
-            logger.error("Failed to refresh Google access token", { error: errText });
+            logger.error("Failed to refresh Google access token", { status: res.status });
             if (res.status === 400 || res.status === 401) {
                 throw new OAuthReauthorizationRequiredError(this.platform, 'refresh_rejected',
                     `Google token refresh failed with status ${res.status}. Reconnect Google.`);
             }
-            throw new Error(`Google token refresh failed with status ${res.status}: ${errText}`);
+            throw new Error(`Google token refresh failed with status ${res.status}`);
         }
 
         const data = await res.json();

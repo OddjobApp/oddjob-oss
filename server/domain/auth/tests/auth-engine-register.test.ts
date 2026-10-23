@@ -83,4 +83,15 @@ describe("self-serve registration", () => {
             .rejects.toThrow(/120/);
         expect(mocks.createUser).not.toHaveBeenCalled();
     });
+    it("stores the selected company profile on the new organization only", async () => {
+        await authEngine.register({username: 'team', email: 'team@example.com', password: 'Password123!', companySize: '11–50', industry: 'Technology'});
+        expect(mocks.insertOrg.mock.calls[0][1]).toMatchObject({companySize: '11–50', industry: 'Technology'});
+        expect(mocks.createUser.mock.calls[0][0]).not.toHaveProperty('companySize');
+    });
+    it("rejects unrecognized company profile selections before writing", async () => {
+        await expect(authEngine.register({username: 'team', email: 'team@example.com', password: 'Password123!', companySize: 'unbounded'})).rejects.toThrow('Invalid companySize');
+        expect(mocks.createUser).not.toHaveBeenCalled();
+        expect(mocks.insertOrg).not.toHaveBeenCalled();
+    });
+
 });

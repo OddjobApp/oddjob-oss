@@ -8,7 +8,7 @@ const hoisted = vi.hoisted(() => {
     insertedVersion: null as any,
     updatedApproval: null as any,
     aiClientExecute: vi.fn(),
-    resolveOrgGeminiKey: vi.fn(),
+    resolveOrgTextAiKey: vi.fn(),
   };
 });
 
@@ -69,7 +69,7 @@ vi.mock("@domain/ai/core/system-ai.service.js", () => ({
 }));
 
 vi.mock("@domain/ai/core/org-gemini-key.js", () => ({
-  resolveOrgGeminiKey: hoisted.resolveOrgGeminiKey,
+  resolveOrgTextAiKey: hoisted.resolveOrgTextAiKey,
   developmentProviderKey: () => "test-dev-key",
 }));
 
@@ -82,7 +82,7 @@ describe("SkillGeneratorService - HIL Skill Synthesis (O3)", () => {
     hoisted.insertedSkill = null;
     hoisted.insertedVersion = null;
     hoisted.updatedApproval = null;
-    hoisted.resolveOrgGeminiKey.mockResolvedValue("org-byok-key-xyz");
+    hoisted.resolveOrgTextAiKey.mockResolvedValue("org-byok-key-xyz");
   });
 
   it("throws BadRequestError if organizationId is missing", async () => {
@@ -182,7 +182,7 @@ module.exports = { execute };`,
     });
 
     // Verify AI call used org-scoped credentials
-    expect(hoisted.resolveOrgGeminiKey).toHaveBeenCalledWith(42);
+    expect(hoisted.resolveOrgTextAiKey).toHaveBeenCalledWith(42);
     expect(hoisted.aiClientExecute).toHaveBeenCalledTimes(1);
 
     // Verify persisted skill

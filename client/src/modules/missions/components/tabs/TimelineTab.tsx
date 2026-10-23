@@ -5,9 +5,12 @@
  */
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useOrgContext } from "@domain-ui/core/ui/hooks/use-org-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@domain-ui/core/ui/components/ui/card";
 import { Badge } from "@domain-ui/core/ui/components/ui/badge";
-import { Clock, Calendar, TrendingUp, TrendingDown } from "lucide-react";
+import { Clock, TrendingUp, TrendingDown } from "lucide-react";
 
 interface TimelineTabProps {
   mission: any;
@@ -16,13 +19,22 @@ interface TimelineTabProps {
 }
 
 export default function TimelineTab({ mission, run }: TimelineTabProps) {
+  const { selectedOrgId } = useOrgContext();
+  const evidence = useQuery<{ events: Array<{ id: string; kind: string; title: string; timestamp: string; status?: string | null; summary?: string; actor?: string | null }> }>({
+    queryKey: ["/api/mission-runs", run?.id, "evidence-timeline", selectedOrgId],
+    enabled: !!run?.id && selectedOrgId != null,
+    queryFn: async ({ signal }) => {
+      const response = await apiRequest("GET", `/api/mission-runs/${run.id}/evidence-timeline?orgId=${selectedOrgId}&includePayloads=false&direction=desc`, undefined, undefined, signal);
+      return response.json();
+    },
+  });
   const estimatedDuration = mission.estimatedDuration || 1;
   const startedAt = run?.startedAt ? new Date(run.startedAt) : null;
   const completedAt = run?.completedAt ? new Date(run.completedAt) : null;
   const now = new Date();
   
   const elapsedHours = startedAt 
-    ? (completedAt?.getTime() || now.getTime()) - startedAt.getTime() / (1000 * 60 * 60)
+    ? ((completedAt?.getTime() || now.getTime()) - startedAt.getTime()) / (1000 * 60 * 60)
     : 0;
   
   const remainingHours = Math.max(0, estimatedDuration - elapsedHours);
@@ -103,14 +115,17 @@ export default function TimelineTab({ mission, run }: TimelineTabProps) {
           </div>
         )}
 
-        {/* Timeline Visualization Placeholder */}
-        <div className="h-[200px] bg-muted/50 rounded-lg flex items-center justify-center">
-          <div className="text-center">
-            <Calendar className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground">Timeline visualization</p>
-            <p className="text-xs text-muted-foreground/60">Gantt chart would render here</p>
-          </div>
-        </div>
+        <section aria-label="Execution evidence" className="space-y-4">
+          <div><h3 className="font-semibold">Execution evidence</h3><p className="text-sm text-muted-foreground">Recorded state changes, approval decisions, tool actions, and computer-use steps. Payloads are excluded from this view.</p></div>
+          {!run?.id || selectedOrgId == null ? <p className="text-sm text-muted-foreground">Select a run in an organization to inspect its evidence.</p>
+            : evidence.isPending ? <p role="status">Loading execution evidence...</p>
+            : evidence.isError ? <div role="alert"><p>Execution evidence could not be loaded.</p><button type="button" className="min-h-11 font-semibold underline" onClick={() => evidence.refetch()}>Retry evidence</button></div>
+            : !evidence.data?.events.length ? <p className="text-sm text-muted-foreground">No execution evidence has been recorded for this run.</p>
+            : <ol className="space-y-3">{evidence.data.events.map(event => <li key={event.id} className="rounded-lg border border-border p-4">
+                <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{event.kind.replace(/_/g, " ")}</Badge>{event.status && <Badge variant="secondary">{event.status}</Badge>}<time dateTime={event.timestamp} className="text-xs text-muted-foreground">{new Date(event.timestamp).toLocaleString()}</time></div>
+                <h4 className="mt-2 font-semibold">{event.title}</h4>{event.summary && <p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{event.summary}</p>}{event.actor && <p className="mt-2 text-xs text-muted-foreground">Actor: {event.actor}</p>}
+              </li>)}</ol>}
+        </section>
       </CardContent>
     </Card>
   );

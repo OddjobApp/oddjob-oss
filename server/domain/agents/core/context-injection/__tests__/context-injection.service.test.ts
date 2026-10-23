@@ -89,25 +89,27 @@ describe("ContextInjectionService integration", () => {
 
     describe("XRay timeout → fallback activated", () => {
         it("activates fallback when XRay exceeds timeout", async () => {
-            // Arrange: XRay findSymbols never resolves (simulates hung service)
-            mockFindSymbols.mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve([]), 10_000)),
-            );
-
-            // Act: use a short timeout so the test doesn't actually wait 5s
-            const result = await contextInjectionService.injectContext(
-                "Modify function createUser in server/routes/users.ts",
-                "/workspace",
-                1,
-                { timeoutMs: 100 },
-            );
-
-            // Assert: fallback is activated with timeout info
-            expect(result.metadata.fallbackActivated).toBe(true);
-            expect(result.prompt).toContain("timed out");
-            // It waited for the 100 ms timeout. A timer can fire a millisecond early
-            // against Date.now() (CI measured 99 under coverage), so allow that much.
-            expect(result.metadata.queryLatencyMs).toBeGreaterThanOrEqual(95);
+            vi.useFakeTimers();
+            try {
+                // A hung service must remain pending until the configured deadline.
+                mockFindSymbols.mockImplementation(() => new Promise(() => {}));
+                let settled = false;
+                const pending = contextInjectionService.injectContext(
+                    "Modify function createUser in server/routes/users.ts",
+                    "/workspace",
+                    1,
+                    { timeoutMs: 100 },
+                ).then(result => { settled = true; return result; });
+                await vi.advanceTimersByTimeAsync(99);
+                expect(settled).toBe(false);
+                await vi.advanceTimersByTimeAsync(1);
+                const result = await pending;
+                expect(result.metadata.fallbackActivated).toBe(true);
+                expect(result.prompt).toContain("timed out");
+                expect(result.metadata.queryLatencyMs).toBe(100);
+            } finally {
+                vi.useRealTimers();
+            }
         });
     });
 

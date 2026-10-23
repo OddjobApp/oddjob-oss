@@ -1,0 +1,2 @@
+export const COMPANY_SIZES = ['Just me', '2–10', '11–50', '51–200', '201–500', '501–1,000', '1,001–5,000', '5,001+', 'Prefer not to say'] as const;
+export const INDUSTRIES = ['Technology', 'Professional services', 'Healthcare', 'Financial services', 'Education', 'Retail and e-commerce', 'Manufacturing', 'Construction and real estate', 'Transportation and logistics', 'Energy and utilities', 'Government and public sector', 'Nonprofit', 'Media and entertainment', 'Hospitality and travel', 'Other', 'Prefer not to say'] as const;

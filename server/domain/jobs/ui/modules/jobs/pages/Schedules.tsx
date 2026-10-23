@@ -1,9 +1,10 @@
+import { Separator } from '@domain-ui/core/ui/components/ui/separator';
+import { PageShell } from "@domain-ui/core/ui/components/layout/PageShell";
 import { useState, useMemo } from 'react';
 import { ErrorBoundary } from '@domain-ui/core/ui/components/shared/ErrorBoundary';
 import { CRON_TEMPLATES } from '../job-constants.js';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Link } from 'wouter';
-import { Plus, Pencil, Trash2, Clock, MoreVertical, Building2, Search, RefreshCw, Terminal } from 'lucide-react';
+import { Plus, Pencil, Trash2, Clock, MoreVertical, Building2, Search } from 'lucide-react';
 import { useOrgContext } from '@domain-ui/core/ui/hooks/use-org-context';
 import { useAuth } from '@domain-ui/auth/ui/modules/auth/hooks/use-auth';
 import CronExpressionBuilder from '@domain-ui/core/ui/components/shared/CronExpressionBuilder';
@@ -18,7 +19,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@domain-ui/core/ui/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@domain-ui/core/ui/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@domain-ui/core/ui/components/ui/dropdown-menu';
-import { Separator } from '@domain-ui/core/ui/components/ui/separator';
 import { Textarea } from '@domain-ui/core/ui/components/ui/textarea';
 import { Switch } from '@domain-ui/core/ui/components/ui/switch';
 import { ScrollArea } from '@domain-ui/core/ui/components/ui/scroll-area';
@@ -180,7 +180,7 @@ export default function SchedulesPage() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
-            toast({ title: 'Success', description: `Schedule ${editingSchedule ? 'updated' : 'created'} successfully` });
+            toast({ title: 'Success', description: `Automation ${editingSchedule ? 'updated' : 'created'} successfully` });
             setIsDialogOpen(false);
             setEditingSchedule(null);
         },
@@ -196,7 +196,7 @@ export default function SchedulesPage() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
-            toast({ title: 'Deleted', description: 'Schedule removed successfully' });
+            toast({ title: 'Deleted', description: 'Automation removed successfully' });
         },
         onError: (err: Error) => {
             toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -206,7 +206,7 @@ export default function SchedulesPage() {
     const handleSave = () => {
         setValidationError('');
         if (!scheduleName.trim()) {
-            setValidationError('Schedule name is required');
+            setValidationError('Automation name is required');
             return;
         }
         if (pattern === 2 && weekdays.length === 0) {
@@ -221,95 +221,73 @@ export default function SchedulesPage() {
     };
 
     const handleDelete = (id: number) => {
-        if (confirm('Delete this schedule? This cannot be undone.')) deleteMutation.mutate(id);
+        if (confirm('Delete this automation timing rule? This cannot be undone.')) deleteMutation.mutate(id);
     };
 
     return (
-        <ErrorBoundary name="Schedules">
-        <div className="min-h-screen w-full bg-background relative overflow-hidden font-sans selection:bg-primary/30 p-3 sm:p-6 space-y-5 sm:space-y-8">
-            {/* Cinematic Background */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute inset-0 cinematic-grid opacity-10" />
-                <div className="absolute inset-0 scanlines opacity-[0.03]" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
-            </div>
-
-            {/* Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between relative z-10">
-                <div className="min-w-0 space-y-1">
-                    <h1 className="break-words text-3xl font-black tracking-normal text-foreground uppercase italic leading-none drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] sm:text-5xl">
-                        Temporal Patterns
-                    </h1>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary italic glow-text-small sm:text-[11px] sm:tracking-[0.5em]">
-                        CHRONOMETRIC EXECUTION FLIGHT DECK
-                    </p>
-                </div>
-                <Button 
-                    onClick={openCreateDialog} 
-                    data-testid="button-create-schedule"
-                    className="w-full bg-primary hover:bg-foreground text-primary-foreground hover:text-background text-[11px] font-black uppercase tracking-widest rounded-2xl px-5 h-12 shadow-[0_0_30px_hsl(var(--primary)/0.3)] transition-all active:scale-95 italic group border border-primary/20 sm:w-auto sm:px-8 sm:h-14"
-                >
-                    <Plus className="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform" />
-                    Forge New Matrix
-                </Button>
-            </div>
-
+        <ErrorBoundary name="Automations">
+        <PageShell
+            title="Automations"
+            description="Manage reusable timing rules for your workflows. Connect a rule to scheduled work to run it."
+            contentClassName="space-y-6 p-4 md:p-6"
+            headerAction={<Button onClick={openCreateDialog} data-testid="button-create-schedule"><Plus className="mr-2 h-4 w-4" />New automation</Button>}
+        >
             {/* Table card */}
-            <Card className="glass-panel-heavy border-foreground/5 rounded-2xl overflow-hidden shadow-2xl relative z-10 before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/5 before:to-transparent before:pointer-events-none sm:rounded-[2.5rem]">
-                <CardHeader className="border-b border-foreground/5 p-4 sm:pb-8 sm:pt-10 sm:px-10">
+            <Card className="overflow-hidden border-border bg-card">
+                <CardHeader className="border-b border-border p-4 sm:p-6">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="min-w-0">
-                            <CardTitle className="text-xl font-black text-foreground uppercase italic tracking-tighter flex items-center gap-3">
-                                <div className="w-1.5 h-6 bg-primary rounded-full animate-pulse" />
-                                Active Registry
+                            <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-3">
+
+                                Timing rules
                             </CardTitle>
-                            <CardDescription className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.16em] mt-2 italic sm:text-[11px] sm:tracking-[0.3em]">
-                                High-fidelity chronological triggers for autonomous mission sequences
+                            <CardDescription className="text-sm text-muted-foreground mt-2">
+                                Review recurrence, time zone, and whether each rule is enabled.
                             </CardDescription>
                         </div>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                             <div className="relative group w-full sm:w-auto">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground/20 group-focus-within:text-primary transition-colors" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <Input
-                                    placeholder="SEARCH_REGISTRY..."
+                                    placeholder="Search automations…"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    className="pl-9 h-10 w-full bg-foreground/[0.03] border-foreground/10 rounded-xl text-[10px] font-black tracking-widest text-foreground placeholder:text-foreground/10 focus:ring-primary/40 focus:border-primary/20 transition-all italic uppercase sm:w-64"
+                                    className="pl-9 h-10 w-full bg-muted/30 border-border rounded-xl text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:ring-primary/40 focus:border-primary/20 transition-all sm:w-64"
                                     data-testid="input-search-schedules"
                                 />
                             </div>
                             <RefreshButton
                                 onRefresh={() => queryClient.invalidateQueries({ queryKey: ['/api/schedules'] })}
                                 isLoading={isLoading}
-                                tooltipText="Refresh patterns"
-                                className="h-10 w-10 border-foreground/10 bg-foreground/5 text-foreground hover:bg-foreground/10"
+                                tooltipText="Refresh automations"
+                                className="h-10 w-10 border-border bg-foreground/5 text-foreground hover:bg-foreground/10"
                             />
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6">
                     {isLoading ? (
-                        <div className="text-center py-8 text-muted-foreground">Loading schedules…</div>
+                        <div className="text-center py-8 text-muted-foreground">Loading automations…</div>
                     ) : filteredSchedules.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
                             <Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                            <p className="text-sm">No schedules found.</p>
+                            <p className="text-sm">No automations found.</p>
                         </div>
                     ) : (
                         <>
                         <div className="grid gap-3 md:hidden">
                             {filteredSchedules.map(schedule => (
-                                <div key={schedule.id} data-testid={`card-schedule-${schedule.id}`} className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4">
+                                <div key={schedule.id} data-testid={`card-schedule-${schedule.id}`} className="rounded-2xl border border-border bg-muted/30 p-4">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0 space-y-1">
-                                            <h3 className="truncate text-sm font-black italic tracking-tight text-foreground">{schedule.name}</h3>
+                                            <h3 className="truncate text-sm font-semibold tracking-tight text-foreground">{schedule.name}</h3>
                                             {schedule.description && (
-                                                <p className="line-clamp-2 text-xs font-bold text-foreground/35">{schedule.description}</p>
+                                                <p className="line-clamp-2 text-xs font-bold text-muted-foreground">{schedule.description}</p>
                                             )}
                                         </div>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" data-testid={`button-actions-mobile-${schedule.id}`}>
+                                                <Button variant="ghost" size="icon" aria-label={`Actions for ${schedule.name}`} data-testid={`button-actions-mobile-${schedule.id}`}>
                                                     <MoreVertical className="w-4 h-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
@@ -331,27 +309,27 @@ export default function SchedulesPage() {
                                     </div>
                                     <div className="mt-4 grid gap-3 text-xs">
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="font-black uppercase tracking-widest text-foreground/30">Pattern</span>
-                                            <span className="min-w-0 truncate text-right font-black italic text-foreground/70">
+                                            <span className="font-semibold text-muted-foreground">Recurrence</span>
+                                            <span className="min-w-0 truncate text-right font-semibold text-muted-foreground">
                                                 {schedule.patternLabel || PATTERN_TYPES.find(p => p.value === schedule.pattern)?.label || '-'}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="font-black uppercase tracking-widest text-foreground/30">Timezone</span>
-                                            <Badge variant="outline" className="bg-foreground/[0.02] border-foreground/5 text-foreground/50 text-[10px] font-black uppercase tracking-widest italic">
+                                            <span className="font-semibold text-muted-foreground">Timezone</span>
+                                            <Badge variant="outline" className="bg-muted/30 border-border text-muted-foreground text-sm font-semibold">
                                                 {schedule.timezone || 'UTC'}
                                             </Badge>
                                         </div>
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="font-black uppercase tracking-widest text-foreground/30">Status</span>
+                                            <span className="font-semibold text-muted-foreground">Status</span>
                                             {schedule.isActive
-                                                ? <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-black uppercase tracking-widest italic">Active</Badge>
-                                                : <Badge variant="secondary" className="bg-foreground/5 text-foreground/30 border-foreground/10 text-[10px] font-black uppercase tracking-widest italic">Offline</Badge>}
+                                                ? <Badge>Enabled</Badge>
+                                                : <Badge variant="secondary" className="bg-foreground/5 text-muted-foreground border-border text-sm font-semibold">Disabled</Badge>}
                                         </div>
                                         {showOrgColumn && (
                                             <div className="flex items-center justify-between gap-3">
-                                                <span className="font-black uppercase tracking-widest text-foreground/30">Org</span>
-                                                <span className="truncate text-right text-foreground/50">
+                                                <span className="font-semibold text-muted-foreground">Org</span>
+                                                <span className="truncate text-right text-muted-foreground">
                                                     {schedule.organizationId ? orgMap[schedule.organizationId] || `Org #${schedule.organizationId}` : 'Global'}
                                                 </span>
                                             </div>
@@ -363,45 +341,45 @@ export default function SchedulesPage() {
                         <div className="hidden overflow-x-auto md:block">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-foreground/5 hover:bg-transparent bg-foreground/[0.01]">
-                                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/30 italic py-6 pl-10">Pattern ID</TableHead>
-                                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/30 italic py-6">Chrono Logic</TableHead>
-                                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/30 italic py-6">Temporal Region</TableHead>
-                                    <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/30 italic py-6">Matrix Status</TableHead>
-                                    {showOrgColumn && <TableHead className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/30 italic py-6">Control Center</TableHead>}
-                                    <TableHead className="text-right text-[11px] font-black uppercase tracking-[0.2em] text-foreground/30 italic py-6 pr-10">Ops</TableHead>
+                                <TableRow className="border-border hover:bg-transparent bg-muted/30">
+                                    <TableHead className="text-sm font-semibold text-muted-foreground py-4 pl-4">Automation</TableHead>
+                                    <TableHead className="text-sm font-semibold text-muted-foreground py-4">Recurrence</TableHead>
+                                    <TableHead className="text-sm font-semibold text-muted-foreground py-4">Time zone</TableHead>
+                                    <TableHead className="text-sm font-semibold text-muted-foreground py-4">Status</TableHead>
+                                    {showOrgColumn && <TableHead className="text-sm font-semibold text-muted-foreground py-4">Organization</TableHead>}
+                                    <TableHead className="text-right text-sm font-semibold text-muted-foreground py-4 pr-4">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredSchedules.map(schedule => (
-                                    <TableRow key={schedule.id} data-testid={`row-schedule-${schedule.id}`} className="border-foreground/5 hover:bg-foreground/[0.02] transition-colors group/row">
-                                        <TableCell className="py-6 pl-10 border-foreground/[0.02]">
+                                    <TableRow key={schedule.id} data-testid={`row-schedule-${schedule.id}`} className="border-border hover:bg-muted/30 transition-colors group/row">
+                                        <TableCell className="py-4 pl-4 border-border">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-[15px] font-black text-foreground italic tracking-tight group-hover/row:text-primary transition-colors">{schedule.name}</span>
+                                                <span className="text-[15px] font-semibold text-foreground tracking-tight group-hover/row:text-primary transition-colors">{schedule.name}</span>
                                                 {schedule.description && (
-                                                    <span className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.2em] italic max-w-[200px] truncate">{schedule.description}</span>
+                                                    <span className="text-sm font-semibold text-muted-foreground max-w-sm truncate">{schedule.description}</span>
                                                 )}
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-6 border-foreground/[0.02]">
+                                        <TableCell className="py-4 border-border">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 rounded-xl bg-primary/5 border border-primary/10 group-hover/row:border-primary/30 transition-all">
-                                                    <Clock className="w-4 h-4 text-primary animate-pulse-slow" />
+                                                    <Clock className="w-4 h-4 text-primary" />
                                                 </div>
-                                                <span className="text-[12px] font-black text-foreground/70 tracking-tight italic uppercase">
+                                                <span className="text-sm font-semibold text-muted-foreground tracking-tight">
                                                     {schedule.patternLabel || PATTERN_TYPES.find(p => p.value === schedule.pattern)?.label || '—'}
                                                 </span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-6 border-foreground/[0.02]">
-                                            <Badge variant="outline" className="bg-foreground/[0.02] border-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em] italic px-3 h-7">
+                                        <TableCell className="py-4 border-border">
+                                            <Badge variant="outline" className="bg-muted/30 border-border text-muted-foreground text-sm font-semibold px-3 h-7">
                                                 {schedule.timezone || 'UTC'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="py-6 border-foreground/[0.02]">
+                                        <TableCell className="py-4 border-border">
                                             {schedule.isActive
-                                                ? <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.3em] italic px-4 h-8 shadow-[0_0_15px_rgba(16,185,129,0.1)]">Active</Badge>
-                                                : <Badge variant="secondary" className="bg-foreground/5 text-foreground/20 border-foreground/10 text-[10px] font-black uppercase tracking-[0.3em] italic px-4 h-8 opacity-50">Offline</Badge>}
+                                                ? <Badge>Enabled</Badge>
+                                                : <Badge variant="secondary" className="bg-foreground/5 text-muted-foreground border-border text-sm font-semibold px-4 h-8">Disabled</Badge>}
                                         </TableCell>
                                         {showOrgColumn && (
                                             <TableCell>
@@ -418,7 +396,7 @@ export default function SchedulesPage() {
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" data-testid={`button-actions-${schedule.id}`}>
+                                                    <Button variant="ghost" size="icon" aria-label={`Actions for ${schedule.name}`} data-testid={`button-actions-${schedule.id}`}>
                                                         <MoreVertical className="w-4 h-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -450,57 +428,56 @@ export default function SchedulesPage() {
 
             {/* Create / Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] glass-panel-deep border-foreground/10 rounded-[2.5rem] shadow-2xl p-0 overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-                    
+                <DialogContent className="max-w-3xl max-h-[90vh] border-border bg-background p-0 overflow-hidden">
+
                     <DialogHeader className="p-8 pb-0">
                         <div className="flex items-center gap-4 mb-2">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                                <Terminal className="w-5 h-5 text-primary" />
+                                <Clock className="w-5 h-5 text-primary" />
                             </div>
                             <div>
-                                <DialogTitle className="text-2xl font-black text-foreground uppercase italic tracking-tighter">
-                                    {editingSchedule ? 'Edit_Pattern' : 'Forge_Pattern'}
+                                <DialogTitle className="text-2xl font-semibold text-foreground">
+                                    {editingSchedule ? 'Edit automation' : 'New automation'}
                                 </DialogTitle>
-                                <DialogDescription className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest">
-                                    {editingSchedule ? 'Modify temporal execution parameters' : 'Initialize new autonomous trigger sequence'}
+                                <DialogDescription className="text-sm font-bold text-muted-foreground">
+                                    {editingSchedule ? 'Update the timing rule for this automation.' : 'Choose a name, recurrence, and time zone for the timing rule.'}
                                 </DialogDescription>
                             </div>
                         </div>
                     </DialogHeader>
 
                     <ScrollArea className="h-[500px] px-8">
-                        <div className="space-y-8 py-6">
+                        <div className="space-y-8 py-4">
 
-                            {/* ── General Details ── */}
+                            {/* ── Details ── */}
                             <div className="space-y-6">
-                                <h3 className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.3em] italic flex items-center gap-3">
+                                <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-3">
                                     <span className="h-px flex-1 bg-foreground/5" />
-                                    General Matrix Identity
+                                    Details
                                     <span className="h-px flex-1 bg-foreground/5" />
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2 space-y-2">
-                                        <Label htmlFor="schedule-name" className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic ml-1">Schedule Name *</Label>
+                                        <Label htmlFor="schedule-name" className="text-sm font-semibold text-muted-foreground ml-1">Automation name *</Label>
                                         <Input
                                             id="schedule-name"
-                                            placeholder="E.G., DAILY_MORNING_FLIGHT"
+                                            placeholder="e.g. Weekly operations review"
                                             value={scheduleName}
                                             onChange={e => setScheduleName(e.target.value)}
-                                            className="h-12 bg-foreground/[0.03] border-foreground/10 rounded-xl px-4 text-[11px] font-black tracking-widest text-foreground placeholder:text-foreground/10 focus:ring-primary/40 focus:border-primary/20 transition-all italic uppercase"
+                                            className="h-12 bg-muted/30 border-border rounded-xl px-4 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:ring-primary/40 focus:border-primary/20 transition-all"
                                             data-testid="input-schedule-name"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="pattern-type" className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic ml-1">Pattern Logic *</Label>
+                                        <Label htmlFor="pattern-type" className="text-sm font-semibold text-muted-foreground ml-1">Recurrence *</Label>
                                         <Select value={String(pattern)} onValueChange={v => setPattern(Number(v))}>
-                                            <SelectTrigger id="pattern-type" className="h-12 bg-foreground/[0.03] border-foreground/10 rounded-xl px-4 text-[11px] font-black tracking-widest text-foreground focus:ring-primary/40 transition-all italic" data-testid="select-pattern-type">
+                                            <SelectTrigger id="pattern-type" className="h-12 bg-muted/30 border-border rounded-xl px-4 text-sm font-semibold text-foreground focus:ring-primary/40 transition-all" data-testid="select-pattern-type">
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-background border-foreground/10">
+                                            <SelectContent className="bg-background border-border">
                                                 {PATTERN_TYPES.map(pt => (
-                                                    <SelectItem key={pt.value} value={String(pt.value)} className="text-[11px] font-bold text-foreground uppercase tracking-widest italic focus:bg-primary/20 transition-colors uppercase">{pt.label}</SelectItem>
+                                                    <SelectItem key={pt.value} value={String(pt.value)} className="text-sm font-bold text-foreground focus:bg-primary/20 transition-colors">{pt.label}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -514,7 +491,7 @@ export default function SchedulesPage() {
                                                 onCheckedChange={setIsActive}
                                                 data-testid="switch-schedule-active"
                                             />
-                                            <Label htmlFor="schedule-active" className="cursor-pointer">Schedule is Active</Label>
+                                            <Label htmlFor="schedule-active" className="cursor-pointer">Enabled</Label>
                                         </div>
                                     </div>
 
@@ -522,7 +499,7 @@ export default function SchedulesPage() {
                                         <Label htmlFor="schedule-description">Description</Label>
                                         <Textarea
                                             id="schedule-description"
-                                            placeholder="Brief description of this schedule"
+                                            placeholder="Describe what this timing rule is used for"
                                             value={scheduleDescription}
                                             onChange={e => setScheduleDescription(e.target.value)}
                                             rows={2}
@@ -536,9 +513,9 @@ export default function SchedulesPage() {
 
                             {/* ── Timing Configuration ── */}
                             <div className="space-y-6">
-                                <h3 className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.3em] italic flex items-center gap-3">
+                                <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-3">
                                     <span className="h-px flex-1 bg-foreground/5" />
-                                    Chronometric Parameters
+                                    Timing
                                     <span className="h-px flex-1 bg-foreground/5" />
                                 </h3>
 
@@ -546,25 +523,25 @@ export default function SchedulesPage() {
                                 {(pattern === 1 || pattern === 2 || pattern === 3) && (
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="start-time" className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic ml-1">Run Time (HH:MM) *</Label>
+                                            <Label htmlFor="start-time" className="text-sm font-semibold text-muted-foreground ml-1">Run Time (HH:MM) *</Label>
                                             <Input
                                                 id="start-time"
                                                 type="time"
                                                 value={starttime}
                                                 onChange={e => setStarttime(e.target.value)}
-                                                className="h-12 bg-foreground/[0.03] border-foreground/10 rounded-xl px-4 text-[11px] font-black tracking-widest text-foreground focus:ring-primary/40 focus:border-primary/20 transition-all italic invert-colors-dark"
+                                                className="h-12 bg-muted/30 border-border rounded-xl px-4 text-sm font-semibold text-foreground focus:ring-primary/40 focus:border-primary/20 transition-all invert-colors-dark"
                                                 data-testid="input-start-time"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="timezone" className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic ml-1">Temporal Region *</Label>
+                                            <Label htmlFor="timezone" className="text-sm font-semibold text-muted-foreground ml-1">Time zone *</Label>
                                             <Select value={timezone} onValueChange={setTimezone}>
-                                                <SelectTrigger id="timezone" className="h-12 bg-foreground/[0.03] border-foreground/10 rounded-xl px-4 text-[11px] font-black tracking-widest text-foreground focus:ring-primary/40 transition-all italic" data-testid="select-timezone">
+                                                <SelectTrigger id="timezone" className="h-12 bg-muted/30 border-border rounded-xl px-4 text-sm font-semibold text-foreground focus:ring-primary/40 transition-all" data-testid="select-timezone">
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent className="max-h-[300px] bg-background border-foreground/10">
+                                                <SelectContent className="max-h-[300px] bg-background border-border">
                                                     {TIMEZONES.map(tz => (
-                                                        <SelectItem key={tz.value} value={tz.value} className="text-[11px] font-bold text-foreground uppercase tracking-widest italic focus:bg-primary/20 transition-colors">{tz.label}</SelectItem>
+                                                        <SelectItem key={tz.value} value={tz.value} className="text-sm font-bold text-foreground focus:bg-primary/20 transition-colors">{tz.label}</SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
@@ -660,29 +637,29 @@ export default function SchedulesPage() {
                         </div>
                     </ScrollArea>
 
-                    <DialogFooter className="p-8 pt-4 bg-foreground/[0.02] border-t border-foreground/5">
+                    <DialogFooter className="p-8 pt-4 bg-muted/30 border-t border-border">
                         <Button
                             variant="outline"
                             onClick={() => setIsDialogOpen(false)}
-                            className="h-12 bg-transparent border-foreground/10 text-foreground/40 text-[10px] font-black uppercase tracking-widest hover:bg-foreground/5 hover:text-foreground rounded-xl px-6 italic transition-all"
+                            className="h-12 bg-transparent border-border text-muted-foreground text-sm font-semibold hover:bg-foreground/5 hover:text-foreground rounded-xl px-6 transition-all"
                             data-testid="button-cancel-schedule"
                         >
-                            Abort Sequence
+                            Cancel
                         </Button>
                         <Button
                             onClick={handleSave}
                             disabled={saveMutation.isPending}
-                            className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-xl px-8 shadow-lg shadow-primary/20 transition-all active:scale-95 italic"
+                            className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-xl px-8 transition-all active:scale-95"
                             data-testid="button-submit-schedule"
                         >
                             {saveMutation.isPending
-                                ? (editingSchedule ? 'RECONFIGURING...' : 'FORGING...')
-                                : (editingSchedule ? 'Update_Matrix_Pattern' : 'Establish_Pattern_Link')}
+                                ? (editingSchedule ? 'Saving…' : 'Creating…')
+                                : (editingSchedule ? 'Save changes' : 'Create automation')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </PageShell>
         </ErrorBoundary>
     );
 }

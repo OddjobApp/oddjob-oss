@@ -6,6 +6,8 @@ test.describe('Critical route accessibility', () => {
     // @tag accessibility keyboard health critical
 
     await page.goto('/health');
+    // The shell renders after load; a Tab pressed before then lands on nothing.
+    await expect(page.locator('#main-content')).toBeAttached();
     await page.keyboard.press('Tab');
 
     const skipLink = page.getByRole('link', { name: 'Skip to main content' });

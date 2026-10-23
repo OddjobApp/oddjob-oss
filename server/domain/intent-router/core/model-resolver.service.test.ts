@@ -26,7 +26,7 @@ describe("model resolution for an organization's own AI key", () => {
         const result = await new ModelResolverService().resolve(unboundCard, 1);
         expect(mocks.resolveConnection).toHaveBeenCalledWith(1);
         expect(result).toEqual({
-            providerId: null, modelId: null, providerName: "Amazon Bedrock (Claude)",
+            providerId: null, modelId: null, providerName: "Amazon Bedrock",
             providerTechnicalName: "bedrock", modelIdentifier: "us.anthropic.claude-sonnet-4-6", isFallback: false,
         });
         expect(mocks.select).not.toHaveBeenCalled();

@@ -1,3 +1,4 @@
+import { PUBLIC_FEATURE_DOCS } from "@shared/public-feature-docs.js";
 
 import { createLogger } from "@server/utils/logger.js";
 import { BadRequestError, NotFoundError } from "@server/utils/errors.js";
@@ -203,6 +204,7 @@ export interface DocumentationRelease {
   createdAt: string;
   publishedAt: string | null;
   changeIds: number[];
+  publicSummary?: string;
   markdown: string;
 }
 
@@ -1941,12 +1943,15 @@ export class DocumentationService {
         createdAt: meta.createdAt ?? row.createdAt?.toISOString?.() ?? String(row.createdAt),
         publishedAt: meta.publishedAt ?? null,
         changeIds: Array.isArray(meta.changeIds) ? meta.changeIds : [],
+        publicSummary: typeof meta.publicSummary === "string" ? meta.publicSummary : undefined,
         markdown: row.textContent ?? "",
       } satisfies DocumentationRelease;
     });
   }
 
-  async publishReleaseNotes(releaseId: number, organizationId: number): Promise<DocumentationRelease> {
+  async publishReleaseNotes(releaseId: number, organizationId: number, publicSummary?: string): Promise<DocumentationRelease> {
+    if (publicSummary !== undefined && (typeof publicSummary !== 'string' || publicSummary.trim().length < 10 || publicSummary.length > 5000)) throw new BadRequestError("Public summary must be 10–5,000 characters");
+    if (publicSummary && organizationId !== Number(process.env.PUBLIC_RELEASE_NOTES_ORG_ID)) throw new BadRequestError("This organization is not the public release publisher");
     const orgContext = getSystemOrgContext(organizationId);
     const document = await knowledgeService.getDocumentById(releaseId, orgContext);
     const meta = document?.metadata ?? {};
@@ -1959,7 +1964,7 @@ export class DocumentationService {
     }
     const publishedAt = new Date().toISOString();
     const updated = await knowledgeService.updateDocument(releaseId, {
-      metadata: { ...meta, status: "published", publishedAt },
+      metadata: { ...meta, status: "published", publishedAt, ...(publicSummary ? { publicSummary: publicSummary.trim() } : {}) },
     }, orgContext);
     return {
       id: updated.id,
@@ -2232,6 +2237,29 @@ export class DocumentationService {
     });
 
     return true;
+  }
+
+  /** Public projection of the same platform generator; deliberately no org or stored-document lookup. */
+  async getPublicReleaseNotes() {
+    const source = process.env.PUBLIC_RELEASE_NOTES_ORG_ID;
+    if (!source || !/^[1-9]\d*$/.test(source) || !Number.isSafeInteger(Number(source))) return [];
+    const releases = await this.getReleaseNotes(Number(source));
+    return releases.filter(release => release.status === 'published' && release.publicSummary && release.publishedAt)
+      .sort((a, b) => Date.parse(b.publishedAt!) - Date.parse(a.publishedAt!))
+      .slice(0, 100).map(({title, version, publishedAt, publicSummary}) => ({title, version, publishedAt, summary: publicSummary}));
+  }
+
+  async getPublicFeatureSpec(slug: string) {
+    const topic = PUBLIC_FEATURE_DOCS.find(entry => entry.slug === slug);
+    if (!topic) throw new NotFoundError("Unknown public feature guide");
+    const guidePath = path.join(process.cwd(), topic.guide);
+    const [guide, stat] = await Promise.all([fs.readFile(guidePath, "utf8"), fs.stat(guidePath)]);
+    const content = guide.trim();
+    // Curated public usage guides exclude internal schemas and component relationships.
+    const markdown = [`# ${topic.title}`, content.replace(/^#{1,2} .+\n/, "")].join("\n\n");
+    const sourceUpdatedAt = new Date(stat.mtimeMs).toISOString();
+    return { slug: topic.slug, title: topic.title, markdown, sourceUpdatedAt,
+      revision: fingerprint(markdown), source: "platform-generator" as const };
   }
 
   async getFeatureSpec(featureId: string, organizationId: number): Promise<FeatureSpec> {

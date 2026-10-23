@@ -581,3 +581,48 @@ describe("isRouteFile", () => {
     expect(isRouteFile(p("crew", "api", "crew.routes.test.ts"))).toBe(false);
   });
 });
+
+
+describe("public platform documentation boundary", () => {
+  it("publishes curated guides without scanning internal schemas or organization knowledge", async () => {
+    vi.clearAllMocks();
+    const scan = vi.spyOn(documentationService, "getFeatures").mockResolvedValue([]);
+    (fs.readFile as Mock).mockResolvedValue("# Pipelines\n\nCurrent guide from platform source.");
+    (fs.stat as Mock).mockResolvedValue({mtimeMs: Date.parse("2026-10-22T00:00:00Z")});
+    try {
+      const doc = await documentationService.getPublicFeatureSpec("pipelines");
+      expect(doc.markdown).toContain("Current guide from platform source");
+      expect(doc.markdown).not.toContain("Implementation reference");
+      expect(scan).not.toHaveBeenCalled();
+      expect(knowledgeService.getGeneratedSpecMeta).not.toHaveBeenCalled();
+      expect(knowledgeService.getDocumentByTitle).not.toHaveBeenCalled();
+      expect(knowledgeService.createDocument).not.toHaveBeenCalled();
+      (fs.readFile as Mock).mockResolvedValue("# Pipelines\n\nChanged platform guide.");
+      expect((await documentationService.getPublicFeatureSpec("pipelines")).markdown).toContain("Changed platform guide");
+    } finally { scan.mockRestore(); }
+  });
+  it("rejects non-catalog identifiers before reading files or scanning", async () => {
+    vi.clearAllMocks();
+    await expect(documentationService.getPublicFeatureSpec("../../credentials")).rejects.toThrow("Unknown public feature guide");
+    expect(fs.readFile).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('public release notes boundary', () => {
+  it('returns only explicit published summaries from the configured publisher', async () => {
+    vi.stubEnv('PUBLIC_RELEASE_NOTES_ORG_ID','7');
+    const scan = vi.spyOn(documentationService,'getReleaseNotes').mockResolvedValue([
+      {id:1,title:'Public update',version:'1.2.0',status:'published',createdAt:'2026-10-22',publishedAt:'2026-10-22T00:00:00Z',publicSummary:'New customer-facing capability.',changeIds:[9],markdown:'PRIVATE SCHEMA'},
+      {id:2,title:'Private update',version:'1.3.0',status:'published',createdAt:'2026-10-22',publishedAt:'2026-10-22T00:00:00Z',changeIds:[10],markdown:'PRIVATE'},
+      {id:3,title:'Draft',version:'1.4.0',status:'draft',createdAt:'2026-10-22',publishedAt:null,publicSummary:'Unpublished',changeIds:[],markdown:'DRAFT'}
+    ]);
+    try {
+      const releases = await documentationService.getPublicReleaseNotes();
+      expect(scan).toHaveBeenCalledWith(7);
+      expect(releases).toEqual([{title:'Public update',version:'1.2.0',publishedAt:'2026-10-22T00:00:00Z',summary:'New customer-facing capability.'}]);
+      vi.stubEnv('PUBLIC_RELEASE_NOTES_ORG_ID','');scan.mockClear();
+      expect(await documentationService.getPublicReleaseNotes()).toEqual([]);expect(scan).not.toHaveBeenCalled();
+    } finally {scan.mockRestore();vi.unstubAllEnvs();}
+  });
+});

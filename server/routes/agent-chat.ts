@@ -10,31 +10,12 @@ import { agentService } from "../domain/agents/agent.service.js";
 import { dailyBriefService } from "../domain/admin/core/daily-brief.service.js";
 import { toolAnalyticsService } from "../domain/agents/core/tool-analytics.service.js";
 import { AGENT_TOOLS } from "../domain/tools/v1/tool-registry.service.js";
+import { mapAgentError } from "./agent-error-map.js";
 
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
-
-/** Map a raw agent/provider error message to a user-facing message + code. */
-function mapAgentError(errorMessage: string): { userMessage: string; errorCode: string } {
-    if (errorMessage.includes("spending cap")) {
-        return { userMessage: "**API quota or spend cap reached**\n\nThe configured AI provider cannot answer because quota or spending cap is exhausted. Raise the provider cap or switch Copilot to another configured provider/model.", errorCode: "QUOTA_EXCEEDED" };
-    } else if (errorMessage.includes("insufficient_quota") || errorMessage.includes("exceeded your current quota")) {
-        return { userMessage: "🚫 **API Quota Exceeded**\n\nThe AI service has run out of quota. Please check your API billing settings or try again later.", errorCode: "QUOTA_EXCEEDED" };
-    } else if (errorMessage.includes("429") || errorMessage.includes("rate limit") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
-        return { userMessage: "⏳ **Rate Limited**\n\nToo many requests. Please wait a moment and try again.", errorCode: "RATE_LIMITED" };
-    } else if (errorMessage.includes("401") || errorMessage.includes("invalid_api_key") || errorMessage.includes("Incorrect API key")) {
-        return { userMessage: "🔑 **Invalid API Key**\n\nThe AI service API key is invalid or missing. Please check your configuration.", errorCode: "INVALID_API_KEY" };
-    } else if (errorMessage.includes("No GOOGLE_API_KEY") || errorMessage.includes("No OPENAI_API_KEY")) {
-        return { userMessage: "⚙️ **Missing Configuration**\n\nNo API key is configured for the AI service. Please set up your API credentials.", errorCode: "MISSING_API_KEY" };
-    } else if (errorMessage.includes("network") || errorMessage.includes("ECONNREFUSED") || errorMessage.includes("fetch failed")) {
-        return { userMessage: "🔌 **Connection Error**\n\nCouldn't connect to the AI service. Please check your network connection.", errorCode: "NETWORK_ERROR" };
-    } else if (errorMessage.includes("timeout")) {
-        return { userMessage: "⏱️ **Request Timeout**\n\nThe request took too long. Please try a simpler question.", errorCode: "TIMEOUT" };
-    }
-    return { userMessage: "Sorry, I encountered an error processing your request.", errorCode: "AGENT_ERROR" };
-}
 
 export function registerAgentChatRoutes(app: any) {
     const router = Router();

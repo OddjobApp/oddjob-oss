@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ resolve: vi.fn(), execute: vi.fn(), spend: vi.fn(),
-    anthropic: vi.fn(), anthropicTransports: [] as unknown[], openai: vi.fn(), openaiMetadata: [] as unknown[] }));
+    anthropic: vi.fn(), bedrock: vi.fn(), bedrockUrls: [] as unknown[], openai: vi.fn(), openaiMetadata: [] as unknown[] }));
 vi.mock("./org-model.service.js", () => ({ orgModelService: { resolve: mocks.resolve } }));
 vi.mock("./providers/google-client.js", () => ({ GoogleClient: class { execute = mocks.execute; } }));
-vi.mock("./providers/anthropic-client.js", () => ({
-    AnthropicClient: class { constructor(transport?: unknown) { mocks.anthropicTransports.push(transport); } execute = mocks.anthropic; },
-    bedrockTransport: (runtimeUrl: string) => ({ provider: "bedrock", runtimeUrl }),
+vi.mock("./providers/anthropic-client.js", () => ({ AnthropicClient: class { execute = mocks.anthropic; } }));
+vi.mock("./providers/bedrock-client.js", () => ({
+    BedrockClient: class { constructor(baseUrl?: unknown) { mocks.bedrockUrls.push(baseUrl); } execute = mocks.bedrock; },
 }));
 vi.mock("./providers/openai-client.js", () => ({ OpenAIClient: class {
     constructor(metadata: unknown) { mocks.openaiMetadata.push(metadata); }
@@ -59,19 +59,20 @@ describe("BYOK execution boundary", () => {
         await expect(client.execute({ organizationId: 7 } as any, "hello", "key")).rejects.toThrow("budget");
         expect(mocks.execute).not.toHaveBeenCalled();
     });
-    it("runs a Bedrock connection on the Anthropic client over its own Region's runtime", async () => {
+    it("runs a Bedrock connection on the Converse client over its own Region's runtime", async () => {
         mocks.spend.mockResolvedValue({ allowed: true });
-        mocks.anthropic.mockResolvedValue({ success: true, output: "claude via bedrock" });
-        mocks.anthropicTransports.length = 0;
+        mocks.bedrock.mockResolvedValue({ success: true, output: "claude via bedrock" });
+        mocks.bedrockUrls.length = 0;
         mocks.resolve.mockResolvedValue({ provider: "bedrock", apiKey: "ABSK-org-key", model: "us.anthropic.claude-sonnet-4-6",
             baseUrl: "https://bedrock-runtime.us-east-2.amazonaws.com" });
         const client = new OrganizationAIClient(vi.fn());
         await withAiOrganization(async () => 7, () => client.execute(
             { model: "gemini-2.5-flash", baseUrl: "https://attacker.example", useCache: true } as any, "hi", "platform-key"));
         // The endpoint is the connection's, never the call's.
-        expect(mocks.anthropicTransports.at(-1)).toEqual({ provider: "bedrock", runtimeUrl: "https://bedrock-runtime.us-east-2.amazonaws.com" });
-        expect(mocks.anthropic.mock.calls[0][0]).toMatchObject({ model: "us.anthropic.claude-sonnet-4-6", provider: "bedrock", baseUrl: undefined, useCache: false });
-        expect(mocks.anthropic.mock.calls[0][2]).toBe("ABSK-org-key");
+        expect(mocks.bedrockUrls.at(-1)).toBe("https://bedrock-runtime.us-east-2.amazonaws.com");
+        expect(mocks.bedrock.mock.calls[0][0]).toMatchObject({ model: "us.anthropic.claude-sonnet-4-6", provider: "bedrock", baseUrl: undefined, useCache: false });
+        expect(mocks.bedrock.mock.calls[0][2]).toBe("ABSK-org-key");
+        expect(mocks.anthropic).not.toHaveBeenCalled();
         expect(mocks.execute).not.toHaveBeenCalled();
     });
     it("runs each provider on its own client, endpoint and model, whatever the call asked for", async () => {

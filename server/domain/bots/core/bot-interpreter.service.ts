@@ -13,7 +13,7 @@ import { createLogger } from "@server/utils/logger.js";
 import { ValidationError } from "@server/utils/errors.js";
 import { isValidRecurrence } from "@shared/contracts/project-event-recurrence.js";
 import { LLMClient } from "@server/domain/ai/core/llm-client.js";
-import { ORG_GEMINI_KEY_MISSING, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { ORG_AI_KEY_MISSING, resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 const logger = createLogger("BotInterpreterService");
 
@@ -200,10 +200,10 @@ Rules:
 `.trim();
 
     async interpret(prompt: string): Promise<BotBlueprint> {
-        const apiKey = await resolveOrgGeminiKey(null);
+        const apiKey = await resolveOrgTextAiKey(null);
 
         if (!apiKey) {
-            logger.warn(`${ORG_GEMINI_KEY_MISSING} — falling back to keyword matching`);
+            logger.warn(`${ORG_AI_KEY_MISSING} — falling back to keyword matching`);
             return keywordFallback(prompt);
         }
 

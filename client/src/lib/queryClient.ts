@@ -187,7 +187,7 @@ export async function apiRequest(method: string, url: string, body?: any, timeou
   if (csrfToken) headers['x-csrf-token'] = csrfToken;
   if (orgId !== null) headers['x-organization-id'] = orgId.toString();
 
-  console.debug(`[apiRequest] ${method} ${requestUrl}`, body ? { body } : '');
+  console.debug(`[apiRequest] ${method} ${requestUrl}`);
 
   let response = await fetchWithTimeout(requestUrl, {
     method,

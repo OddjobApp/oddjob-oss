@@ -160,11 +160,11 @@ describe("organization Gemini connections", () => {
             expect(vi.mocked(fetch).mock.calls[0][0]).toBe("https://bedrock.us-east-2.amazonaws.com/foundation-models/anthropic.claude-3-5-sonnet-20240620-v1%3A0");
         });
 
-        it("refuses short-term and malformed Bedrock keys, and non-Claude models, before contacting AWS", async () => {
+        it("refuses short-term and malformed Bedrock keys, and IDs that are not Bedrock models, before contacting AWS", async () => {
             const save = (apiKey: string, model = "us.anthropic.claude-sonnet-4-6") => orgModelService.save(7, { provider: "bedrock", apiKey, model });
             await expect(save("bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29tLz9BY3Rpb249Q2FsbFdpdGhCZWFyZXJUb2tlbg==")).rejects.toThrow("long-term Amazon Bedrock API key");
             await expect(save("ABSK key with spaces 1234567890")).rejects.toThrow("valid API key");
-            await expect(save("ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", "amazon.nova-pro-v1:0")).rejects.toThrow("valid Amazon Bedrock (Claude) model ID");
+            await expect(save("ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", "gpt-5")).rejects.toThrow("valid Amazon Bedrock model ID");
             await expect(save("ABSKQmVkcm9ja0FQSUtleS10ZXN0LWF0LTEyMzQ1Njc4OTAxMjpzZWNyZXQ=", "us.anthropic.claude-x/../../admin")).rejects.toThrow("model ID");
             expect(fetch).not.toHaveBeenCalled();
         });
@@ -192,6 +192,35 @@ describe("organization Gemini connections", () => {
             await orgModelService.save(7, { provider: "qwen", apiKey: "sk-qwen-organization-key-1", model: "qwen-plus", region: "https://evil.example" });
             expect(vi.mocked(fetch).mock.calls[1][0]).toBe("https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models");
             await expect(orgModelService.save(7, { provider: "https://evil.example", apiKey, model: "x" })).rejects.toThrow("valid API key");
+        });
+
+        it("accepts any Bedrock model, not only Claude, and checks it in the chosen Region", async () => {
+            const bedrockKey = "ABSKQmVkcm9ja0FQSUtleS1vcmdhbml6YXRpb24=";
+            vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({}) } as Response);
+            const result = await orgModelService.save(7, { provider: "bedrock", apiKey: bedrockKey,
+                model: "amazon.nova-lite-v1:0", region: "us-west-2" });
+            const [url, options] = vi.mocked(fetch).mock.calls[0];
+            expect(url).toBe("https://bedrock.us-west-2.amazonaws.com/foundation-models/amazon.nova-lite-v1%3A0");
+            expect(url).not.toContain(bedrockKey);
+            expect((options?.headers as Record<string, string>).Authorization).toBe(`Bearer ${bedrockKey}`);
+            const stored = mocks.insert.mock.calls[0][0];
+            expect(JSON.parse(decrypt(stored.encryptedData, "organization_ai:7:bedrock")))
+                .toMatchObject({ apiKey: bedrockKey, model: "amazon.nova-lite-v1:0", region: "us-west-2" });
+            expect(JSON.stringify(result)).not.toContain(bedrockKey);
+        });
+
+        it("refuses a Bedrock key that is not a long-term API key before contacting AWS", async () => {
+            for (const key of ["bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29t", "AKIAIOSFODNN7EXAMPLE1234", "ABSKQmVkcm9ja0FQSUtl-_not-base64"]) {
+                await expect(orgModelService.save(7, { provider: "bedrock", apiKey: key, model: "amazon.nova-lite-v1:0" }))
+                    .rejects.toThrow("long-term Amazon Bedrock API key");
+            }
+            expect(fetch).not.toHaveBeenCalled();
+        });
+
+        it("still refuses base64 characters in other providers' keys", async () => {
+            await expect(orgModelService.save(7, { provider: "openai", apiKey: "sk-organization+key/123456=", model: "gpt-5" }))
+                .rejects.toThrow("valid OpenAI API key");
+            expect(fetch).not.toHaveBeenCalled();
         });
 
         it("keeps Gemini the default when a second provider is added, and resolves either by name", async () => {

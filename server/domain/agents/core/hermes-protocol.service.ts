@@ -1,7 +1,7 @@
 import { createLogger } from "../../../utils/logger.js";
 import { AIClientFactory } from "../../ai/core/ai-client.service.js";
 import type { AIApiCallConfig } from "@shared/schema/index.js";
-import { ORG_GEMINI_KEY_MISSING, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { ORG_AI_KEY_MISSING, resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 const logger = createLogger("HermesProtocolService");
 
@@ -105,9 +105,9 @@ ${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
      * Uses the Hermes protocol (Think-Act) to generate structured proposals.
      */
     async reason(prompt: string, model: string = "gemini-2.0-flash"): Promise<HermesResponse> {
-        const apiKey = await resolveOrgGeminiKey(null);
+        const apiKey = await resolveOrgTextAiKey(null);
         if (!apiKey) {
-            throw new Error(`${ORG_GEMINI_KEY_MISSING} to use Hermes reasoning.`);
+            throw new Error(`${ORG_AI_KEY_MISSING} to use Hermes reasoning.`);
         }
 
         const client = AIClientFactory.getClient({ provider: "google" } as any);

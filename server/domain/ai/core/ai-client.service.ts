@@ -7,6 +7,7 @@ import { systemConfigService } from "@domain/system/system-config.service.js";
 import { calculateAiCost, providerForModel } from "./cost-registry.js";
 import { createLogger } from "@server/utils/logger.js";
 import { withSpan } from "@server/utils/tracing.js";
+import { EgressFirewall } from "@server/utils/egress-firewall.js";
 import { OrganizationAIClient } from "./organization-ai-client.js";
 
 const logger = createLogger("AIClient");
@@ -243,19 +244,32 @@ export interface AIClient {
   ): Promise<{ cacheName: string }>;
 }
 
+/** Larger than any provider accepts inline (Bedrock: 3.75 MB, Anthropic: 5 MB, Gemini: 20 MB request). */
+export const MAX_IMAGE_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+
+/**
+ * An image attachment as base64. A URL is fetched through EgressFirewall:
+ * attachment URLs come from documents and messages, so a plain fetch would let
+ * one point the server at an internal address.
+ */
 export async function fetchImageAsBase64(url: string): Promise<{ data: string, mimeType: string }> {
   if (url.startsWith('data:')) {
-    const match = url.match(/^data:([^;]+);base64,(.+)$/);
+    const match = url.match(/^data:([^;,]+)(?:;[^,]*)?;base64,(.+)$/);
     if (!match) throw new Error('Invalid data URL');
-    return { data: match[2], mimeType: match[1] };
+    return { data: match[2], mimeType: match[1].toLowerCase() };
   }
-  const response = await fetch(url);
+  const guarded = await EgressFirewall.fetch(url);
+  if (!guarded.allowed || !guarded.response) throw new Error(`Image URL refused: ${guarded.reason}`);
+  const response = guarded.response;
   if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const base64 = buffer.toString('base64');
-  const mimeType = response.headers.get('content-type') || 'image/jpeg';
-  return { data: base64, mimeType };
+  if (Number(response.headers.get('content-length') ?? 0) > MAX_IMAGE_ATTACHMENT_BYTES) {
+    throw new Error('Image attachment is too large');
+  }
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.length > MAX_IMAGE_ATTACHMENT_BYTES) throw new Error('Image attachment is too large');
+  // "image/png; charset=binary" -> "image/png": providers match the bare type.
+  const mimeType = (response.headers.get('content-type') || 'image/jpeg').split(';')[0].trim().toLowerCase();
+  return { data: buffer.toString('base64'), mimeType };
 }
 
 const DEFAULT_RETRY_CONFIG = {
@@ -366,6 +380,7 @@ import { MidjourneyClient } from "@domain/ai/core/providers/midjourney-client.js
 import { DalleClient } from "@domain/ai/core/providers/dalle-client.js";
 import { MockAIClient } from "@domain/ai/core/providers/mock-client.js";
 import { AzureClient } from "@domain/ai/core/providers/azure-client.js";
+import { BedrockClient } from "@domain/ai/core/providers/bedrock-client.js";
 function shouldAllowMockFallback(): boolean {
   if (process.env.ALLOW_AI_MOCK_FALLBACK === "true") return true;
   if (process.env.NODE_ENV === "test" || process.env.VITEST === "true") return true;
@@ -1124,6 +1139,9 @@ export class AIClientFactory {
         break;
       case "azure":
         client = new AzureClient(providerMetadata as any);
+        break;
+      case "bedrock":
+        client = new BedrockClient(compatBaseUrl);
         break;
       case "midjourney":
         client = new MidjourneyClient(providerMetadata as any);

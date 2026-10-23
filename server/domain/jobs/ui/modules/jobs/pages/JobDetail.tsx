@@ -140,7 +140,7 @@ export default function JobDetail() {
         </div>
     );
 
-    const isAgent = job.type === 'ai agent' || job.type === 'agent ai';
+    const isAgent = ['ai_agent', 'form_agent', 'ai agent', 'agent ai'].includes(job.type);
     const requestedTab = new URLSearchParams(searchString).get("tab");
     const availableTabs = new Set(["matrix", "schemas", "reactive", "impact", "history"]);
     if (job.type === "selenium") availableTabs.add("live");

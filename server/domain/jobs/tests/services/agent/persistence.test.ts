@@ -17,7 +17,7 @@ vi.mock('@server/database_service.js', () => ({
 
 // The org's key, resolved the same way in production and here: no env read.
 vi.mock('@domain/ai/core/org-gemini-key.js', () => ({
-    resolveOrgGeminiKey: vi.fn(async () => 'test-key'),
+    resolveOrgTextAiKey: vi.fn(async () => 'test-key'),
 }));
 
 vi.mock('@domain/ai/core/ai-client.service.js', () => ({

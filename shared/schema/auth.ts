@@ -87,6 +87,8 @@ export const orgs = pgTable("orgs", {
      * the former should fall through to the viewer's browser timezone.
      */
     timezone: text("timezone"),
+    companySize: text("company_size"),
+    industry: text("industry"),
     stripeCustomerId: text("stripe_customer_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),
     subscriptionStatus: text("subscription_status"), // 'active', 'canceled', 'past_due', etc.

@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@dom
 import { ListRestart, Terminal, Activity, Zap, Shield, Radio, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AgentDeployment } from "@shared/schema/agent-deployments";
+type PublicAgentDeployment = AgentDeployment & { allowChatInput?: boolean; buttons?: { id: string; label: string }[] };
 import { YouTubePlayer } from '@domain-ui/core/ui/components/shared/YouTubePlayer';
 import { RescueRequestPanel } from '../components/RescueRequestPanel';
 import { formatSubmissionValue, humanizeFieldKey, parseFormSubmissionMessage, parseStructuredJsonMessage } from './form-submission-message';
@@ -159,7 +160,7 @@ export default function AgentDeploymentPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // 2. Query hooks
-    const { data: deployment, isLoading: isMetadataLoading, error: metadataError } = useQuery<AgentDeployment>({
+    const { data: deployment, isLoading: isMetadataLoading, error: metadataError } = useQuery<PublicAgentDeployment>({
         queryKey: [`/api/public/agents/${slug}`],
         queryFn: async () => {
             const res = await fetch(`/api/public/agents/${slug}`);
@@ -240,12 +241,13 @@ export default function AgentDeploymentPage() {
     });
 
     const chatMutation = useMutation({
-        mutationFn: async (args: { text: string, attachments: FileAttachment[] }) => {
+        mutationFn: async (args: { text: string, attachments: FileAttachment[], buttonId?: string }) => {
             // Extract all search params to pass to the agent context (e.g., assetId from QR code)
             const urlParams = Object.fromEntries(new URLSearchParams(searchString).entries());
             
             const body: Record<string, unknown> = {
                 message: args.text,
+                buttonId: args.buttonId,
                 attachments: args.attachments.map(a => ({ id: a.id, name: a.name })),
                 context: { 
                     jobId: deployment?.jobId,
@@ -373,6 +375,7 @@ export default function AgentDeploymentPage() {
 
     // 4. Methods - Defined EARLY to avoid scoping issues in return block
     const handleSend = (messageOverride?: string) => {
+        if (deployment?.allowChatInput === false) return;
         if ((!messageOverride && !inputValue.trim() && attachments.length === 0) || chatMutation.isPending || isUploading) return;
 
         const userMsg = messageOverride || inputValue.trim();
@@ -572,6 +575,30 @@ export default function AgentDeploymentPage() {
                     </form>
                 </Card>
             </div>
+        );
+    }
+
+    const actionButtons = (deployment.buttons?.length ?? 0) > 0 && <nav aria-label="Agent actions" className="flex flex-wrap justify-center gap-3 p-4">
+        {(deployment.buttons ?? []).map((button: { id: string; label: string }) => <Button key={button.id} type="button" disabled={chatMutation.isPending} onClick={() => {
+            setMessages(prev => [...prev, { role: "user", content: button.label, timestamp: Date.now() }]);
+            chatMutation.mutate({ text: button.label, attachments: [], buttonId: button.id });
+        }}>{button.label}</Button>)}
+    </nav>;
+
+    // A public sign-up embed needs the published form, without a chat composer
+    // or any model invocation. Access checks above still apply to its agent.
+    const initialForm = deployment.allowChatInput === false
+        ? parseAgentResponse(deployment.welcomeMessage || '')
+        : null;
+    if (initialForm?.type === 'form_studio_form' && !(deployment.buttons?.length)) {
+        return (
+            <main className="min-h-screen bg-background p-4 text-foreground sm:p-6">
+                <div className="mx-auto max-w-2xl space-y-4">
+                    {!isEmbed && !isWidget && <a href="/" className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">Back to Oddjob</a>}
+                    <PublicForm token={(initialForm.data as { token: string }).token} />
+                    {actionButtons}
+                </div>
+            </main>
         );
     }
 
@@ -972,7 +999,8 @@ export default function AgentDeploymentPage() {
                 </div>
             </main>
 
-            <footer className="p-6 glass-header border-t-0">
+            {actionButtons}
+            {deployment.allowChatInput !== false && <footer className="p-6 glass-header border-t-0">
                 <div className="max-w-4xl mx-auto space-y-4">
                     {messages.filter(m => m.role === 'user').length === 0 && (() => {
                         const title = (deployment?.title || slug || "").toLowerCase();
@@ -1087,7 +1115,7 @@ export default function AgentDeploymentPage() {
                         </DynamicButtonBg>
                     </div>
                 </div>
-            </footer>
+            </footer>}
         </div>
     );
 }

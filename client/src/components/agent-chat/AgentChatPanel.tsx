@@ -547,8 +547,10 @@ export function AgentChatPanel({
   useEffect(() => {
     if (!highlightedTurnId) return;
     const el = document.getElementById(`turn-${highlightedTurnId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el && transcriptEl?.contains(el)) {
+      const target = el.getBoundingClientRect();
+      const viewport = transcriptEl.getBoundingClientRect();
+      transcriptEl.scrollTo?.({ top: transcriptEl.scrollTop + target.top - viewport.top - (transcriptEl.clientHeight - target.height) / 2, behavior: 'smooth' });
     } else {
       // A windowed transcript has not mounted a turn that is off screen, so
       // there is no element to find; scroll the list to it instead.
@@ -558,7 +560,7 @@ export function AgentChatPanel({
     }
     const timer = setTimeout(() => setHighlightedTurnId(null), 8000);
     return () => clearTimeout(timer);
-  }, [highlightedTurnId, turns, virtualizeTurns]);
+  }, [highlightedTurnId, turns, virtualizeTurns, transcriptEl]);
 
   const [isCanvasOpen, setIsCanvasOpen] = useState(false);
   const appStudioOrgId = session ? session.organizationId : resolveActiveOrgId();
@@ -795,11 +797,13 @@ export function AgentChatPanel({
       // Unmeasured rows are estimated, so the end marker's offset is a guess
       // until the last row mounts. Let the list land on it first.
       virtuosoRef.current.scrollToIndex({ index: 'LAST', align: 'end' });
-      const frame = requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }));
+      const frame = requestAnimationFrame(() => transcriptEl?.scrollTo?.({ top: transcriptEl.scrollHeight, behavior: 'smooth' }));
       return () => cancelAnimationFrame(frame);
     }
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [turns.length, isSending, virtualizeTurns]);
+    // scrollIntoView also moves overflow-hidden ancestors, clipping the entire
+    // room above the composer. Only the transcript owns conversation scrolling.
+    transcriptEl?.scrollTo?.({ top: transcriptEl.scrollHeight, behavior: 'smooth' });
+  }, [turns.length, isSending, virtualizeTurns, transcriptEl]);
 
   const invite = useCallback(async () => {
     const identifier = inviteValue.trim();

@@ -132,11 +132,15 @@ export class CopilotIntentPredictorService {
     const hasConcreteTarget = /(pipeline|job|mission|database|cluster|app|cycle|server|doc|form|user|team|prompt)/i.test(lower);
     const isUnderspecifiedAction = isActionMatch && !hasConcreteTarget;
     const isCompetingIntents = (Number(isActionMatch) + Number(isDiagnosticMatch) + Number(isPlanningMatch) + Number(isInfoMatch)) >= 2;
+    // A bare command with no object ("fix it", "check", "help", "update").
+    const isVagueCommand = /^(fix|check|update|help|change|handle|sort|do)\b/i.test(lower) && !hasConcreteTarget;
 
-    if (
-      (isVeryShort && !isInfoMatch && !isDiagnosticMatch && !isPlanningMatch && (!isActionMatch || isUnderspecifiedAction)) ||
-      (isVeryShort && isCompetingIntents)
-    ) {
+    // Only an underspecified *request* is disambiguated. Every other short
+    // message ("yes", "ok", "thanks", "hi", "42", "form studio") is usually a reply
+    // to Copilot's own question or a name, and goes to the conversation, which has
+    // the history to read it; turning "yes" into "which action do you mean?" broke
+    // every follow-up.
+    if (isVeryShort && (isUnderspecifiedAction || isVagueCommand || isCompetingIntents)) {
       logger.info(`[CopilotIntentPredictor] Low confidence for prompt "${trimmed}". Invoking GQE disambiguation.`);
       
       const targetNode = context?.page || "current screen";

@@ -98,6 +98,9 @@ scripts/temp/
 !*.swcrc
 !*.replit
 !node-fetch.d.ts
+!robots.txt
+!sitemap.xml
+!manifest.json
 !REFACTORING_ANALYSIS.md
 !FORM_AGENT_FEATURE_DOCUMENTATION.md
 !attached_assets/

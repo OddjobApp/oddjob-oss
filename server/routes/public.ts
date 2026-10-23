@@ -39,6 +39,23 @@ interface PublicModule {
 // traffic cannot repeatedly trigger a manifest read + dataset scan. 60s is fresh enough for
 // a status page and cheap to serve.
 let moduleCache: { at: number; data: PublicModule[] } | null = null;
+
+/**
+ * A rate is published only over enough events. Fewer is "unverified", not a
+ * percentage: two successful jobs are not "100% uptime", and an idle component
+ * is not an outage. (Number(null) is 0, which turned every idle component into
+ * "Issues Detected".)
+ */
+const MIN_EVENTS_90D = 50;
+const MIN_EVENTS_24H = 20;
+const MIN_EVENTS_1H = 5;
+function measuredRate(row: Record<string, unknown> | undefined, rateKey: string, totalKey: string, minimum: number): number | null {
+    const total = Number(row?.[totalKey]) || 0;
+    const value = row?.[rateKey];
+    if (value == null || total < minimum) return null;
+    const rate = Number(value);
+    return Number.isFinite(rate) ? rate : null;
+}
 const MODULE_CACHE_TTL_MS = 60_000;
 
 /**
@@ -136,7 +153,7 @@ router.get("/trust", asyncHandler(async (req: Request, res: Response) => {
     // 1. Calculate Overall System Status (Last 1 Hour)
     // Rule: > 10% failure rate = Degraded, > 30% = Outage
     const statusQuery = await db.execute(sql`
-        SELECT 
+        SELECT
             COUNT(*) as total,
             COUNT(CASE WHEN status IN ('failure', 'timeout', 'cancelled') THEN 1 END) as failures
         FROM forensic_event_log
@@ -145,17 +162,17 @@ router.get("/trust", asyncHandler(async (req: Request, res: Response) => {
 
     const totalLastHour = Number(statusQuery.rows[0].total) || 0;
     const failuresLastHour = Number(statusQuery.rows[0].failures) || 0;
+    // Too few events in the hour to judge: unverified. Otherwise the failure rate
+    // decides, and a healthy hour is "operational" (it could never be before).
     let systemStatus = "unverified";
-
-    if (totalLastHour > 0) {
+    if (totalLastHour >= MIN_EVENTS_1H) {
         const failureRate = failuresLastHour / totalLastHour;
-        if (failureRate > 0.3) systemStatus = "outage";
-        else if (failureRate > 0.1) systemStatus = "degraded";
+        systemStatus = failureRate > 0.3 ? "outage" : failureRate > 0.1 ? "degraded" : "operational";
     }
 
     // 2. 24h Metrics
     const dailyMetrics = await db.execute(sql`
-        SELECT 
+        SELECT
             COUNT(*) as total_jobs,
             ROUND(COUNT(CASE WHEN status = 'success' THEN 1 END)::numeric / NULLIF(COUNT(*), 0)::numeric * 100, 2) as success_rate
         FROM forensic_event_log
@@ -165,44 +182,47 @@ router.get("/trust", asyncHandler(async (req: Request, res: Response) => {
 
     // 3. 90-Day Uptime (Real)
     const uptimeQuery = await db.execute(sql`
-        SELECT 
+        SELECT
+            COUNT(*) as total,
             ROUND(COUNT(CASE WHEN status = 'success' THEN 1 END)::numeric / NULLIF(COUNT(*), 0)::numeric * 100, 2) as uptime_90d
         FROM forensic_event_log
         WHERE created_at > NOW() - INTERVAL '90 days'
           AND job_type NOT IN ('manual', 'test')
     `);
-    const uptimeValue = uptimeQuery.rows[0]?.uptime_90d;
-    const uptime90d = uptimeValue == null ? null : Number(uptimeValue);
+    const uptime90d = measuredRate(uptimeQuery.rows[0] as any, "uptime_90d", "total", MIN_EVENTS_90D);
 
     // 4. Component Health Checks (Real)
     // AI Engine: Check specific job types in last hour
     const aiHealthQuery = await db.execute(sql`
-        SELECT 
+        SELECT
+            COUNT(*) as total,
             ROUND(COUNT(CASE WHEN status = 'success' THEN 1 END)::numeric / NULLIF(COUNT(*), 0)::numeric * 100, 2) as success_rate
         FROM forensic_event_log
         WHERE created_at > NOW() - INTERVAL '1 hour'
           AND job_type IN ('ai_api_call', 'ai_agent', 'agent_ai', 'reranker', 'decision', 'transformer')
     `);
-    const aiSuccessRate = Number(aiHealthQuery.rows[0]?.success_rate);
+    const aiSuccessRate = measuredRate(aiHealthQuery.rows[0] as any, "success_rate", "total", MIN_EVENTS_1H);
 
     // Knowledge Graph: Check python sidecar integration logs (often used for KG ops)
     const kgHealthQuery = await db.execute(sql`
-        SELECT 
+        SELECT
+            COUNT(*) as total,
             ROUND(COUNT(CASE WHEN response_status >= 200 AND response_status < 300 THEN 1 END)::numeric / NULLIF(COUNT(*), 0)::numeric * 100, 2) as success_rate
         FROM integration_logs
         WHERE created_at > NOW() - INTERVAL '1 hour'
           AND platform = 'python_sidecar'
     `);
-    const kgSuccessRate = Number(kgHealthQuery.rows[0]?.success_rate);
+    const kgSuccessRate = measuredRate(kgHealthQuery.rows[0] as any, "success_rate", "total", MIN_EVENTS_1H);
 
     // API Gateway / Integration Gateway Health (Real)
     const gatewayHealthQuery = await db.execute(sql`
-        SELECT 
+        SELECT
+            COUNT(*) as total,
             ROUND(COUNT(CASE WHEN response_status >= 200 AND response_status < 300 THEN 1 END)::numeric / NULLIF(COUNT(*), 0)::numeric * 100, 2) as success_rate
         FROM integration_logs
         WHERE created_at > NOW() - INTERVAL '1 hour'
     `);
-    const gatewaySuccessRate = Number(gatewayHealthQuery.rows[0]?.success_rate);
+    const gatewaySuccessRate = measuredRate(gatewayHealthQuery.rows[0] as any, "success_rate", "total", MIN_EVENTS_1H);
 
     const getComponentStatus = (rate: number | null | undefined) => {
         if (rate === null || rate === undefined || isNaN(rate)) return "unverified";
@@ -223,9 +243,9 @@ router.get("/trust", asyncHandler(async (req: Request, res: Response) => {
     // We define an "incident" as a job that failed with "timeout" or high recurrence error
     // Anonymized for public view
     const incidents = await db.execute(sql`
-        SELECT 
+        SELECT
             created_at as time,
-            'Resolved' as status, 
+            'Resolved' as status,
             job_type,
             error_message,
             status as raw_status
@@ -257,7 +277,7 @@ router.get("/trust", asyncHandler(async (req: Request, res: Response) => {
 
     // 5. Integration Gateway Metrics (24h)
     const integrationMetrics = await db.execute(sql`
-        SELECT 
+        SELECT
             COUNT(*) as total_calls,
             ROUND(COUNT(CASE WHEN response_status >= 200 AND response_status < 300 THEN 1 END)::numeric / NULLIF(COUNT(*), 0)::numeric * 100, 2) as success_rate
         FROM integration_logs
@@ -265,8 +285,7 @@ router.get("/trust", asyncHandler(async (req: Request, res: Response) => {
     `);
 
     // Use for the 24h metric display
-    const integrationRateValue = integrationMetrics.rows[0]?.success_rate;
-    const integrationSuccessRate = integrationRateValue == null ? null : Number(integrationRateValue);
+    const integrationSuccessRate = measuredRate(integrationMetrics.rows[0] as any, "success_rate", "total_calls", MIN_EVENTS_24H);
 
     // 6. Production mission evidence (30d). This is intentionally conservative:
     // only explicitly production-labeled, non-shadow, non-demo runs are counted.
@@ -310,9 +329,17 @@ router.get("/trust", asyncHandler(async (req: Request, res: Response) => {
         uptime_90d: uptime90d,
         last_updated: new Date(),
         metrics: {
-            jobs_processed_24h: dailyMetrics.rows[0].total_jobs || 0,
-            success_rate_24h: dailyMetrics.rows[0]?.success_rate == null ? null : Number(dailyMetrics.rows[0].success_rate),
-            integration_success_rate_24h: integrationSuccessRate
+            jobs_processed_24h: Number(dailyMetrics.rows[0]?.total_jobs) || 0,
+            success_rate_24h: measuredRate(dailyMetrics.rows[0] as any, "success_rate", "total_jobs", MIN_EVENTS_24H),
+            integration_success_rate_24h: integrationSuccessRate,
+        },
+        /** The events each figure is computed from, and the minimum before it is shown. */
+        samples: {
+            events_90d: Number((uptimeQuery.rows[0] as any)?.total) || 0,
+            jobs_24h: Number(dailyMetrics.rows[0]?.total_jobs) || 0,
+            integration_calls_24h: Number((integrationMetrics.rows[0] as any)?.total_calls) || 0,
+            events_1h: totalLastHour,
+            minimum: { days_90: MIN_EVENTS_90D, hours_24: MIN_EVENTS_24H, hour_1: MIN_EVENTS_1H },
         },
         assurance: {
             evidence_model: "oddjob.evidence-levels.v1",

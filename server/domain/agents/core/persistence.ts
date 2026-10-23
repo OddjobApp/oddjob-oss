@@ -2,7 +2,7 @@
 import { db } from "@server/database_service.js";
 import { agentRunSteps } from "@shared/schema/index.js";
 import { randomUUID } from "crypto";
-import { resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 export interface AgentStep {
     type: string;
@@ -114,7 +114,7 @@ export async function saveSuccessfulPlanAsSkill(
 
         // Use a small LLM to distill this into a "Macro Skill"
         const client = AIClientFactory.getClient({ provider: "google" } as any);
-        const apiKey = await resolveOrgGeminiKey(context.organizationId);
+        const apiKey = await resolveOrgTextAiKey(context.organizationId);
         if (!apiKey) return;
 
         const distillationPrompt = `

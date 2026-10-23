@@ -18,7 +18,7 @@ import { LLMBackend } from "./backends/llm.backend.js";
 import { initRerankingService, type RerankingService } from "./reranking.service.js";
 import { loadRerankingConfig } from "./config.js";
 import { AIClientFactory } from "@domain/ai/core/ai-client.service.js";
-import { developmentProviderKey, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { developmentProviderKey, resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 import { createLogger } from "@server/utils/logger.js";
 
 const logger = createLogger("RerankingBoot");
@@ -50,7 +50,7 @@ const llmRouterAdapter: LLMRouterClient = {
   async isAvailable() {
     // Available when the organization in scope has a key. The platform key this
     // used to check is never set in production, so LLM reranking was always off.
-    return !!(await resolveOrgGeminiKey(null));
+    return !!(await resolveOrgTextAiKey(null));
   },
 };
 

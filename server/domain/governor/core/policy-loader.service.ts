@@ -33,9 +33,11 @@ export class PolicyLoaderService {
     async syncAllPolicies(): Promise<void> {
         logger.info(`Starting YAML capability manager sync from ${this.policiesDir}...`);
         
+        // Nothing to sync. Creating the directory here failed on every production
+        // boot (the image's code tree is read-only to the app user) and an empty
+        // directory would have synced nothing anyway.
         if (!fs.existsSync(this.policiesDir)) {
-            logger.warn(`Policies directory not found: ${this.policiesDir}. Creating it...`);
-            fs.mkdirSync(this.policiesDir, { recursive: true });
+            logger.info(`No YAML policies deployed (${this.policiesDir} is absent); policies are managed in the database.`);
             return;
         }
 

@@ -35,7 +35,7 @@ export const SPA_ROUTES: ReadonlyArray<{ template: SpaTemplate; prefixes: readon
       // /r and /h (shared run / HIL links).
       "/a", "/app", "/o", "/r", "/h", "/external", "/hil-form",
       "/trust", "/overview", "/use-cases", "/getting-started", "/contact",
-      "/privacy", "/terms", "/404",
+      "/privacy", "/terms", "/404", "/docs",
     ],
   },
   {

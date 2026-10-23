@@ -20,6 +20,11 @@ interface TrustMetrics {
         integration_success_rate_24h: number | null;
     };
     components: { name: string; status: string }[];
+    /** The events behind each figure, and the minimum before a figure is shown. */
+    samples?: {
+        events_90d: number; jobs_24h: number; integration_calls_24h: number; events_1h: number;
+        minimum: { days_90: number; hours_24: number; hour_1: number };
+    };
     modules?: {
         module: string;
         status: "operational" | "degraded" | "unverified";
@@ -52,6 +57,12 @@ interface TrustMetrics {
 }
 
 const displayPercent = (value: number | null) => value == null ? "Unverified" : `${value}%`;
+
+/** Why a figure is unverified: how many events it rests on against how many it needs. */
+function SampleNote({ value, have, need }: { value: number | null; have?: number; need?: number }) {
+    if (value != null || have == null || need == null) return null;
+    return <p className="mt-1 text-xs text-muted-foreground">{have.toLocaleString()} of {need.toLocaleString()} events needed</p>;
+}
 
 const relativeTime = (iso: string | null) => {
     if (!iso) return "On change";
@@ -150,6 +161,7 @@ export default function TrustPage() {
                             <div className={cn("text-3xl font-bold", data.uptime_90d == null ? "text-muted-foreground" : "text-foreground")}>
                                 {displayPercent(data.uptime_90d)}
                             </div>
+                            <SampleNote value={data.uptime_90d} have={data.samples?.events_90d} need={data.samples?.minimum.days_90} />
                         </div>
                     </CardContent>
                 </Card>
@@ -174,6 +186,7 @@ export default function TrustPage() {
                                     <span className="text-sm font-medium">Global Success Rate</span>
                                     <span className="text-2xl font-bold">{displayPercent(data.metrics.success_rate_24h)}</span>
                                 </div>
+                                <SampleNote value={data.metrics.success_rate_24h} have={data.samples?.jobs_24h} need={data.samples?.minimum.hours_24} />
                                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                                     {data.metrics.success_rate_24h != null && <DynamicProgress
                                         className={cn(

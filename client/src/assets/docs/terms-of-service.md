@@ -26,3 +26,6 @@ In no event shall Oddjob be liable for any indirect, incidental, special, or con
 
 ## 7. Governing Law
 These Terms shall be governed by the laws of the State of California, without regard to its conflict of law provisions.
+
+## 8. Contact Us
+For questions about these terms, contact [admin@oddjob.app](mailto:admin@oddjob.app).

@@ -17,6 +17,17 @@ import { getAssetPlainText } from "@domain/knowledge/core/rag-utils.service.js";
 import { AIClientFactory } from "@domain/ai/core/ai-client.service.js";
 import { NotFoundError } from "@server/utils/errors.js";
 import { developmentProviderKey } from "@domain/ai/core/org-gemini-key.js";
+import { ORG_AI_KEY_MISSING } from "@domain/ai/core/organization-ai-client.js";
+
+/**
+ * Errors no other chunk can recover from: the organization has no AI
+ * connection (strict BYOK), so every chunk would fail the same way and the
+ * extraction must fail rather than complete with nothing extracted.
+ */
+function isUnconfigured(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return message === ORG_AI_KEY_MISSING || message === "Organization context is required for AI execution";
+}
 
 interface ExtractedNode {
     label: string;
@@ -103,11 +114,12 @@ export class KnowledgeExtractionService {
         if (isImage) {
             if (onProgress) await onProgress(30, "Analyzing image extraction...");
             try {
-                const extractionResult = await this.callLLMForExtraction(textContent, graphSchema, attachments);
+                const extractionResult = await this.callLLMForExtraction(textContent, graphSchema, organizationId, attachments);
                 const stats = await this.ingestExtractionResult(extractionResult, document, organizationId, extractionId);
                 totalStats.nodes += stats.nodes;
                 totalStats.edges += stats.edges;
             } catch (e) {
+                if (isUnconfigured(e)) throw e;
                 console.error("Failed to process image extraction:", e);
             }
         } else {
@@ -118,11 +130,12 @@ export class KnowledgeExtractionService {
                 if (onProgress) await onProgress(30 + Math.floor((index / total) * 60), `Analyzing chunk ${index + 1}/${total}`);
 
                 try {
-                    const extractionResult = await this.callLLMForExtraction(chunk, graphSchema);
+                    const extractionResult = await this.callLLMForExtraction(chunk, graphSchema, organizationId);
                     const stats = await this.ingestExtractionResult(extractionResult, document, organizationId, extractionId);
                     totalStats.nodes += stats.nodes;
                     totalStats.edges += stats.edges;
                 } catch (e) {
+                    if (isUnconfigured(e)) throw e;
                     console.error(`Failed to process extraction chunk ${index + 1}/${total}:`, e);
                 }
             }
@@ -145,12 +158,12 @@ export class KnowledgeExtractionService {
         return totalStats;
     }
 
-    private async callLLMForExtraction(textContent: string, schema: any, attachments?: any[]): Promise<ExtractionResult> {
-        // Just use Gemini/OpenAI
-        const client = AIClientFactory.getClient({
-            provider: "google", // Default to Gemini for JSON mode handling 
-            // In a real app, this should come from org settings or env
-        } as any);
+    private async callLLMForExtraction(textContent: string, schema: any, organizationId: number | null, attachments?: any[]): Promise<ExtractionResult> {
+        // Runs on the organization's default AI connection (Organization Settings):
+        // Gemini, Amazon Bedrock, or any other provider it connected a key for.
+        // "google" and GEMINI_MODEL apply only to the platform client outside
+        // production, for an org without a connection.
+        const client = AIClientFactory.getClient({ provider: "google" } as any);
 
         const mappings = schema.mappings || [];
         const schemaSummary = JSON.stringify(mappings, null, 2);
@@ -210,6 +223,7 @@ JSON FORMAT:
 
         const result = await client.execute({
             credentialId: 0, // Dummy ID as we provide API key directly
+            organizationId,
             model: process.env.GEMINI_MODEL || "gemini-2.0-flash", // High capacity model
             userPrompt: truncatedText,
             systemPrompt: systemPrompt,

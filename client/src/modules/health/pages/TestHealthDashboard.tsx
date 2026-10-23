@@ -688,7 +688,9 @@ export default function TestHealthDashboard() {
                   <p className="mt-1 truncate text-xs font-medium text-muted-foreground">
                     {latestE2eChange
                       ? `Latest register entry: ${latestE2eChange.explanation}`
-                      : "The feature spec and implementation fingerprint are connected to the documentation system."}
+                      : documentationStatus === "up-to-date" || documentationStatus === "completed"
+                        ? "No change register entries for E2E testing yet."
+                        : "No change register entries for E2E testing yet. Generate the documentation to start the record."}
                   </p>
                 </div>
               </div>

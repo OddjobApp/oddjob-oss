@@ -37,10 +37,10 @@ function app() {
     const server = express();
     server.use(express.json());
     server.use('/api/saas', router);
-    server.use((err: any, _req: any, res: any, _next: any) => res.status(err.status ?? 400).json({ error: err.message }));
+    server.use((err: any, _req: any, res: any, _next: any) => res.status(err.statusCode ?? err.status ?? 400).json({ error: err.message }));
     return server;
 }
-const body = { platform: 'jira', organization_id: 1, credentials: { base_url: 'https://attacker.example', api_key: 'stolen' } };
+const body = { platform: 'jira', credentials: { base_url: 'https://jira.example', api_key: 'k' } };
 
 describe('POST /api/saas/create-connector', () => {
     beforeEach(() => {
@@ -50,11 +50,24 @@ describe('POST /api/saas/create-connector', () => {
         mocks.whereOrg = [];
     });
 
-    it("writes the caller's organization, ignoring an organization named in the body", async () => {
+    it("writes the caller's organization", async () => {
         const response = await request(app()).post('/api/saas/create-connector').send(body);
         expect(response.status).toBe(200);
         expect(mocks.inserted).toHaveBeenCalledWith(expect.objectContaining({ orgId: 7, platform: 'jira' }));
-        expect(mocks.inserted.mock.calls[0][0].orgId).not.toBe(1);
+    });
+
+    it("refuses a body that names another organization, before touching storage", async () => {
+        const response = await request(app()).post('/api/saas/create-connector')
+            .send({ ...body, organization_id: 1, credentials: { base_url: 'https://attacker.example', api_key: 'stolen' } });
+        expect(response.status).toBe(403);
+        expect(mocks.inserted).not.toHaveBeenCalled();
+        expect(mocks.updated).not.toHaveBeenCalled();
+    });
+
+    it("sends Google and QuickBooks through their organization OAuth flow", async () => {
+        const response = await request(app()).post('/api/saas/create-connector').send({ platform: 'google', credentials: {} });
+        expect(response.status).toBe(400);
+        expect(mocks.inserted).not.toHaveBeenCalled();
     });
 
     it('refuses a member who is not an organization administrator, before touching storage', async () => {

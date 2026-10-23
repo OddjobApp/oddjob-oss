@@ -5,7 +5,7 @@ import { systemAiService } from "@domain/ai/core/system-ai.service.js";
 import { db } from "@server/database_service.js";
 import { skills, skillVersionHistory, approvalRequests, missionRuns } from "@shared/schema/index.js";
 import { eq, and, desc } from "drizzle-orm";
-import { resolveOrgGeminiKey, developmentProviderKey } from "@domain/ai/core/org-gemini-key.js";
+import { resolveOrgTextAiKey, developmentProviderKey } from "@domain/ai/core/org-gemini-key.js";
 import { BadRequestError, NotFoundError, ForbiddenError } from "@server/utils/errors.js";
 import type { Skill, SkillVersionHistory } from "@shared/schema/skills.js";
 
@@ -221,7 +221,7 @@ Synthesize the evolution path.`;
     const provider = aiConfig?.provider || process.env.AI_PROVIDER || "google";
     const model = aiConfig?.model || process.env.AI_MODEL || "gemini-2.0-flash";
     const baseUrl = aiConfig?.baseUrl;
-    const orgApiKey = await resolveOrgGeminiKey(options.organizationId);
+    const orgApiKey = await resolveOrgTextAiKey(options.organizationId);
     const apiKey = orgApiKey || aiConfig?.apiKey || developmentProviderKey();
 
     // 4. Construct AI Prompts

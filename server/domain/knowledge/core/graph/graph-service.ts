@@ -27,7 +27,7 @@ import { hierarchicalRetrievalService } from "./hierarchical-retrieval.service.j
 
 import { CreateNodeInput, UpdateNodeInput, CreateEdgeInput, NodeSearchOptions, GraphTraversalOptions } from "../types.js";
 import { temporalVersionStoreService } from "../temporal/temporal-version-store.service.js";
-import { developmentProviderKey, ORG_GEMINI_KEY_MISSING, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { developmentProviderKey, ORG_AI_KEY_MISSING, resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 const logger = createLogger("GraphService");
 
@@ -290,7 +290,7 @@ export const graphService = {
 
             // Gated on the organization's key. This checked OPENAI_API_KEY, which
             // production never sets, so NLQ parsing always fell back to text search.
-            if (!(await resolveOrgGeminiKey(null))) throw new Error(`${ORG_GEMINI_KEY_MISSING} to parse natural-language graph queries`);
+            if (!(await resolveOrgTextAiKey(null))) throw new Error(`${ORG_AI_KEY_MISSING} to parse natural-language graph queries`);
 
             const res = await aiClient.execute(
                 {

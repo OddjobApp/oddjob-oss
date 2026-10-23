@@ -73,14 +73,16 @@ export const ORG_AI_PROVIDERS: Record<OrgAiProviderId, OrgAiProvider> = {
         keyUrl: "https://llama.developer.meta.com", keyHelp: "the Meta developer portal",
         regions: [{ id: "default", label: "Global", baseUrl: "https://api.meta.ai/v1" }],
     },
-    // Claude through the organization's own AWS account. The key is a long-term
+    // Any Bedrock text model through the organization's own AWS account, called
+    // with the Converse API (Claude, Nova, Llama, Mistral...). The key is a long-term
     // Bedrock API key (ABSK…); short-term keys expire within hours and are refused.
     // Recent Claude models are offered only through an inference profile (us.…,
     // global.…), which may process a request in another Region of that geography.
     bedrock: {
-        id: "bedrock", label: "Amazon Bedrock (Claude)", credentialType: "bedrock",
+        id: "bedrock", label: "Amazon Bedrock", credentialType: "bedrock",
         defaultModel: "us.anthropic.claude-sonnet-4-6",
-        modelPattern: /^(?:(?:us|eu|apac|au|jp|global)\.)?anthropic\.claude-[a-z0-9.-]{1,90}(?::[0-9]{1,3})?$/,
+        // [geography.]vendor.model[:version], e.g. us.anthropic.claude-sonnet-4-6, amazon.nova-lite-v1:0
+        modelPattern: /^(?:(?:us|eu|apac|au|jp|ca|us-gov|global)\.)?[a-z0-9-]{2,20}\.[A-Za-z0-9][A-Za-z0-9._-]{0,90}(?::[0-9]{1,3})?$/,
         keyUrl: "https://console.aws.amazon.com/bedrock/home#/api-keys/long-term/create", keyHelp: "the Amazon Bedrock console",
         keyPattern: /^ABSK[A-Za-z0-9+/=]{20,1020}$/,
         regions: [

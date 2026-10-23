@@ -92,10 +92,12 @@ export class OrganizationService {
      */
     async insertOrganizationRecord(
         executor: Pick<typeof db, "insert">,
-        data: { name: string; suppressionPolicyId?: number | null },
+        data: { name: string; suppressionPolicyId?: number | null; companySize?: string; industry?: string },
     ) {
         const [org] = await executor.insert(orgs).values({
             name: data.name.trim(),
+            ...(data.companySize ? { companySize: data.companySize } : {}),
+            ...(data.industry ? { industry: data.industry } : {}),
             suppressionPolicyId: data.suppressionPolicyId || null
         }).returning();
 

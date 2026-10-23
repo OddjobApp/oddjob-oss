@@ -29,7 +29,7 @@ import {
   createKnowledgeGraphEdges,
 } from "../extraction/knowledge-graph-extractor.js";
 import { embedKnowledgeNode } from "../graph/graph-service.js";
-import { developmentProviderKey, resolveOrgGeminiKey } from "@domain/ai/core/org-gemini-key.js";
+import { resolveOrgTextAiKey } from "@domain/ai/core/org-gemini-key.js";
 
 const logger = createLogger("KnowledgeIngestion");
 
@@ -208,9 +208,7 @@ async function generateEntityRules(
 
     const apiKey =
       config.apiKey ||
-      (config.provider === "google"
-        ? await resolveOrgGeminiKey(null)
-        : developmentProviderKey("openai")) ||
+      (await resolveOrgTextAiKey(null, config.provider === "google" ? "google" : "openai")) ||
       "";
 
     if (!apiKey) {

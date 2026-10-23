@@ -27,6 +27,7 @@ describe('CREW Room Re-Engagement & Deep-Linked Turn Highlighting', () => {
   beforeEach(() => {
     (globalThis as any).EventSource = EventSourceStub;
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.scrollTo = vi.fn();
     vi.clearAllMocks();
   });
 
@@ -109,7 +110,11 @@ describe('CREW Room Re-Engagement & Deep-Linked Turn Highlighting', () => {
       expect(targetTurn).not.toBeNull();
       expect(targetTurn?.getAttribute('data-turn-id')).toBe('102');
       expect(targetTurn?.className).toContain('ring-2 ring-primary');
-      expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
+      expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+      const transcript = screen.getByTestId("crew-transcript");
+      expect(transcript.contains(targetTurn)).toBe(true);
+      expect(window.HTMLElement.prototype.scrollTo).toHaveBeenCalled();
+      expect((window.HTMLElement.prototype.scrollTo as ReturnType<typeof vi.fn>).mock.instances).toContain(transcript);
     });
   });
 });

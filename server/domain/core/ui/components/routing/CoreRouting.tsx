@@ -33,6 +33,7 @@ function PageLoader() {
 const NotFound = lazy(() => import("@domain-ui/core/ui/pages/NotFound"));
 const ExternalTaskPage = lazy(() => import("@domain-ui/core/ui/pages/ExternalTaskPage"));
 const PublicFormPage = lazy(() => import("@/modules/forms/pages/PublicFormPage"));
+const MarketingPage = lazy(() => import("@/pages/marketing/MarketingPage"));
 const TrustPage = lazy(() => import("@domain-ui/core/ui/pages/TrustPage"));
 
 const RescuePublicPage = lazy(() => import("@domain-ui/rescue/ui/modules/rescue/pages/RescuePublicPage"));
@@ -277,7 +278,7 @@ export function CoreRouting() {
             }}
           </Route>
 
-          <Route path="/" component={AuthPage} />
+          <Route path="/" component={MarketingPage} />
           <Route>
             <PrefetchRouteWatcher />
             <ProtectedRoutes />
