@@ -1,3 +1,4 @@
+import { buildOrgAiReadinessContext } from "./org-ai-readiness-context.js";
 import { db } from "@server/database_service.js";
 import { eq, inArray, desc, and, gt, sql } from "drizzle-orm";
 import { contactIntentStates, orgSettings, pipelines, datasets, agentChatMessages, knowledgeTopics, documentTemplates, jobTypes, prospectProfiles, prospectLeads } from "@shared/schema/index.js";
@@ -1162,6 +1163,10 @@ The propose_* tools create an approval the user confirms via buttons; tell the u
             } catch (e) {
                 logger.warn("Failed to fetch credentials for agent context", undefined, e);
             }
+        }
+
+        if (!isPublishedAgent) {
+            prompt += await buildOrgAiReadinessContext(userContext.organizationId);
         }
 
         // ─── Scanned Asset Context (pre-loaded from QR scan) ──────────────────
