@@ -10,7 +10,7 @@
     "dist": "node scripts/dist.cjs"
   },
   "devDependencies": {
-    "electron": "^38.0.0",
+    "electron": "^42.11.16",
     "electron-builder": "^26.0.0"
   },
   "build": {
