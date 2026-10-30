@@ -198,7 +198,7 @@
     "lucide-react": "^0.453.0",
     "mammoth": "^1.11.0",
     "marked": "^17.0.1",
-    "multer": "^2.0.2",
+    "multer": "^2.5.0",
     "mysql2": "^3.22.5",
     "nodemailer": "^10.0.13",
     "openai": "^6.27.0",
